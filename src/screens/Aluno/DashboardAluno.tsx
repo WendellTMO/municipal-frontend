@@ -23,7 +23,9 @@ import {
   TripHeroCard,
 } from '../../components';
 import { dayLabel } from '../../utils/dayLabel';
-import { escolherViagemDeHoje, textoSaida } from '../../utils/viagemAluno';
+import { escolherViagemDeHoje } from '../../utils/viagemAluno';
+import { horaCurta } from '../../utils/viagemPainel';
+import AgoraCard from '../../components/AgoraCard';
 import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
@@ -330,24 +332,11 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
         {/* Ônibus a caminho */}
         {emAndamento && todayTrip && (
-          <TripHeroCard
-            dayLabel="AGORA"
-            time={textoSaida(todayTrip)}
-            statusLabel="Ônibus a caminho"
-            statusColor={colors.solid.green}
-            statusIcon={IconNames.bus}
-            title={todayTrip.rota_nome ?? 'Rota'}
-            accessibilityLabel={`Ônibus a caminho. ${textoSaida(todayTrip)}. ${(todayTrip.rota_nome ?? 'Rota').replace(/→/g, 'para')}`}
-            onPress={abrirLocalizacao}>
-            <TouchableOpacity
-              style={styles.verOnibusButton}
-              onPress={abrirLocalizacao}
-              accessibilityRole="button"
-              accessibilityLabel="Ver ônibus no mapa">
-              <Icon name={IconNames.location} size="lg" color={colors.primary.main} style={undefined} />
-              <Text style={styles.verOnibusText}>Ver ônibus no mapa</Text>
-            </TouchableOpacity>
-          </TripHeroCard>
+          <AgoraCard
+            rotaNome={todayTrip.rota_nome ?? 'Rota'}
+            hora={horaCurta(todayTrip.horario_inicio)}
+            onPress={abrirLocalizacao}
+          />
         )}
 
         {/* Próxima Viagem */}
@@ -506,17 +495,6 @@ const styles = StyleSheet.create({
     ...textStyles.h5,
     fontWeight: '700',
   },
-  verOnibusButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-    marginTop: spacing.base,
-    minHeight: 56,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  verOnibusText: { ...textStyles.h5, color: colors.primary.main, fontWeight: '800' },
   todayBannerSub: {
     ...textStyles.bodySmall,
     marginTop: spacing.xxs,

@@ -1,4 +1,4 @@
-import { ehDeHoje, horaCurta } from './viagemPainel';
+import { ehDeHoje } from './viagemPainel';
 
 // Quanto menor o índice, mais relevante para o aluno.
 const PRIORIDADE = ['EM_ANDAMENTO', 'AGENDADA', 'CANCELADA', 'FINALIZADA'];
@@ -14,6 +14,3 @@ export const escolherViagemDeHoje = (viagens, agora = new Date()) => {
   }
   return escolhida;
 };
-
-// A API do aluno não traz a hora real de saída, então usa a hora de início da viagem.
-export const textoSaida = viagem => `Saiu ${horaCurta(viagem?.horario_inicio)}`;
