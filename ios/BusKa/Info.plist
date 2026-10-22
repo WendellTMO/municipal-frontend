@@ -35,6 +35,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>O BusKá usa o Face ID para abrir sua sessão neste aparelho.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>O BusKá precisa da sua localização para acompanhar a rota.</string>
 	<key>UILaunchStoryboardName</key>
