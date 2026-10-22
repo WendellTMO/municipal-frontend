@@ -23,6 +23,7 @@ import {
   TripHeroCard,
 } from '../../components';
 import { dayLabel } from '../../utils/dayLabel';
+import { escolherViagemDeHoje, textoSaida } from '../../utils/viagemAluno';
 import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
@@ -30,22 +31,6 @@ import { withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = { navigation: NativeStackNavigationProp<RootParamList> };
-
-const TODAY_ISO = new Date().toISOString().split('T')[0];
-
-/** Returns today's most relevant trip (EM_ANDAMENTO > AGENDADA > CANCELADA) */
-function pickTodayTrip(viagens: ViagemAgendaUI[]): ViagemAgendaUI | null {
-  const todayTrips = viagens.filter((v) => v.data === TODAY_ISO);
-  if (todayTrips.length === 0) return null;
-  const priority = ['EM_ANDAMENTO', 'AGENDADA', 'CANCELADA', 'FINALIZADA'];
-  return (
-    todayTrips.sort(
-      (a, b) =>
-        priority.indexOf(a.status_viagem ?? '') -
-        priority.indexOf(b.status_viagem ?? ''),
-    )[0] ?? null
-  );
-}
 
 const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   const [rotasCadastradas, setRotasCadastradas] = useState<ViagemAgendaUI[]>([]);
@@ -138,7 +123,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             : null,
         );
 
-        setTodayTrip(pickTodayTrip(todasViagens));
+        setTodayTrip(escolherViagemDeHoje(todasViagens));
       } else {
         setProximaViagem(null);
         setTodayTrip(null);
@@ -167,25 +152,6 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   const todayBannerConfig = (() => {
     if (!todayTrip) return null;
     switch (todayTrip.status_viagem) {
-      case 'EM_ANDAMENTO':
-        return {
-          bg: colors.success.light,
-          border: colors.success.main,
-          text: colors.success.dark,
-          icon: IconNames.bus,
-          label: 'Ônibus em trânsito',
-          sub: 'Toque para ver localização',
-          onPress: () => {
-            const rota = (rotasCadastradas as unknown[]).find(
-              (r: unknown) => (r as Record<string, unknown>).id === todayTrip.rota_id,
-            );
-            if (rota)
-              navigation.navigate('LocalizacaoOnibus', {
-                rota,
-                viagem: todayTrip,
-              });
-          },
-        };
       case 'CANCELADA':
         return {
           bg: colors.error.light,
@@ -209,12 +175,17 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
     if (rota) navigation.navigate('DetalheViagem', { rota, viagem: proximaViagem });
   };
 
+  const emAndamento = todayTrip?.status_viagem === 'EM_ANDAMENTO';
+
+  // Com a viagem em andamento, o mapa mostra ela; senão mostra a próxima.
   const abrirLocalizacao = () => {
-    if (!proximaViagem) return;
-    const rota = (rotasCadastradas as unknown[]).find(
-      (r: unknown) => (r as Record<string, unknown>).id === proximaViagem.rota_id,
-    );
-    if (rota) navigation.navigate('LocalizacaoOnibus', { rota, viagem: proximaViagem });
+    const viagem = emAndamento ? todayTrip : proximaViagem;
+    if (!viagem) return;
+    const rota =
+      (rotasCadastradas as unknown[]).find(
+        (r: unknown) => (r as Record<string, unknown>).id === viagem.rota_id,
+      ) ?? { id: viagem.rota_id, nome: viagem.rota_nome };
+    navigation.navigate('LocalizacaoOnibus', { rota, viagem });
   };
 
   let proximaViagemLabel = '';
@@ -356,8 +327,30 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         )}
 
+        {/* Ônibus a caminho */}
+        {emAndamento && todayTrip && (
+          <TripHeroCard
+            dayLabel="AGORA"
+            time={textoSaida(todayTrip)}
+            statusLabel="Ônibus a caminho"
+            statusColor={colors.solid.green}
+            statusIcon={IconNames.bus}
+            title={todayTrip.rota_nome ?? 'Rota'}
+            accessibilityLabel={`Ônibus a caminho. ${textoSaida(todayTrip)}. ${(todayTrip.rota_nome ?? 'Rota').replace(/→/g, 'para')}`}
+            onPress={abrirLocalizacao}>
+            <TouchableOpacity
+              style={styles.verOnibusButton}
+              onPress={abrirLocalizacao}
+              accessibilityRole="button"
+              accessibilityLabel="Ver ônibus no mapa">
+              <Icon name={IconNames.location} size="lg" color={colors.primary.main} style={undefined} />
+              <Text style={styles.verOnibusText}>Ver ônibus no mapa</Text>
+            </TouchableOpacity>
+          </TripHeroCard>
+        )}
+
         {/* Próxima Viagem */}
-        {proximaViagem && (
+        {proximaViagem && !emAndamento && (
           <TripHeroCard
             dayLabel={dayLabel(proximaViagem.data)}
             time={proximaViagem.horario}
@@ -388,7 +381,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             label="Localização"
             accessibilityLabel="Localização do ônibus"
             color={colors.solid.green}
-            disabled={!proximaViagem}
+            disabled={!proximaViagem && !emAndamento}
             onPress={abrirLocalizacao}
           />
         </View>
@@ -510,6 +503,17 @@ const styles = StyleSheet.create({
     ...textStyles.h5,
     fontWeight: '700',
   },
+  verOnibusButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    marginTop: spacing.base,
+    minHeight: 56,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  verOnibusText: { ...textStyles.h5, color: colors.primary.main, fontWeight: '800' },
   todayBannerSub: {
     ...textStyles.bodySmall,
     marginTop: spacing.xxs,
