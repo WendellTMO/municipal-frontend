@@ -104,7 +104,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Voltar">
-          <Icon name={IconNames.arrowBack} size="md" color="#FFFFFF" />
+          <Icon name={IconNames.back} size="md" color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>Notificações</Text>

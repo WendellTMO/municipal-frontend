@@ -149,7 +149,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
             accessibilityLabel="Voltar">
-            <Icon name={IconNames.arrowBack} size="md" color="#FFFFFF" />
+            <Icon name={IconNames.back} size="md" color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Editar Perfil</Text>
           <View style={{ width: 40 }} />
