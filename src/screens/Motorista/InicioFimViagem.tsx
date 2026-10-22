@@ -35,12 +35,15 @@ import {
 } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { ReportSheet } from '../../components';
-import { RouteMap, StaticRouteMap } from '../../features/map/index';
+import { LocationMap, StaticRouteMap, useArrivalDetection, useRoutePolyline, normalizeRoutePoints } from '../../features/map/index';
+import SubHeader from '../../components/SubHeader';
+import { montarParadas } from '../../utils/paradasViagem';
+import { horaCurta } from '../../utils/viagemPainel';
 import { motoristaService } from '../../services/motoristaService';
 import { createNotificacao } from '../../services/notificacaoService';
 import { useToast } from '../../components/Toast';
 import { unwrapItems } from '../../types';
-import type { PontoFlatResponse } from '../../types';
+import type { InstituicaoResponse, PontoFlatResponse } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
@@ -80,6 +83,12 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [reportVisible, setReportVisible] = useState(false);
   const [broadcastVisible, setBroadcastVisible] = useState(false);
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
+  const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
+  const [concluidas, setConcluidas] = useState(0);
+  const [listaAberta, setListaAberta] = useState(false);
+  const [posMotorista, setPosMotorista] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [alturaTopo, setAlturaTopo] = useState(0);
+  const [alturaPainel, setAlturaPainel] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentViagem = (viagem ?? viagemParam) as Record<string, unknown>;
@@ -118,6 +127,14 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           const items = unwrapItems(pontosResp) as PontoFlatResponse[];
           setPontosRota(items);
         }
+
+        // Instituições de ensino, para marcar as paradas que são escolas. Opcional.
+        try {
+          const lista = await motoristaService.listarInstituicoes();
+          setInstituicoes((lista.items ?? []) as InstituicaoResponse[]);
+        } catch {
+          setInstituicoes([]);
+        }
       } catch {
         setViagemIniciada(viagemParam?.status === 'EM_ANDAMENTO');
       } finally {
@@ -150,6 +167,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     const sendPos = () => {
       Geolocation!.getCurrentPosition(
         (pos) => {
+          setPosMotorista({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
           motoristaService
             .enviarLocalizacao(viagemIdRef.current!, {
               latitude: pos.coords.latitude,
@@ -166,6 +184,33 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     const gpsInterval = setInterval(sendPos, GPS_SEND_INTERVAL_MS);
     return () => clearInterval(gpsInterval);
   }, [viagemIniciada]);
+
+  // Paradas válidas (com coordenadas), com estado e instituição de ensino.
+  const pontosValidos = normalizeRoutePoints(pontosRota);
+  const paradas = montarParadas(pontosValidos, concluidas, instituicoes);
+  const proxima = paradas.find((p) => p.estado === 'proxima') ?? null;
+  const todasFeitas = pontosValidos.length > 0 && concluidas >= pontosValidos.length;
+
+  const marcarChegada = () => {
+    setConcluidas((n) => (n < pontosValidos.length ? n + 1 : n));
+  };
+
+  // Chegada automática a menos de 50 m da próxima parada; o botão "Cheguei" cobre o resto.
+  useArrivalDetection({
+    userLocation: posMotorista,
+    destination: proxima ? proxima.ponto : null,
+    thresholdMeters: 50,
+    onArrive: marcarChegada,
+  });
+
+  const { coordinates: trajeto } = useRoutePolyline({
+    origin: posMotorista,
+    destination: proxima
+      ? { latitude: proxima.ponto.latitude, longitude: proxima.ponto.longitude }
+      : null,
+    enabled: !!posMotorista && !!proxima,
+    minRefetchDistanceMeters: 20,
+  });
 
   const formatarTempo = (s: number) => {
     const h = Math.floor(s / 3600);
@@ -285,51 +330,120 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   if (viagemIniciada) {
     return (
       <View style={styles.mapScreen}>
-        {/* Full-screen live map */}
-        <RouteMap
-          pontosRota={pontosRota}
-          onPontoChegado={() => {
-            // advance through stops as driver arrives
-            setPontosRota((prev) => prev.slice(1));
-          }}
-        />
+        {/* Mesmo mapa da tela do aluno: paradas numeradas, próxima destacada, ônibus */}
+        <View style={StyleSheet.absoluteFillObject}>
+          <LocationMap
+            pontosRota={pontosRota}
+            posicaoOnibus={posMotorista}
+            proximaParadaId={proxima ? (proxima.ponto.id as string) : null}
+            rotaCoordenadas={trajeto}
+            seguirOnibus={false}
+            margemSuperior={alturaTopo}
+            margemInferior={alturaPainel}
+          />
+        </View>
 
-        {/* Floating top: info + timer */}
-        <SafeAreaView style={styles.floatingTop} pointerEvents="box-none">
-          <View style={styles.topBar}>
-            <View style={styles.topBarLeft}>
-              <TouchableOpacity
-                style={styles.backButtonDisabled}
-                disabled
-                accessibilityRole="button"
-                accessibilityLabel="Voltar (desabilitado durante viagem)"
-                accessibilityState={{ disabled: true }}>
-                <Icon name={IconNames.back} size="md" color="rgba(255,255,255,0.3)" />
-              </TouchableOpacity>
-              <View style={{ flex: 1, marginLeft: spacing.sm }}>
-                <Text style={styles.topBarTitle} numberOfLines={1}>
-                  {currentViagem.tipo as string} · {currentViagem.horario as string}
-                </Text>
-                <Text style={styles.topBarSub} numberOfLines={1}>
-                  {pontosRota.length > 0
-                    ? `Próximo: ${pontosRota[0]?.apelido ?? '—'}`
-                    : 'Em andamento'}
+        {/* Cabeçalho no padrão do app: voltar desabilitado, rota e cronômetro */}
+        <View style={styles.floatingTop} onLayout={(e) => setAlturaTopo(e.nativeEvent.layout.height)}>
+          <SubHeader
+            titulo="Em andamento"
+            subtitulo={`${(currentViagem.tipo as string) ?? ''} · ${horaCurta(currentViagem.horario_inicio as string)}`}
+            voltarDesabilitado
+            direita={
+              <View style={styles.timerChip}>
+                <Icon name={IconNames.schedule} size="sm" color={colors.success.contrast} />
+                <Text
+                  style={styles.timerText}
+                  accessibilityLabel={`Tempo decorrido: ${formatarTempo(tempoDecorrido)}`}>
+                  {formatarTempo(tempoDecorrido)}
                 </Text>
               </View>
-            </View>
-            <View style={styles.timerChip}>
-              <Icon name={IconNames.schedule} size="sm" color={colors.success.contrast} />
-              <Text
-                style={styles.timerText}
-                accessibilityLabel={`Tempo decorrido: ${formatarTempo(tempoDecorrido)}`}>
-                {formatarTempo(tempoDecorrido)}
-              </Text>
-            </View>
-          </View>
-        </SafeAreaView>
+            }
+          />
+        </View>
 
         {/* Floating bottom: secondary actions + finalizar */}
-        <View style={styles.floatingBottom}>
+        <View style={styles.floatingBottom} onLayout={(e) => setAlturaPainel(e.nativeEvent.layout.height)}>
+          {/* Próxima parada, como no painel do aluno, com o botão de chegada */}
+          <View style={styles.proximaCard}>
+            <View style={styles.proximaIcone}>
+              <Icon name={IconNames.location} size="md" color={colors.primary.main} />
+            </View>
+            <View style={styles.proximaTextos}>
+              <Text style={styles.proximaRotulo}>{todasFeitas ? 'ROTA CONCLUÍDA' : 'PRÓXIMA PARADA'}</Text>
+              <Text style={styles.proximaNome} numberOfLines={2}>
+                {proxima ? (proxima.ponto.apelido as string) : 'Todas as paradas feitas'}
+              </Text>
+              {proxima && proxima.instituicao ? (
+                <Text style={styles.proximaInstituicao} numberOfLines={1}>
+                  {proxima.instituicao.nome}
+                </Text>
+              ) : null}
+            </View>
+            {proxima ? (
+              <TouchableOpacity
+                style={styles.chegueiBtn}
+                onPress={marcarChegada}
+                accessibilityRole="button"
+                accessibilityLabel="Cheguei nesta parada">
+                <Text style={styles.chegueiTexto}>Cheguei</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          {/* Lista de paradas, abre e fecha */}
+          <TouchableOpacity
+            style={styles.listaToggle}
+            onPress={() => setListaAberta(!listaAberta)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: listaAberta }}
+            accessibilityLabel={`Paradas, ${Math.min(concluidas, paradas.length)} de ${paradas.length} feitas`}>
+            <Text style={styles.listaToggleTexto}>
+              Paradas ({Math.min(concluidas, paradas.length)} de {paradas.length})
+            </Text>
+            <Icon
+              name={listaAberta ? IconNames.expandLess : IconNames.expandMore}
+              size="md"
+              color={colors.text.secondary}
+            />
+          </TouchableOpacity>
+          {listaAberta ? (
+            <ScrollView style={styles.listaParadas} nestedScrollEnabled>
+              {paradas.map((p) => (
+                <View key={p.ponto.id ?? p.numero} style={styles.paradaLinha}>
+                  <View
+                    style={[
+                      styles.paradaNumero,
+                      p.estado === 'feita' && { backgroundColor: colors.success.main },
+                      p.estado === 'proxima' && { backgroundColor: '#1565C0' },
+                    ]}>
+                    {p.estado === 'feita' ? (
+                      <Icon name={IconNames.check} size="xs" color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.paradaNumeroTexto}>{p.numero}</Text>
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[styles.paradaNome, p.estado === 'feita' && styles.paradaFeita]}
+                      numberOfLines={2}>
+                      {p.ponto.apelido}
+                    </Text>
+                    {p.instituicao ? (
+                      <View style={styles.instituicaoLinha}>
+                        <Icon name={IconNames.school} size="xs" color={colors.primary.main} />
+                        <Text style={styles.instituicaoTexto} numberOfLines={1}>
+                          {p.instituicao.nome}
+                          {p.instituicao.tipo ? ` · ${p.instituicao.tipo}` : ''}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          ) : null}
+
           <View style={styles.secondaryRow}>
             <TouchableOpacity
               style={styles.secondaryBtn}
@@ -452,7 +566,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         <View style={{ flex: 1, marginLeft: spacing.md }}>
           <Text style={styles.title} accessibilityRole="header">Iniciar Viagem</Text>
           <Text style={styles.headerSubtitle}>
-            {currentViagem.tipo as string} · {currentViagem.horario as string}
+            {currentViagem.tipo as string} · {horaCurta(currentViagem.horario_inicio as string)}
           </Text>
         </View>
         <View style={styles.headerIcon}>
@@ -667,6 +781,50 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     ...shadows.xl,
   },
+  proximaCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  proximaIcone: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: colors.primary.lighter,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  proximaTextos: { flex: 1 },
+  proximaRotulo: { ...textStyles.caption, color: colors.text.secondary, letterSpacing: 1 },
+  proximaNome: { ...textStyles.h5, color: colors.text.primary },
+  proximaInstituicao: { ...textStyles.caption, color: colors.primary.main, fontWeight: '700' as const },
+  chegueiBtn: {
+    minHeight: 48,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 14,
+    backgroundColor: colors.success.main,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chegueiTexto: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' as const },
+  listaToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  listaToggleTexto: { ...textStyles.body, color: colors.text.primary, fontWeight: '700' as const },
+  listaParadas: { maxHeight: 200 },
+  paradaLinha: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
+  paradaNumero: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.neutral[400],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paradaNumeroTexto: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' as const },
+  paradaNome: { ...textStyles.body, color: colors.text.primary },
+  paradaFeita: { color: colors.text.secondary },
+  instituicaoLinha: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: 2 },
+  instituicaoTexto: { ...textStyles.caption, color: colors.primary.main, fontWeight: '700' as const },
   secondaryRow: { flexDirection: 'row', gap: spacing.md },
   secondaryBtn: {
     flex: 1,
