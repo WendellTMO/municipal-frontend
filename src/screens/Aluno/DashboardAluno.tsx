@@ -13,7 +13,15 @@ import { alunoService } from '../../services';
 import { getNotificacoes } from '../../services/notificacaoService';
 import { useAuth } from '../../contexts/AuthContext';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
-import { Icon, IconNames, LoadingSpinner, TripAlertBanner } from '../../components';
+import {
+  ActionTile,
+  Icon,
+  IconNames,
+  LoadingSpinner,
+  TripAlertBanner,
+  TripHeroCard,
+} from '../../components';
+import { dayLabel } from '../../utils/dayLabel';
 import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
@@ -36,45 +44,6 @@ function pickTodayTrip(viagens: ViagemAgendaUI[]): ViagemAgendaUI | null {
     )[0] ?? null
   );
 }
-
-const CAPACITY_WARN = 0.85;
-
-const CapacityBar: React.FC<{
-  confirmed: number;
-  total: number;
-}> = ({ confirmed, total }) => {
-  if (total === 0) return null;
-  const pct = Math.min(1, confirmed / total);
-  const quaseLotado = pct >= CAPACITY_WARN;
-  return (
-    <View
-      style={styles.capacityWrap}
-      accessible
-      accessibilityLabel={`${confirmed} de ${total} vagas confirmadas${quaseLotado ? ', quase lotado' : ''}`}>
-      <View style={styles.capacityRow}>
-        <Text style={styles.capacityText}>
-          {confirmed}/{total} vagas
-        </Text>
-        {quaseLotado && (
-          <View style={styles.quaseLotadoBadge}>
-            <Text style={styles.quaseLotadoText}>Quase lotado</Text>
-          </View>
-        )}
-      </View>
-      <View style={styles.barTrack}>
-        <View
-          style={[
-            styles.barFill,
-            {
-              width: `${pct * 100}%` as `${number}%`,
-              backgroundColor: quaseLotado ? colors.warning.main : colors.success.main,
-            },
-          ]}
-        />
-      </View>
-    </View>
-  );
-};
 
 const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   const [rotasCadastradas, setRotasCadastradas] = useState<ViagemAgendaUI[]>([]);
@@ -125,22 +94,11 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
     }
   }, [navigation]);
 
-  const getRoleLabel = (role?: string) => {
-    const map: Record<string, string> = {
-      aluno: 'Aluno',
-      motorista: 'Motorista',
-      gestor: 'Gestor',
-    };
-    return map[role ?? ''] ?? role ?? '';
-  };
-
   const getUserInfo = () => {
-    const roleLabel = getRoleLabel(user?.role);
     const mun = (user as Record<string, unknown>)?.municipio as
       | { nome: string; uf?: string }
       | undefined;
-    const municipioInfo = mun ? `${mun.nome}${mun.uf ? ` - ${mun.uf}` : ''}` : '';
-    return municipioInfo ? `${roleLabel} • ${municipioInfo}` : roleLabel;
+    return mun ? `${mun.nome}${mun.uf ? ` - ${mun.uf}` : ''}` : '';
   };
 
   const loadData = useCallback(async () => {
@@ -243,22 +201,37 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           sub: 'Entre em contato com o gestor',
           onPress: undefined,
         };
-      case 'AGENDADA':
-        return {
-          bg: colors.primary.lighter,
-          border: colors.primary.main,
-          text: colors.primary.dark,
-          icon: IconNames.schedule,
-          label: `Viagem agendada para hoje`,
-          sub: todayTrip.horario_inicio
-            ? `Saída às ${(todayTrip.horario_inicio).substring(0, 5)}`
-            : 'Confira os detalhes',
-          onPress: undefined,
-        };
       default:
         return null;
     }
   })();
+
+  const abrirDetalheViagem = () => {
+    if (!proximaViagem) return;
+    const rota = (rotasCadastradas as unknown[]).find(
+      (r: unknown) => (r as Record<string, unknown>).id === proximaViagem.rota_id,
+    );
+    if (rota) navigation.navigate('DetalheViagem', { rota, viagem: proximaViagem });
+  };
+
+  const abrirLocalizacao = () => {
+    if (!proximaViagem) return;
+    const rota = (rotasCadastradas as unknown[]).find(
+      (r: unknown) => (r as Record<string, unknown>).id === proximaViagem.rota_id,
+    );
+    if (rota) navigation.navigate('LocalizacaoOnibus', { rota, viagem: proximaViagem });
+  };
+
+  let proximaViagemLabel = '';
+  if (proximaViagem) {
+    const dia = dayLabel(proximaViagem.data);
+    let quando = `em ${dia}`;
+    if (dia === 'HOJE') quando = 'hoje';
+    if (dia === 'AMANHÃ') quando = 'amanhã';
+    const confirmada = proximaViagem.status === 'Confirmado' ? 'confirmada' : 'não confirmada';
+    const rota = (proximaViagem.rota_nome ?? 'Rota').replace(/→/g, 'para');
+    proximaViagemLabel = `Próxima viagem ${quando} às ${proximaViagem.horario}, ${rota}, ${confirmada}`;
+  }
 
   if (loading) {
     return (
@@ -340,7 +313,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.greeting} accessibilityRole="header">
                 Olá, {user?.nome || 'Aluno'}!
               </Text>
-              <Text style={styles.subtitle}>{getUserInfo()}</Text>
+              {getUserInfo() ? <Text style={styles.subtitle}>{getUserInfo()}</Text> : null}
             </View>
             <TouchableOpacity
               style={styles.avatarContainer}
@@ -410,139 +383,41 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         )}
 
-        {/* Próxima Viagem Destacada */}
+        {/* Próxima Viagem */}
         {proximaViagem && (
-          <View
-            style={[
-              styles.proximaViagemCard,
-              todayBannerConfig ? styles.proximaViagemCardBelowBanner : null,
-            ]}
-            accessible
-            accessibilityLabel={`Próxima viagem às ${proximaViagem.horario}, status ${proximaViagem.status}`}>
-            <View style={styles.cardHeader}>
-              <Icon
-                name={IconNames.schedule}
-                size="md"
-                color={colors.primary.lighter}
-                accessibilityElementsHidden
-              />
-              <Text style={styles.cardTitle}>Próxima Viagem</Text>
-            </View>
-            <View style={styles.viagemInfo}>
-              <View style={styles.viagemHeader}>
-                <Text style={styles.viagemHorario}>{proximaViagem.horario}</Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    proximaViagem.status === 'Confirmado'
-                      ? styles.statusConfirmado
-                      : styles.statusNaoConfirmado,
-                  ]}>
-                  <Icon
-                    name={
-                      proximaViagem.status === 'Confirmado'
-                        ? IconNames.checkCircle
-                        : IconNames.warning
-                    }
-                    size="xs"
-                    color={colors.text.inverse}
-                    accessibilityElementsHidden
-                  />
-                  <Text style={styles.statusText}>{proximaViagem.status}</Text>
-                </View>
-              </View>
-              <Text style={styles.viagemRota}>{proximaViagem.rota_nome ?? 'Rota'}</Text>
-              <Text style={styles.viagemTipo}>{proximaViagem.tipo}</Text>
-
-              {/* Capacity bar */}
-              <CapacityBar
-                confirmed={proximaViagem.alunos_confirmados_count}
-                total={proximaViagem.total_alunos}
-              />
-            </View>
-            <TouchableOpacity
-              style={styles.verDetalhesButton}
-              onPress={() => {
-                const rota = (rotasCadastradas as unknown[]).find(
-                  (r: unknown) =>
-                    (r as Record<string, unknown>).id === proximaViagem.rota_id,
-                );
-                if (rota)
-                  navigation.navigate('DetalheViagem', {
-                    rota,
-                    viagem: proximaViagem,
-                  });
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Ver detalhes da próxima viagem">
-              <Text style={styles.verDetalhesText}>Ver Detalhes</Text>
-              <Icon
-                name={IconNames.chevronRight}
-                size="md"
-                color={colors.primary.main}
-                accessibilityElementsHidden
-              />
-            </TouchableOpacity>
-          </View>
+          <TripHeroCard
+            dayLabel={dayLabel(proximaViagem.data)}
+            time={proximaViagem.horario}
+            statusLabel={proximaViagem.status}
+            statusColor={
+              proximaViagem.status === 'Confirmado' ? colors.success.main : colors.warning.main
+            }
+            statusIcon={
+              proximaViagem.status === 'Confirmado' ? IconNames.checkCircle : IconNames.warning
+            }
+            title={proximaViagem.rota_nome ?? 'Rota'}
+            accessibilityLabel={proximaViagemLabel}
+            onPress={abrirDetalheViagem}
+          />
         )}
 
         {/* Quick Actions */}
         <View style={styles.botoesRapidos} accessibilityRole="toolbar">
-          <TouchableOpacity
-            style={styles.botaoRapido}
+          <ActionTile
+            icon={IconNames.bus}
+            label="Viagens"
+            accessibilityLabel="Minhas Viagens"
+            color={colors.solid.blue}
             onPress={() => navigation.navigate('RotaAluno')}
-            accessibilityRole="button"
-            accessibilityLabel="Minhas Viagens">
-            <View style={[styles.botaoIconContainer, { backgroundColor: colors.secondary.lighter }]}>
-              <Icon name={IconNames.bus} size="lg" color={colors.secondary.dark} accessibilityElementsHidden />
-            </View>
-            <Text style={styles.botaoRapidoText}>Minhas Viagens</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.botaoRapido, !proximaViagem && styles.botaoRapidoDisabled]}
-            disabled={!proximaViagem}
-            onPress={() => {
-              if (proximaViagem) {
-                const rota = (rotasCadastradas as unknown[]).find(
-                  (r: unknown) =>
-                    (r as Record<string, unknown>).id === proximaViagem.rota_id,
-                );
-                if (rota)
-                  navigation.navigate('LocalizacaoOnibus', {
-                    rota,
-                    viagem: proximaViagem,
-                  });
-              }
-            }}
-            accessibilityRole="button"
+          />
+          <ActionTile
+            icon={IconNames.location}
+            label="Localização"
             accessibilityLabel="Localização do ônibus"
-            accessibilityState={{ disabled: !proximaViagem }}>
-            <View style={[styles.botaoIconContainer, { backgroundColor: colors.success.light }]}>
-              <Icon name={IconNames.location} size="lg" color={colors.success.dark} accessibilityElementsHidden />
-            </View>
-            <Text style={styles.botaoRapidoText}>Localização</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.botaoRapido}
-            onPress={() => navigation.navigate('Notificacoes')}
-            accessibilityRole="button"
-            accessibilityLabel={
-              unreadCount > 0 ? `Notificações, ${unreadCount} não lidas` : 'Notificações'
-            }>
-            <View style={[styles.botaoIconContainer, { backgroundColor: colors.accent.light }]}>
-              <Icon name={IconNames.notifications} size="lg" color={colors.accent.dark} accessibilityElementsHidden />
-              {unreadCount > 0 && (
-                <View style={styles.badgeSmall} accessibilityElementsHidden>
-                  <Text style={styles.badgeSmallText}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.botaoRapidoText}>Notificações</Text>
-          </TouchableOpacity>
+            color={colors.solid.green}
+            disabled={!proximaViagem}
+            onPress={abrirLocalizacao}
+          />
         </View>
 
         {/* Enrolled Routes */}
@@ -688,23 +563,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
-  badgeSmall: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.error.main,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 3,
-  },
-  badgeSmallText: {
-    color: colors.text.inverse,
-    fontSize: 9,
-    fontWeight: '700',
-  },
 
   // Today Banner
   todayBanner: {
@@ -735,149 +593,16 @@ const styles = StyleSheet.create({
   },
 
   // Próxima Viagem Card
-  proximaViagemCard: {
-    margin: spacing.base,
-    marginTop: -spacing.xl,
-    padding: spacing.lg,
-    // Fundo escuro de proposito: o conteudo do card e todo branco ou quase
-    // (capacityText em rgba(255,255,255,.8), barTrack em .25). Sobre o azul
-    // claro anterior o cartao inteiro sumia.
-    backgroundColor: colors.primary.dark,
-    borderRadius: borderRadius.xl,
-    ...shadows.lg,
-  },
-  proximaViagemCardBelowBanner: {
-    marginTop: spacing.base,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  cardTitle: {
-    ...textStyles.caption,
-    color: colors.primary.lighter,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  viagemInfo: { marginBottom: spacing.base },
-  viagemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  viagemHorario: {
-    ...textStyles.display2,
-    color: colors.primary.contrast,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-  },
-  statusConfirmado: { backgroundColor: colors.success.main },
-  statusNaoConfirmado: { backgroundColor: colors.warning.main },
-  statusText: {
-    ...textStyles.caption,
-    color: colors.text.inverse,
-    fontWeight: '600',
-  },
-  viagemRota: {
-    ...textStyles.h4,
-    color: colors.primary.contrast,
-    marginBottom: spacing.xs,
-  },
-  viagemTipo: {
-    ...textStyles.bodySmall,
-    color: colors.primary.lighter,
-    marginBottom: spacing.sm,
-  },
-  verDetalhesButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-  },
-  verDetalhesText: {
-    ...textStyles.button,
-    color: colors.primary.main,
-  },
 
   // Capacity
-  capacityWrap: {
-    marginTop: spacing.sm,
-  },
-  capacityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
-  },
-  capacityText: {
-    ...textStyles.caption,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  quaseLotadoBadge: {
-    backgroundColor: colors.warning.main,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  quaseLotadoText: {
-    ...textStyles.caption,
-    color: colors.text.inverse,
-    fontWeight: '700',
-    fontSize: 10,
-  },
-  barTrack: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: 4,
-    borderRadius: 2,
-  },
 
   // Quick Actions
   botoesRapidos: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.xs,
     marginTop: spacing.lg,
     marginBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  botaoRapido: {
-    flex: 1,
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
-    alignItems: 'center',
-    ...shadows.sm,
-  },
-  botaoRapidoDisabled: { opacity: 0.5 },
-  botaoIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  botaoRapidoText: {
-    ...textStyles.caption,
-    color: colors.text.primary,
-    fontWeight: '500',
-    textAlign: 'center',
+    gap: spacing.xs,
   },
 
   // Routes
