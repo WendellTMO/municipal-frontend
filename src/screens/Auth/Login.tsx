@@ -110,7 +110,6 @@ const Login: React.FC<LoginProps> = ({ navigation }) => {
               <AuthLogo width={250} />
 
               <View style={styles.form}>
-                <Text style={styles.label}>E-mail</Text>
                 <View
                   style={[
                     styles.inputWrapper,
@@ -130,6 +129,7 @@ const Login: React.FC<LoginProps> = ({ navigation }) => {
                   <TextInput
                     style={styles.input}
                     placeholder="seu@email.com"
+                    accessibilityLabel="E-mail"
                     placeholderTextColor="#94A3B8"
                     value={email}
                     onChangeText={(text) => {
@@ -147,10 +147,10 @@ const Login: React.FC<LoginProps> = ({ navigation }) => {
                   />
                 </View>
 
-                <Text style={[styles.label, styles.passwordLabel]}>Senha</Text>
                 <View
                   style={[
                     styles.inputWrapper,
+                    styles.passwordWrapper,
                     senhaFocused && styles.inputWrapperFocused,
                     !!erro && styles.inputWrapperError,
                   ]}
@@ -166,7 +166,8 @@ const Login: React.FC<LoginProps> = ({ navigation }) => {
 
                   <TextInput
                     style={styles.input}
-                    placeholder="••••••••"
+                    placeholder="Sua senha"
+                    accessibilityLabel="Senha"
                     placeholderTextColor="#94A3B8"
                     value={senha}
                     onChangeText={(text) => {
@@ -378,16 +379,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   form: {
-    marginTop: 20,
+    marginTop: 8,
   },
-  label: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#334155',
-    marginBottom: 8,
-  },
-  passwordLabel: {
-    marginTop: 18,
+  passwordWrapper: {
+    marginTop: 16,
   },
   inputWrapper: {
     minHeight: 58,

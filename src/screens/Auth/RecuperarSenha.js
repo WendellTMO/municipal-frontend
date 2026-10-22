@@ -143,7 +143,6 @@ const RecuperarSenha = ({navigation}) => {
             </View>
 
             {/* Email field */}
-            <Text style={styles.label}>E-mail</Text>
             <View style={[
               styles.inputWrapper,
               focused && styles.inputWrapperFocused,
@@ -157,6 +156,7 @@ const RecuperarSenha = ({navigation}) => {
               <TextInput
                 style={styles.input}
                 placeholder="seu@email.com"
+                accessibilityLabel="E-mail"
                 placeholderTextColor={colors.neutral[400]}
                 value={email}
                 onChangeText={(text) => { setEmail(text); if (error) setError(''); }}
@@ -289,14 +289,6 @@ const styles = StyleSheet.create({
   },
 
   // ── Field ─────────────────────────────────────────
-  label: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 13,
-    fontWeight: '500',
-    color: colors.text.primary,
-    marginBottom: spacing.sm,
-  },
-
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
