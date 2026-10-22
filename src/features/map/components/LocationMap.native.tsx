@@ -32,6 +32,7 @@ export default function LocationMap({
   previa = false,
   onToque,
   rotaCoordenadas,
+  centralizarTick = 0,
 }: LocationMapProps) {
   const paradas = useMemo(() => normalizeRoutePoints(pontosRota), [pontosRota]);
 
@@ -50,6 +51,7 @@ export default function LocationMap({
     setStops,
     setRoute,
     clearRoute,
+    centralizarOnibus,
     setMargins,
     reloadKey,
   } = useLeafletWebViewBridge(onToque);
@@ -75,6 +77,11 @@ export default function LocationMap({
 
     setUserMarker(posicaoAluno);
   }, [mapReady, posicaoAluno, clearUserMarker, setUserMarker]);
+
+  useEffect(() => {
+    if (centralizarTick && mapReady) centralizarOnibus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centralizarTick]);
 
   useEffect(() => {
     if (!mapReady) return;

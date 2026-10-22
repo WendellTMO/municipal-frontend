@@ -103,6 +103,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [tipoProblema, setTipoProblema] = useState<TipoOcorrencia | null>(null);
   const [posMotorista, setPosMotorista] = useState<{ latitude: number; longitude: number } | null>(null);
   const [alturaTopo, setAlturaTopo] = useState(0);
+  const [centralizarTick, setCentralizarTick] = useState(0);
   const [alturaPainel, setAlturaPainel] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -370,10 +371,22 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             proximaParadaId={proxima ? (proxima.ponto.id as string) : null}
             rotaCoordenadas={trajeto}
             seguirOnibus={false}
+            centralizarTick={centralizarTick}
             margemSuperior={alturaTopo}
             margemInferior={alturaPainel}
           />
         </View>
+
+        {/* Minha posição: leva o mapa ao ônibus (apagado enquanto não há GPS) */}
+        <TouchableOpacity
+          style={[styles.minhaPosicao, { bottom: alturaPainel + spacing.base }, !posMotorista && styles.acaoDesabilitada]}
+          onPress={() => setCentralizarTick((n) => n + 1)}
+          disabled={!posMotorista}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !posMotorista }}
+          accessibilityLabel="Centralizar na minha posição">
+          <Icon name={IconNames.myLocation} size="lg" color="#FFFFFF" />
+        </TouchableOpacity>
 
         {/* Cabeçalho no padrão do app: voltar desabilitado, rota e cronômetro */}
         <View style={styles.floatingTop} onLayout={(e) => setAlturaTopo(e.nativeEvent.layout.height)}>
@@ -944,6 +957,18 @@ const styles = StyleSheet.create({
   instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
   instituicaoQtd: { ...textStyles.h5, color: colors.primary.main },
   // Quatro botões com flex igual e vão de 8 px: ocupam a largura do Finalizar Viagem, sem sobras.
+  minhaPosicao: {
+    position: 'absolute',
+    right: spacing.base,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.solid.blue,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 15,
+    ...shadows.lg,
+  },
   acoesRow: { flexDirection: 'row', gap: spacing.sm },
   acaoIcone: {
     flex: 1,

@@ -21,6 +21,7 @@ type Result = {
   fitToCoordinates: (coords: LatLng[]) => void;
   setStops: (paradas: NormalizedRoutePoint[], proximaId?: string | null) => void;
   setMargins: (topo: number, base: number) => void;
+  centralizarOnibus: () => void;
   reloadKey: number;
 };
 
@@ -105,6 +106,12 @@ export function useLeafletWebViewBridge(onMapTap?: () => void): Result {
     [inject]
   );
 
+  const centralizarOnibus = useCallback(() => {
+    inject(
+      `var m = window.BuskaMap; if (m && m.mapInstance && m.destMarker) { m.mapInstance.setView(m.destMarker.getLatLng(), Math.max(m.mapInstance.getZoom(), 16)); }`,
+    );
+  }, [inject]);
+
   const clearRoute = useCallback(() => {
     inject(`window.BuskaMap.clearRoute();`);
   }, [inject]);
@@ -146,6 +153,7 @@ export function useLeafletWebViewBridge(onMapTap?: () => void): Result {
     clearUserMarker,
     setRoute,
     clearRoute,
+    centralizarOnibus,
     fitToCoordinates,
     setStops,
     setMargins,

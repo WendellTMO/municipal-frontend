@@ -10,6 +10,8 @@ type LeafletModule = typeof LeafletNS;
 type LeafletMap = LeafletNS.Map;
 type LeafletMarker = LeafletNS.Marker;
 
+const ZOOM_CENTRALIZAR = 16;
+
 export default function LocationMap({
   pontosRota,
   posicaoOnibus,
@@ -21,6 +23,7 @@ export default function LocationMap({
   onToque,
   rotaCoordenadas,
   seguirOnibus = true,
+  centralizarTick = 0,
 }: LocationMapProps) {
   const controles = !previa;
   // O mapa é criado uma vez; o ref entrega a ele o onToque mais recente.
@@ -116,6 +119,18 @@ export default function LocationMap({
       { color: '#1565C0', weight: 5, opacity: 0.8 },
     ).addTo(map);
   }, [mapReady, rotaCoordenadas]);
+
+  // ─── Botão "minha posição": leva o mapa ao ônibus ─────────────────────────
+
+  useEffect(() => {
+    if (!centralizarTick || !mapReady || !mapInstance.current || !destinationLatLng) return;
+    const map = mapInstance.current;
+    map.setView(
+      [destinationLatLng.latitude, destinationLatLng.longitude],
+      Math.max(map.getZoom(), ZOOM_CENTRALIZAR),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centralizarTick]);
 
   // ─── Destination marker ───────────────────────────────────────────────────
 
