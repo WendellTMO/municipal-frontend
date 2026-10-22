@@ -25,6 +25,8 @@ import {
 import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
 import { confirmAction } from '../../utils/confirm';
+import { webTitleProps } from '../../utils/webTitle';
+import ActionTile from '../../components/ActionTile';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const GESTOR_DARK  = colors.accent.dark;
@@ -42,60 +44,60 @@ const daysAgo = (n) => {
 
 // ─── Metric Card ────────────────────────────────────────────────────────────
 
-const MetricCard = ({ icon, label, value, loading, accentColor }) => (
-  <View style={[metricStyles.card, { borderLeftColor: accentColor ?? GESTOR_COLOR }]}>
-    <View style={[metricStyles.iconWrap, { backgroundColor: (accentColor ?? GESTOR_COLOR) + '18' }]}>
-      <Icon name={icon} size="md" color={accentColor ?? GESTOR_COLOR} />
+const MetricCard = ({ icon, label, value, loading, color }) => (
+  <View
+    style={metricStyles.card}
+    accessible
+    accessibilityLabel={`${label} hoje: ${value ?? 'indisponível'}`}
+    {...webTitleProps(label)}>
+    <View style={[metricStyles.square, { backgroundColor: color }]}>
+      <Icon name={icon} size="lg" color="#FFFFFF" />
     </View>
     {loading ? (
-      <ActivityIndicator size="small" color={accentColor ?? GESTOR_COLOR} style={{ marginTop: spacing.xs }} />
+      <ActivityIndicator size="small" color={color} style={metricStyles.loading} />
     ) : (
       <Text style={metricStyles.value}>{value ?? '—'}</Text>
     )}
-    <Text style={metricStyles.label}>{label}</Text>
   </View>
 );
 
 const metricStyles = StyleSheet.create({
   card: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
     backgroundColor: colors.background.paper,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginHorizontal: spacing.xs,
-    borderLeftWidth: 3,
-    alignItems: 'flex-start',
     ...shadows.sm,
   },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.md,
+  square: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
   },
-  value: {
-    ...textStyles.h3,
-    color: colors.text.primary,
-    marginBottom: spacing.xxs,
-  },
-  label: {
-    ...textStyles.caption,
-    color: colors.text.secondary,
-  },
+  value: { ...textStyles.h2, color: colors.text.primary },
+  loading: { marginLeft: spacing.sm },
 });
 
 // ─── Stat Row ────────────────────────────────────────────────────────────────
 
-const StatItem = ({ label, value, loading }) => (
-  <View style={statStyles.item}>
+const StatItem = ({ icon, color, label, value, loading }) => (
+  <View
+    style={statStyles.item}
+    accessible
+    accessibilityLabel={`${label}: ${value ?? 'indisponível'}`}
+    {...webTitleProps(label)}>
+    <Icon name={icon} size="lg" color={color} />
     {loading ? (
-      <ActivityIndicator size="small" color={GESTOR_COLOR} />
+      <ActivityIndicator size="small" color={color} />
     ) : (
       <Text style={statStyles.value}>{value ?? '—'}</Text>
     )}
-    <Text style={statStyles.label}>{label}</Text>
   </View>
 );
 
@@ -103,51 +105,10 @@ const statStyles = StyleSheet.create({
   item: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
   },
-  value: {
-    ...textStyles.h3,
-    color: colors.text.primary,
-    marginBottom: spacing.xxs,
-  },
-  label: {
-    ...textStyles.caption,
-    color: colors.text.secondary,
-    textAlign: 'center',
-  },
-});
-
-// ─── Quick Action ─────────────────────────────────────────────────────────────
-
-const QuickAction = ({ icon, label, onPress, accent }) => (
-  <TouchableOpacity style={qaStyles.item} onPress={onPress} activeOpacity={0.7}>
-    <View style={[qaStyles.iconWrap, { backgroundColor: (accent ?? GESTOR_COLOR) + '18' }]}>
-      <Icon name={icon} size="lg" color={accent ?? GESTOR_COLOR} />
-    </View>
-    <Text style={qaStyles.label} numberOfLines={2}>{label}</Text>
-  </TouchableOpacity>
-);
-
-const qaStyles = StyleSheet.create({
-  item: {
-    width: '30%',
-    alignItems: 'center',
-    marginBottom: spacing.base,
-  },
-  iconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  label: {
-    ...textStyles.caption,
-    color: colors.text.primary,
-    textAlign: 'center',
-    fontWeight: fontWeight.medium,
-  },
+  value: { ...textStyles.h4, color: colors.text.primary },
 });
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
@@ -355,18 +316,18 @@ const DashboardGestor = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Hoje</Text>
           <View style={styles.metricsRow}>
             <MetricCard
-              icon={IconNames.bus}
+              icon={IconNames.route}
               label="Viagens"
               value={counts.viagens}
               loading={loadingCounts}
-              accentColor={GESTOR_COLOR}
+              color={colors.solid.amber}
             />
             <MetricCard
               icon={IconNames.person}
               label="Motoristas"
               value={counts.motoristas}
               loading={loadingCounts}
-              accentColor={colors.secondary.main}
+              color={colors.solid.teal}
             />
           </View>
           <View style={[styles.metricsRow, { marginTop: spacing.sm }]}>
@@ -375,45 +336,47 @@ const DashboardGestor = ({ navigation }) => {
               label="Alunos"
               value={counts.alunos}
               loading={loadingCounts}
-              accentColor={colors.success.main}
+              color={colors.solid.green}
             />
             <MetricCard
               icon={IconNames.bus}
               label="Ônibus"
               value={counts.onibus}
               loading={loadingCounts}
-              accentColor={colors.info.main}
+              color={colors.solid.blue}
             />
           </View>
 
           {/* ── Relatório 7 dias ──────────────────────────────────────────── */}
+          <Text style={styles.sectionTitle}>Últimos 7 dias</Text>
           <View style={styles.relatorioCard}>
-            <View style={styles.relatorioHeader}>
-              <Icon name={IconNames.chart} size="md" color={GESTOR_COLOR} />
-              <Text style={styles.relatorioTitle}>Últimos 7 dias</Text>
-            </View>
             <View style={styles.statsRow}>
               <StatItem
+                icon={IconNames.checkCircle}
+                color={colors.solid.green}
                 label="Viagens realizadas"
                 value={relatorio?.viagens_realizadas}
                 loading={loadingRelatorio}
               />
-              <View style={styles.statDivider} />
               <StatItem
+                icon={IconNames.group}
+                color={colors.solid.blue}
                 label="Alunos transportados"
                 value={relatorio?.alunos_transportados}
                 loading={loadingRelatorio}
               />
-              <View style={styles.statDivider} />
               <StatItem
+                icon={IconNames.speed}
+                color={colors.solid.teal}
                 label="Km rodados"
                 value={relatorio?.km_total_rodado != null
                   ? `${Number(relatorio.km_total_rodado).toFixed(0)} km`
                   : null}
                 loading={loadingRelatorio}
               />
-              <View style={styles.statDivider} />
               <StatItem
+                icon={IconNames.seat}
+                color={colors.solid.amber}
                 label="Vagas desperdiçadas"
                 value={relatorio?.vagas_desperdicadas}
                 loading={loadingRelatorio}
@@ -424,42 +387,12 @@ const DashboardGestor = ({ navigation }) => {
           {/* ── Ações rápidas ─────────────────────────────────────────────── */}
           <Text style={styles.sectionTitle}>Ações rápidas</Text>
           <View style={styles.qaGrid}>
-            <QuickAction
-              icon={IconNames.add}
-              label="Criar Viagem"
-              onPress={() => navigateToTab('ViagensTab')}
-              accent={GESTOR_COLOR}
-            />
-            <QuickAction
-              icon={IconNames.calendarToday}
-              label="Gerar Lote"
-              onPress={() => navigateToTab('ViagensTab')}
-              accent={GESTOR_COLOR}
-            />
-            <QuickAction
-              icon={IconNames.route}
-              label="Nova Rota"
-              onPress={() => navigateToTab('RotasTab')}
-              accent={colors.secondary.main}
-            />
-            <QuickAction
-              icon={IconNames.person}
-              label="Motoristas"
-              onPress={() => navigateToTab('EquipeTab')}
-              accent={colors.secondary.main}
-            />
-            <QuickAction
-              icon={IconNames.bus}
-              label="Frota"
-              onPress={() => navigateToTab('FrotaTab')}
-              accent={colors.info.main}
-            />
-            <QuickAction
-              icon={IconNames.group}
-              label="Alunos"
-              onPress={() => navigateToTab('EquipeTab')}
-              accent={colors.success.main}
-            />
+            <ActionTile icon={IconNames.add} label="Nova viagem" color={colors.solid.amber} onPress={() => navigateToTab('ViagensTab')} />
+            <ActionTile icon={IconNames.editCalendar} label="Gerar lote" color={colors.solid.amber} onPress={() => navigateToTab('ViagensTab')} />
+            <ActionTile icon={IconNames.route} label="Nova rota" color={colors.solid.teal} onPress={() => navigateToTab('RotasTab')} />
+            <ActionTile icon={IconNames.person} label="Motoristas" color={colors.solid.teal} onPress={() => navigateToTab('EquipeTab')} />
+            <ActionTile icon={IconNames.bus} label="Frota" color={colors.solid.blue} onPress={() => navigateToTab('FrotaTab')} />
+            <ActionTile icon={IconNames.group} label="Alunos" color={colors.solid.green} onPress={() => navigateToTab('EquipeTab')} />
           </View>
 
           {/* ── Viagens recentes ─────────────────────────────────────────── */}
@@ -641,40 +574,19 @@ const styles = StyleSheet.create({
   relatorioCard: {
     backgroundColor: colors.background.paper,
     borderRadius: borderRadius.lg,
-    padding: spacing.base,
-    marginTop: spacing.base,
+    padding: spacing.sm,
     ...shadows.sm,
-  },
-  relatorioHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
-    paddingBottom: spacing.md,
-  },
-  relatorioTitle: {
-    ...textStyles.h4,
-    color: colors.text.primary,
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: colors.border.light,
-  },
   qaGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
-    ...shadows.sm,
+    paddingHorizontal: spacing.xs,
+    rowGap: spacing.lg,
   },
   recentesHeader: {
     flexDirection: 'row',
