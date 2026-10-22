@@ -35,6 +35,7 @@ import {
 } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { ReportSheet } from '../../components';
+import { CHIPS } from '../../components/ReportSheet';
 import { LocationMap, StaticRouteMap, useArrivalDetection, useRoutePolyline, normalizeRoutePoints } from '../../features/map/index';
 import SubHeader from '../../components/SubHeader';
 import { montarParadas } from '../../utils/paradasViagem';
@@ -43,8 +44,8 @@ import { motoristaService } from '../../services/motoristaService';
 import { createNotificacao } from '../../services/notificacaoService';
 import { useToast } from '../../components/Toast';
 import { unwrapItems } from '../../types';
-import type { InstituicaoResponse, PontoFlatResponse } from '../../types';
-import { withFabSpace } from '../../config/feedback';
+import type { InstituicaoResponse, PontoFlatResponse, TipoOcorrencia } from '../../types';
+import { FEEDBACK_FAB_SPACE, withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -86,6 +87,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
   const [concluidas, setConcluidas] = useState(0);
   const [listaAberta, setListaAberta] = useState(false);
+  const [tipoProblema, setTipoProblema] = useState<TipoOcorrencia | null>(null);
   const [posMotorista, setPosMotorista] = useState<{ latitude: number; longitude: number } | null>(null);
   const [alturaTopo, setAlturaTopo] = useState(0);
   const [alturaPainel, setAlturaPainel] = useState(0);
@@ -363,52 +365,13 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         {/* Floating bottom: secondary actions + finalizar */}
-        <View style={styles.floatingBottom} onLayout={(e) => setAlturaPainel(e.nativeEvent.layout.height)}>
-          {/* Próxima parada, como no painel do aluno, com o botão de chegada */}
-          <View style={styles.proximaCard}>
-            <View style={styles.proximaIcone}>
-              <Icon name={IconNames.location} size="md" color={colors.primary.main} />
-            </View>
-            <View style={styles.proximaTextos}>
-              <Text style={styles.proximaRotulo}>{todasFeitas ? 'ROTA CONCLUÍDA' : 'PRÓXIMA PARADA'}</Text>
-              <Text style={styles.proximaNome} numberOfLines={2}>
-                {proxima ? (proxima.ponto.apelido as string) : 'Todas as paradas feitas'}
-              </Text>
-              {proxima && proxima.instituicao ? (
-                <Text style={styles.proximaInstituicao} numberOfLines={1}>
-                  {proxima.instituicao.nome}
-                </Text>
-              ) : null}
-            </View>
-            {proxima ? (
-              <TouchableOpacity
-                style={styles.chegueiBtn}
-                onPress={marcarChegada}
-                accessibilityRole="button"
-                accessibilityLabel="Cheguei nesta parada">
-                <Text style={styles.chegueiTexto}>Cheguei</Text>
-              </TouchableOpacity>
-            ) : null}
-          </View>
-
-          {/* Lista de paradas, abre e fecha */}
-          <TouchableOpacity
-            style={styles.listaToggle}
-            onPress={() => setListaAberta(!listaAberta)}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: listaAberta }}
-            accessibilityLabel={`Paradas, ${Math.min(concluidas, paradas.length)} de ${paradas.length} feitas`}>
-            <Text style={styles.listaToggleTexto}>
+        {/* Lista de paradas sobre o mapa, abre e fecha pelo ícone Paradas */}
+        {listaAberta ? (
+          <View style={[styles.listaFlutuante, { bottom: alturaPainel + spacing.sm }]}>
+            <Text style={styles.listaTitulo}>
               Paradas ({Math.min(concluidas, paradas.length)} de {paradas.length})
             </Text>
-            <Icon
-              name={listaAberta ? IconNames.expandLess : IconNames.expandMore}
-              size="md"
-              color={colors.text.secondary}
-            />
-          </TouchableOpacity>
-          {listaAberta ? (
-            <ScrollView style={styles.listaParadas} nestedScrollEnabled>
+            <ScrollView nestedScrollEnabled>
               {paradas.map((p) => (
                 <View key={p.ponto.id ?? p.numero} style={styles.paradaLinha}>
                   <View
@@ -442,37 +405,61 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                 </View>
               ))}
             </ScrollView>
-          ) : null}
+          </View>
+        ) : null}
 
-          <View style={styles.secondaryRow}>
+        <View style={styles.floatingBottom} onLayout={(e) => setAlturaPainel(e.nativeEvent.layout.height)}>
+          {/* Só a informação da próxima parada */}
+          <View style={styles.proximaCard}>
+            <View style={styles.proximaIcone}>
+              <Icon name={IconNames.location} size="md" color={colors.primary.main} />
+            </View>
+            <View style={styles.proximaTextos}>
+              <Text style={styles.proximaRotulo}>{todasFeitas ? 'ROTA CONCLUÍDA' : 'PRÓXIMA PARADA'}</Text>
+              <Text style={styles.proximaNome} numberOfLines={2}>
+                {proxima ? (proxima.ponto.apelido as string) : 'Todas as paradas feitas'}
+              </Text>
+              {proxima && proxima.instituicao ? (
+                <Text style={styles.proximaInstituicao} numberOfLines={1}>
+                  {proxima.instituicao.nome}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+
+          {/* Ações só com ícone: Paradas, No ponto, Avisar, Alunos */}
+          <View style={styles.acoesRow} accessibilityRole="toolbar">
             <TouchableOpacity
-              style={styles.secondaryBtn}
+              style={[styles.acaoIcone, { backgroundColor: colors.solid.teal }]}
+              onPress={() => setListaAberta(!listaAberta)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: listaAberta }}
+              accessibilityLabel="Paradas">
+              <Icon name={IconNames.route} size="xl" color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.acaoIcone, { backgroundColor: colors.solid.green }, !proxima && styles.acaoDesabilitada]}
+              onPress={marcarChegada}
+              disabled={!proxima}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !proxima }}
+              accessibilityLabel="No ponto">
+              <Icon name={IconNames.noPonto} size="xl" color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.acaoIcone, { backgroundColor: colors.solid.amber }]}
               onPress={() => setBroadcastVisible(true)}
               accessibilityRole="button"
-              accessibilityLabel="Avisar alunos"
-              accessibilityHint="Abre opções de mensagem rápida">
-              <Icon name={IconNames.notifications} size="base" color={colors.primary.dark} />
-              <Text style={styles.secondaryBtnText}>Avisar</Text>
+              accessibilityLabel="Avisar"
+              accessibilityHint="Avisar os alunos ou registrar um problema para a gestão">
+              <Icon name={IconNames.campaign} size="xl" color="#FFFFFF" />
             </TouchableOpacity>
-
             <TouchableOpacity
-              style={styles.secondaryBtn}
-              onPress={() =>
-                navigation.navigate('ListaAlunosConfirmados', { viagem: currentViagem })
-              }
+              style={[styles.acaoIcone, { backgroundColor: colors.solid.blue }]}
+              onPress={() => navigation.navigate('ListaAlunosConfirmados', { viagem: currentViagem })}
               accessibilityRole="button"
-              accessibilityLabel="Ver alunos confirmados">
-              <Icon name={IconNames.group} size="base" color={colors.primary.dark} />
-              <Text style={styles.secondaryBtnText}>Alunos</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.secondaryBtn, styles.secondaryBtnReport]}
-              onPress={() => setReportVisible(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Reportar problema">
-              <Icon name={IconNames.warning} size="base" color={colors.warning.dark} />
-              <Text style={[styles.secondaryBtnText, { color: colors.warning.dark }]}>Problema</Text>
+              accessibilityLabel="Alunos">
+              <Icon name={IconNames.group} size="xl" color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
@@ -511,7 +498,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             />
             <View style={styles.modalSheet}>
               <View style={styles.modalHandle} accessibilityElementsHidden />
-              <Text style={styles.modalTitle} accessibilityRole="header">Avisar Alunos</Text>
+              <ScrollView style={styles.modalScroll} contentContainerStyle={{ gap: spacing.md }}>
+              <Text style={styles.modalTitle} accessibilityRole="header">Avisar alunos</Text>
               <Text style={styles.modalSubtitle}>
                 Escolha uma mensagem rápida para enviar a todos os alunos desta viagem.
               </Text>
@@ -538,6 +526,25 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                   )}
                 </TouchableOpacity>
               ))}
+              <Text style={styles.modalSecao}>Registrar problema para a gestão</Text>
+              <View style={styles.problemaChips}>
+                {CHIPS.map((chip) => (
+                  <TouchableOpacity
+                    key={chip.tipo}
+                    style={styles.problemaChip}
+                    onPress={() => {
+                      setTipoProblema(chip.tipo);
+                      setBroadcastVisible(false);
+                      setReportVisible(true);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Registrar problema: ${chip.label}`}>
+                    <Icon name={chip.icon} size="md" color={chip.color} />
+                    <Text style={styles.problemaChipTexto}>{chip.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              </ScrollView>
             </View>
           </View>
         </Modal>
@@ -546,6 +553,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           visible={reportVisible}
           onClose={() => setReportVisible(false)}
           viagemId={viagemId}
+          tipoInicial={tipoProblema}
         />
       </View>
     );
@@ -773,11 +781,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(255,255,255,0.97)',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: borderRadius.xxl,
     borderTopRightRadius: borderRadius.xxl,
     padding: spacing.base,
-    paddingBottom: spacing.xl,
+    paddingBottom: Math.max(spacing.xl, FEEDBACK_FAB_SPACE),
     gap: spacing.md,
     ...shadows.xl,
   },
@@ -803,6 +811,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chegueiTexto: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' as const },
+  acoesRow: { flexDirection: 'row', justifyContent: 'space-evenly' },
+  acaoIcone: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  acaoDesabilitada: { opacity: 0.4 },
+  listaFlutuante: {
+    position: 'absolute',
+    left: spacing.base,
+    right: spacing.base,
+    maxHeight: 260,
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.xl,
+    padding: spacing.base,
+    zIndex: 20,
+    ...shadows.xl,
+  },
+  listaTitulo: { ...textStyles.h5, color: colors.text.primary, marginBottom: spacing.xs },
+  modalSecao: { ...textStyles.h5, color: colors.text.primary, marginTop: spacing.base, marginBottom: spacing.sm },
+  problemaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  problemaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    minHeight: 48,
+    paddingHorizontal: spacing.base,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border.light,
+    backgroundColor: colors.neutral[50],
+  },
+  problemaChipTexto: { ...textStyles.body, color: colors.text.primary, fontWeight: '600' as const },
   listaToggle: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -969,7 +1012,9 @@ const styles = StyleSheet.create({
 
   // Broadcast modal
   modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalScroll: { flexGrow: 0 },
   modalSheet: {
+    maxHeight: '92%',
     backgroundColor: colors.background.paper,
     borderTopLeftRadius: borderRadius.xxl,
     borderTopRightRadius: borderRadius.xxl,

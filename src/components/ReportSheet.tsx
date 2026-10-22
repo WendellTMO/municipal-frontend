@@ -3,7 +3,7 @@
  * Driver-safe: large touch targets, no mandatory text input,
  * category chips allow one-tap reporting.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -24,18 +24,20 @@ interface ReportSheetProps {
   visible: boolean;
   onClose: () => void;
   viagemId?: string;
+  /** Tipo já escolhido ao abrir (a folha de avisos da viagem passa o tipo tocado) */
+  tipoInicial?: TipoOcorrencia | null;
   /** Called after a report is successfully submitted */
   onSuccess?: () => void;
 }
 
-interface ChipConfig {
+export interface ChipConfig {
   tipo: TipoOcorrencia;
   label: string;
   icon: string;
   color: string;
 }
 
-const CHIPS: ChipConfig[] = [
+export const CHIPS: ChipConfig[] = [
   { tipo: 'ATRASO', label: 'Atraso', icon: IconNames.schedule, color: colors.warning.dark },
   { tipo: 'SUPERLOTACAO', label: 'Lotação', icon: IconNames.group, color: colors.error.main },
   { tipo: 'COMPORTAMENTO', label: 'Comportamento', icon: IconNames.person, color: colors.accent.dark },
@@ -47,9 +49,14 @@ const ReportSheet: React.FC<ReportSheetProps> = ({
   visible,
   onClose,
   viagemId,
+  tipoInicial = null,
   onSuccess,
 }) => {
-  const [selected, setSelected] = useState<TipoOcorrencia | null>(null);
+  const [selected, setSelected] = useState<TipoOcorrencia | null>(tipoInicial);
+
+  useEffect(() => {
+    if (visible) setSelected(tipoInicial);
+  }, [visible, tipoInicial]);
   const [descricao, setDescricao] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
