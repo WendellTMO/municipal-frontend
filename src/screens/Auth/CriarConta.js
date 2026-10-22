@@ -58,6 +58,7 @@ const CriarConta = ({navigation}) => {
 
   const [step, setStep] = useState(STEPS.BASIC);
 
+  const [focusedField, setFocusedField] = useState('');
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
@@ -753,11 +754,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'email' && styles.inputWrapperFocused,
                     errors.email && styles.inputWrapperError,
                   ]}>
                   <Icon name="email" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="seu@email.com"
                     placeholderTextColor={colors.neutral[400]}
                     value={email}
@@ -778,11 +782,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'senha' && styles.inputWrapperFocused,
                     errors.senha && styles.inputWrapperError,
                   ]}>
                   <Icon name="lock" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={[styles.input, styles.inputFlex]}
+                    onFocus={() => setFocusedField('senha')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="Mínimo 8 caracteres"
                     placeholderTextColor={colors.neutral[400]}
                     value={senha}
@@ -814,11 +821,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'confirmarSenha' && styles.inputWrapperFocused,
                     errors.confirmarSenha && styles.inputWrapperError,
                   ]}>
                   <Icon name="lock" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={[styles.input, styles.inputFlex]}
+                    onFocus={() => setFocusedField('confirmarSenha')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="Digite a senha novamente"
                     placeholderTextColor={colors.neutral[400]}
                     value={confirmarSenha}
@@ -854,11 +864,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'nome' && styles.inputWrapperFocused,
                     errors.nome && styles.inputWrapperError,
                   ]}>
                   <Icon name="person" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('nome')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="Seu nome completo"
                     placeholderTextColor={colors.neutral[400]}
                     value={nome}
@@ -877,11 +890,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'cpf' && styles.inputWrapperFocused,
                     errors.cpf && styles.inputWrapperError,
                   ]}>
                   <Icon name="badge" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('cpf')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="000.000.000-00"
                     placeholderTextColor={colors.neutral[400]}
                     value={cpf}
@@ -899,11 +915,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'matricula' && styles.inputWrapperFocused,
                     errors.matricula && styles.inputWrapperError,
                   ]}>
                   <Icon name="school" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('matricula')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="Número da matrícula escolar"
                     placeholderTextColor={colors.neutral[400]}
                     value={matricula}
@@ -950,11 +969,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'telefone' && styles.inputWrapperFocused,
                     errors.telefone && styles.inputWrapperError,
                   ]}>
                   <Icon name="phone" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('telefone')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="(00) 00000-0000"
                     placeholderTextColor={colors.neutral[400]}
                     value={telefone}
@@ -974,11 +996,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'dataNascimento' && styles.inputWrapperFocused,
                     errors.dataNascimento && styles.inputWrapperError,
                   ]}>
                   <Icon name="cake" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('dataNascimento')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="DD/MM/AAAA"
                     placeholderTextColor={colors.neutral[400]}
                     value={dataNascimento}
@@ -1006,11 +1031,14 @@ const CriarConta = ({navigation}) => {
                     <View
                       style={[
                         styles.inputWrapper,
+                        focusedField === 'emailResponsavel' && styles.inputWrapperFocused,
                         errors.emailResponsavel && styles.inputWrapperError,
                       ]}>
                       <Icon name="email" size="md" color={colors.neutral[400]} />
                       <TextInput
                         style={styles.input}
+                        onFocus={() => setFocusedField('emailResponsavel')}
+                        onBlur={() => setFocusedField('')}
                         placeholder="responsavel@email.com"
                         placeholderTextColor={colors.neutral[400]}
                         value={emailResponsavel}
@@ -1035,6 +1063,7 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'cep' && styles.inputWrapperFocused,
                     errors.cep && styles.inputWrapperError,
                   ]}>
                   <Icon
@@ -1044,6 +1073,8 @@ const CriarConta = ({navigation}) => {
                   />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('cep')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="00000-000"
                     placeholderTextColor={colors.neutral[400]}
                     value={cep}
@@ -1063,11 +1094,14 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'logradouro' && styles.inputWrapperFocused,
                     errors.logradouro && styles.inputWrapperError,
                   ]}>
                   <Icon name="home" size="md" color={colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('logradouro')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="Rua, Avenida, etc."
                     placeholderTextColor={colors.neutral[400]}
                     value={logradouro}
@@ -1085,10 +1119,13 @@ const CriarConta = ({navigation}) => {
                     <View
                       style={[
                         styles.inputWrapper,
+                        focusedField === 'numero' && styles.inputWrapperFocused,
                         errors.numero && styles.inputWrapperError,
                       ]}>
                       <TextInput
                         style={[styles.input, styles.inputNoPad]}
+                        onFocus={() => setFocusedField('numero')}
+                        onBlur={() => setFocusedField('')}
                         placeholder="123"
                         placeholderTextColor={colors.neutral[400]}
                         value={numero}
@@ -1106,10 +1143,13 @@ const CriarConta = ({navigation}) => {
                     <View
                       style={[
                         styles.inputWrapper,
+                        focusedField === 'bairro' && styles.inputWrapperFocused,
                         errors.bairro && styles.inputWrapperError,
                       ]}>
                       <TextInput
                         style={[styles.input, styles.inputNoPad]}
+                        onFocus={() => setFocusedField('bairro')}
+                        onBlur={() => setFocusedField('')}
                         placeholder="Centro"
                         placeholderTextColor={colors.neutral[400]}
                         value={bairro}
@@ -1127,6 +1167,7 @@ const CriarConta = ({navigation}) => {
                 <View
                   style={[
                     styles.inputWrapper,
+                    focusedField === 'cidade' && styles.inputWrapperFocused,
                     errors.cidade && styles.inputWrapperError,
                   ]}>
                   <Icon
@@ -1136,6 +1177,8 @@ const CriarConta = ({navigation}) => {
                   />
                   <TextInput
                     style={styles.input}
+                    onFocus={() => setFocusedField('cidade')}
+                    onBlur={() => setFocusedField('')}
                     placeholder="Sua cidade"
                     placeholderTextColor={colors.neutral[400]}
                     value={cidade}
@@ -1209,10 +1252,16 @@ const CriarConta = ({navigation}) => {
             </View>
 
             <View style={styles.modalSearchWrapper}>
-              <View style={styles.searchBar}>
+              <View
+                style={[
+                  styles.searchBar,
+                  focusedField === 'busca' && styles.inputWrapperFocused,
+                ]}>
                 <Icon name="search" size="md" color={colors.neutral[400]} />
                 <TextInput
                   style={styles.searchInput}
+                  onFocus={() => setFocusedField('busca')}
+                  onBlur={() => setFocusedField('')}
                   placeholder="Buscar por nome, sigla ou cidade"
                   placeholderTextColor={colors.neutral[400]}
                   value={institutionSearch}
@@ -1392,6 +1441,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border.light,
     paddingHorizontal: spacing.base,
     gap: spacing.sm,
+  },
+
+  inputWrapperFocused: {
+    borderColor: colors.primary.main,
+    backgroundColor: colors.background.paper,
   },
 
   inputWrapperError: {
