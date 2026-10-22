@@ -7,6 +7,9 @@ import type { LocationMapProps } from '../types';
 import { useLeafletWebViewBridge } from '../hooks/useLeafletWebViewBridge';
 import { normalizeRoutePoints } from '../utils/points';
 
+const ESCONDE_ZOOM =
+  "document.head.insertAdjacentHTML('beforeend','<style>.leaflet-control-zoom{display:none}</style>');true;";
+
 export default function LocationMap({
   pontosRota,
   posicaoOnibus,
@@ -14,6 +17,7 @@ export default function LocationMap({
   posicaoAluno,
   margemSuperior = 0,
   margemInferior = 0,
+  controles = true,
 }: LocationMapProps) {
   const paradas = useMemo(() => normalizeRoutePoints(pontosRota), [pontosRota]);
 
@@ -81,6 +85,7 @@ export default function LocationMap({
         nestedScrollEnabled={false}
         setSupportMultipleWindows={false}
         onMessage={handleMessage}
+        injectedJavaScript={controles ? undefined : ESCONDE_ZOOM}
         androidLayerType="software"
       />
 

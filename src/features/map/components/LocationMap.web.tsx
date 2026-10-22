@@ -17,6 +17,7 @@ export default function LocationMap({
   posicaoAluno,
   margemSuperior = 0,
   margemInferior = 0,
+  controles = true,
 }: LocationMapProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<LeafletMap | null>(null);
@@ -48,11 +49,13 @@ export default function LocationMap({
       if (!mounted || !mapRef.current) return;
 
       // Zoom à direita: o canto de cima à esquerda é do selo de estado do ônibus.
-      const map = L.map(mapRef.current, { zoomControl: false }).setView([-23.55, -46.63], 13);
-      L.control.zoom({ position: 'topright' }).addTo(map);
+      // Na prévia (controles = false) a atribuição vai curta para não cobrir o mapa pequeno.
+      const map = L.map(mapRef.current, { zoomControl: false, attributionControl: controles }).setView([-23.55, -46.63], 13);
+      if (!controles) L.control.attribution({ prefix: false }).addAttribution('© OSM').addTo(map);
+      if (controles) L.control.zoom({ position: 'topright' }).addTo(map);
 
       L.tileLayer(TILE_URL, {
-        attribution: TILE_ATTRIBUTION,
+        attribution: controles ? TILE_ATTRIBUTION : '',
         maxZoom: TILE_MAX_ZOOM,
       }).addTo(map);
 

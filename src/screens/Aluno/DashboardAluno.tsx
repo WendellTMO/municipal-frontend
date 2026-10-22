@@ -26,6 +26,7 @@ import { dayLabel } from '../../utils/dayLabel';
 import { escolherViagemDeHoje } from '../../utils/viagemAluno';
 import { horaCurta } from '../../utils/viagemPainel';
 import AgoraCard from '../../components/AgoraCard';
+import MiniMapaOnibus from '../../components/MiniMapaOnibus';
 import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
@@ -335,8 +336,14 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           <AgoraCard
             rotaNome={todayTrip.rota_nome ?? 'Rota'}
             hora={horaCurta(todayTrip.horario_inicio)}
-            onPress={abrirLocalizacao}
-          />
+            onPress={abrirLocalizacao}>
+            <MiniMapaOnibus
+              rotaId={todayTrip.rota_id}
+              viagemId={todayTrip.id}
+              embarqueId={todayTrip.ponto_embarque_id}
+              onPress={abrirLocalizacao}
+            />
+          </AgoraCard>
         )}
 
         {/* Próxima Viagem */}

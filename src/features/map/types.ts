@@ -24,6 +24,8 @@ export type LocationMapProps = {
    *  Leaflet não sumirem embaixo do cabeçalho nem do painel. */
   margemSuperior?: number;
   margemInferior?: number;
+  /** false esconde o zoom, para o mapa servir de prévia sem interação. */
+  controles?: boolean;
 };
 
 export type RouteMapProps = {
