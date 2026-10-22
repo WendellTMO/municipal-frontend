@@ -387,7 +387,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
         <View style={styles.rotasSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle} accessibilityRole="header">
-              Rotas Cadastradas
+              Minhas rotas
             </Text>
             <TouchableOpacity
               style={styles.verTodasButton}
@@ -414,19 +414,13 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
                   </View>
                   <View style={styles.rotaInfo}>
                     <Text style={styles.rotaNome}>{r.nome as string}</Text>
-                    <Text style={styles.rotaBairro}>
-                      {r.municipio_nome
-                        ? `${r.municipio_nome as string}${r.municipio_uf ? ` - ${r.municipio_uf as string}` : ''}`
-                        : 'Município não informado'}
-                    </Text>
+                    {r.municipio_nome ? (
+                      <Text style={styles.rotaBairro}>
+                        {`${r.municipio_nome as string}${r.municipio_uf ? ` - ${r.municipio_uf as string}` : ''}`}
+                      </Text>
+                    ) : null}
                   </View>
-                  <View style={styles.rotaStatus}>
-                    <View style={styles.enrolledBadge}>
-                      <Icon name={IconNames.checkCircle} size="xs" color={colors.success.main} accessibilityElementsHidden />
-                      <Text style={styles.rotaStatusText}>Cadastrado</Text>
-                    </View>
-                    <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} accessibilityElementsHidden />
-                  </View>
+                  <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} accessibilityElementsHidden />
                 </TouchableOpacity>
               );
             })
@@ -574,16 +568,6 @@ const styles = StyleSheet.create({
   rotaBairro: {
     ...textStyles.bodySmall,
     color: colors.text.secondary,
-  },
-  rotaStatus: { alignItems: 'flex-end', gap: spacing.xs },
-  enrolledBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xxs,
-  },
-  rotaStatusText: {
-    ...textStyles.caption,
-    color: colors.success.main,
   },
 
   // Empty State
