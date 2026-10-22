@@ -16,10 +16,10 @@ const TripHeroCard = ({
   statusColor = colors.success.main,
   statusIcon = IconNames.checkCircle,
   title,
-  subtitle,
+  subtitle = undefined,
   onPress,
   accessibilityLabel,
-  children,
+  children = undefined,
 }) => (
   <View style={styles.card}>
     <TouchableOpacity
