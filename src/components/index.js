@@ -18,6 +18,7 @@ export { default as ActionTile } from './ActionTile';
 export { default as TripHeroCard } from './TripHeroCard';
 export { default as PainelHeader } from './PainelHeader';
 export { default as SubHeader } from './SubHeader';
+export { default as EnviarAvisoSheet } from './EnviarAvisoSheet';
 
 // State Components
 export { 
