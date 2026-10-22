@@ -749,24 +749,28 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Iniciar button */}
-        <TouchableOpacity
-          style={[styles.iniciarButton, loading && styles.buttonDisabled]}
-          onPress={() => setIniciarVisivel(true)}
-          disabled={loading}
-          accessibilityRole="button"
-          accessibilityLabel="Iniciar viagem"
-          accessibilityState={{ disabled: loading }}>
-          {loading ? (
-            <ActivityIndicator size="large" color={colors.text.inverse} />
-          ) : (
-            <>
-              <Icon name={IconNames.play} size="xl" color={colors.text.inverse} />
-              <Text style={styles.iniciarButtonText}>Iniciar Viagem</Text>
-            </>
-          )}
-        </TouchableOpacity>
       </ScrollView>
+
+      {/* Barra fixa embaixo: Iniciar Viagem sempre visível, perto da seta de voltar */}
+      <View style={styles.barraIniciar}>
+          {/* Iniciar button */}
+          <TouchableOpacity
+            style={[styles.iniciarButton, loading && styles.buttonDisabled]}
+            onPress={() => setIniciarVisivel(true)}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Iniciar viagem"
+            accessibilityState={{ disabled: loading }}>
+            {loading ? (
+              <ActivityIndicator size="large" color={colors.text.inverse} />
+            ) : (
+              <>
+                <Icon name={IconNames.play} size="xl" color={colors.text.inverse} />
+                <Text style={styles.iniciarButtonText}>Iniciar Viagem</Text>
+              </>
+            )}
+          </TouchableOpacity>
+      </View>
 
       <ConfirmacaoTelaCheia
         visible={iniciarVisivel}
@@ -1147,6 +1151,12 @@ const styles = StyleSheet.create({
   stopName: { ...textStyles.body, color: colors.text.primary, paddingTop: spacing.xs },
 
   // Action buttons
+  barraIniciar: {
+    padding: spacing.base,
+    paddingBottom: spacing.lg,
+    backgroundColor: colors.background.paper,
+    ...shadows.xl,
+  },
   iniciarButton: {
     backgroundColor: colors.success.main,
     borderRadius: borderRadius.xl,
