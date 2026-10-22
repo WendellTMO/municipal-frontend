@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   Animated,
   StatusBar,
-  ImageBackground,
   Dimensions,
   FlatList,
   Modal,
@@ -20,6 +19,8 @@ import {
 import {useAuth} from '../../contexts/AuthContext';
 import {colors, spacing, borderRadius, shadows} from '../../theme';
 import Icon, {IconNames} from '../../components/Icon';
+import AuthBackground from '../../components/AuthBackground';
+import AuthLogo from '../../components/AuthLogo';
 import {api} from '../../api/client';
 import {
   ErrorCode,
@@ -28,8 +29,7 @@ import {
 } from '../../utils/errors';
 import {unwrapItems} from '@/types';
 
-const {width: SCREEN_W, height: SCREEN_H} = Dimensions.get('screen');
-const CARD_TOP = Math.max(SCREEN_H * 0.36, 220);
+const {height: SCREEN_H} = Dimensions.get('screen');
 
 const STEPS = {BASIC: 1, PERSONAL: 2, ADDRESS: 3};
 const TOTAL_STEPS = 3;
@@ -725,13 +725,9 @@ const CriarConta = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      <ImageBackground
-        source={require('../../../assets/login-background.png')}
-        style={styles.background}
-        resizeMode="cover"
-      />
+      <AuthBackground />
 
       <TouchableOpacity
         style={styles.floatingBack}
@@ -740,7 +736,7 @@ const CriarConta = ({navigation}) => {
         <Icon
           name={IconNames.back}
           size="md"
-          color="rgba(255,255,255,0.95)"
+          color={colors.neutral[700]}
         />
       </TouchableOpacity>
 
@@ -751,11 +747,11 @@ const CriarConta = ({navigation}) => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
+          <AuthLogo width={150} style={styles.logo} />
           <Animated.View
             style={[
               styles.card,
               {
-                marginTop: CARD_TOP,
                 opacity: cardOpacity,
                 transform: [{translateY: cardTranslateY}],
               },
@@ -1308,12 +1304,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEF3FB',
   },
 
-  background: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SCREEN_W,
-    height: SCREEN_H,
+  logo: {
+    marginTop: 40,
   },
 
   floatingBack: {
@@ -1324,7 +1316,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    backgroundColor: 'rgba(15,23,42,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1345,8 +1337,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xl,
     paddingBottom: spacing.xl,
-    minHeight: '100%',
-    ...shadows.xl,
   },
 
   progressBar: {

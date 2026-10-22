@@ -13,16 +13,10 @@ import {
   Animated,
   StatusBar,
   Image,
-  ImageBackground,
-  Dimensions,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { Icon, IconNames } from '../../components';
+import { Icon, IconNames, AuthBackground, AuthLogo } from '../../components';
 import { colors } from '../../theme';
-
-// Physical screen size — never changes, immune to keyboard resize on Android
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('screen');
-const CARD_TOP = Math.max(SCREEN_H * 0.40, 220);
 
 type LoginProps = {
   navigation: {
@@ -89,14 +83,9 @@ const Login: React.FC<LoginProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary.dark} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background.paper} />
 
-      {/* Background uses explicit screen dimensions so keyboard resize on Android never affects it */}
-      <ImageBackground
-        source={require('../../../assets/login-background.png')}
-        style={styles.background}
-        resizeMode="cover"
-      />
+      <AuthBackground />
 
       <KeyboardAvoidingView
         style={styles.kav}
@@ -111,7 +100,6 @@ const Login: React.FC<LoginProps> = ({ navigation }) => {
             style={[
               styles.content,
               {
-                marginTop: CARD_TOP,
                 opacity: fadeAnim,
                 transform: [{ translateY: translateAnim }],
               },
@@ -119,8 +107,7 @@ const Login: React.FC<LoginProps> = ({ navigation }) => {
           >
 
             <View style={styles.card}>
-              <Text style={styles.title}>Bem-vindo de volta! 👋</Text>
-              <Text style={styles.subtitle}>Faça login para acessar sua conta</Text>
+              <AuthLogo width={250} />
 
               <View style={styles.form}>
                 <Text style={styles.label}>E-mail</Text>
@@ -290,13 +277,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.default,
   },
-  background: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SCREEN_W,
-    height: SCREEN_H,
-  },
   kav: {
     flex: 1,
   },
@@ -376,8 +356,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 24,
   },
   content: {
     alignItems: 'center',
@@ -395,32 +376,9 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    paddingTop: 28,
-    paddingHorizontal: 20,
-    paddingBottom: 0,
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 10 },
-    shadowRadius: 24,
-    elevation: 7,
-    overflow: 'hidden',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.primary.dark,
-    textAlign: 'center',
-  },
-  subtitle: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#64748B',
-    textAlign: 'center',
   },
   form: {
-    marginTop: 26,
+    marginTop: 20,
   },
   label: {
     fontSize: 15,
@@ -544,12 +502,6 @@ const styles = StyleSheet.create({
   },
   footerCard: {
     marginTop: 24,
-    backgroundColor: '#F8FAFC',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    marginHorizontal: -20,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
   },
   footerText: {
     textAlign: 'center',
