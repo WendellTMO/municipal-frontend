@@ -1,7 +1,7 @@
 /**
  * Tela cheia de confirmação (Modal em tela cheia, funciona igual na web e no nativo).
- * O botão principal é a opção segura e grande. O secundário fica separado, mais
- * embaixo, para não ser tocado por engano. Voltar do sistema ou Escape cancelam.
+ * Conteúdo e botões ficam juntos no alto (sem vazio no meio); se a lista crescer, ela
+ * rola e os botões continuam visíveis embaixo dela. Voltar do sistema ou Escape cancelam.
  */
 import React from 'react';
 import { ActivityIndicator, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -53,12 +53,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.default },
   conteudo: { flex: 1, padding: spacing.lg },
   titulo: { ...textStyles.h2, color: colors.text.primary, marginTop: spacing.lg, marginBottom: spacing.base },
-  corpo: { flex: 1 },
+  // O corpo tem a altura do conteúdo e só rola quando passa da tela; os botões ficam logo abaixo.
+  corpo: { flexGrow: 0, flexShrink: 1 },
   corpoConteudo: { gap: spacing.md, paddingBottom: spacing.base },
-  botoes: { paddingBottom: spacing.base },
+  botoes: { paddingTop: spacing.base, paddingBottom: spacing.base },
   principal: { minHeight: 80, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   principalTexto: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
-  espaco: { height: spacing.xxl + spacing.lg },
+  espaco: { height: spacing.base },
   secundario: { minHeight: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   secundarioTexto: { fontSize: 17, fontWeight: '800' },
 });
