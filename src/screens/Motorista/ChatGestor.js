@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
+import SubHeader from '../../components/SubHeader';
 
 const ChatGestor = ({navigation}) => {
   const [mensagens, setMensagens] = useState([
@@ -55,22 +56,7 @@ const ChatGestor = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>Chat</Text>
-            <Text style={styles.headerSubtitle}>Gestor Municipal</Text>
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.chat} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
-      </View>
+      <SubHeader titulo="Chat" subtitulo="Gestor Municipal" onBack={() => navigation.goBack()} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

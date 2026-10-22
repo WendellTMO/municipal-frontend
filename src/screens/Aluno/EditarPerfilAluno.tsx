@@ -22,6 +22,7 @@ import { confirmAction } from '../../utils/confirm';
 import { formatPhone, formatCep, onlyDigits } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import SubHeader from '../../components/SubHeader';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -143,17 +144,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar">
-            <Icon name={IconNames.back} size="md" color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Editar Perfil</Text>
-          <View style={{ width: 40 }} />
-        </View>
+        <SubHeader titulo="Editar Perfil" onBack={() => navigation.goBack()} />
 
         <ScrollView
           style={styles.scroll}

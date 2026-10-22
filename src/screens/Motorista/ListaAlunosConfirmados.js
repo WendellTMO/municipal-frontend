@@ -10,6 +10,7 @@ import {
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const ListaAlunosConfirmados = ({navigation, route}) => {
   const viagem = route?.params?.viagem || {};
@@ -29,24 +30,7 @@ const ListaAlunosConfirmados = ({navigation, route}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>Alunos Confirmados</Text>
-            <Text style={styles.headerSubtitle}>
-              {viagem.tipo} • {viagem.horario}
-            </Text>
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.group} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
-      </View>
+      <SubHeader titulo="Alunos Confirmados" subtitulo={`${viagem.tipo} • ${viagem.horario}`} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>

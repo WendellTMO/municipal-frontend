@@ -23,11 +23,12 @@ import { formatPlaca, onlyDigits } from '../../utils/masks';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import SubHeader from '../../components/SubHeader';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const INFO_COLOR = colors.info.main;
 
-const FrotaGestor = () => {
+const FrotaGestor = ({ navigation }) => {
   const toast = useToast();
   const [mostrarForm, setMostrarForm] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -174,21 +175,20 @@ const FrotaGestor = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.headerTitle}>Frota</Text>
-              <Text style={styles.headerSub}>
-                {(onibus ?? []).length} ônibus cadastrado(s)
-              </Text>
-            </View>
+        <SubHeader
+          titulo="Frota"
+          subtitulo={`${(onibus ?? []).length} ônibus cadastrado(s)`}
+          onBack={navigation?.canGoBack?.() ? () => navigation.goBack() : undefined}
+          direita={
             <TouchableOpacity
               style={styles.addButton}
-              onPress={() => setMostrarForm(!mostrarForm)}>
+              onPress={() => setMostrarForm(!mostrarForm)}
+              accessibilityRole="button"
+              accessibilityLabel={mostrarForm ? 'Fechar formulário' : 'Adicionar ônibus'}>
               <Icon name={mostrarForm ? IconNames.close : IconNames.add} size="md" color="#FFFFFF" />
             </TouchableOpacity>
-          </View>
-        </View>
+          }
+        />
 
         {/* Form */}
         {mostrarForm && (

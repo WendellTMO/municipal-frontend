@@ -16,6 +16,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { formatTime } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const DIAS_SEMANA = [
   { id: 'SEG', label: 'Seg' },
@@ -153,20 +154,7 @@ const DefinirHorariosRota = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>Horários</Text>
-            <Text style={styles.headerSubtitle}>{rotaNome}</Text>
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.schedule} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
-      </View>
+      <SubHeader titulo="Horários" subtitulo={rotaNome} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>

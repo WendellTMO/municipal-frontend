@@ -19,6 +19,7 @@ import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -198,26 +199,11 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar">
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>{screenTitle}</Text>
-            <Text style={styles.headerSubtitle}>
-              {viagens.length} viage{viagens.length !== 1 ? 'ns' : 'm'}
-            </Text>
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.route} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
-      </View>
+      <SubHeader
+        titulo={screenTitle}
+        subtitulo={`${viagens.length} viage${viagens.length !== 1 ? 'ns' : 'm'}`}
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView
         contentContainerStyle={withFabSpace()}

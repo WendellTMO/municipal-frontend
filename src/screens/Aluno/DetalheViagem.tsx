@@ -19,6 +19,7 @@ import type { PontoFlatResponse } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { StaticRouteMap } from '../../features/map/index';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -102,20 +103,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
   if (!rota || !viagem) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              accessibilityRole="button"
-              accessibilityLabel="Voltar">
-              <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-            </TouchableOpacity>
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.title}>Detalhes da Viagem</Text>
-            </View>
-          </View>
-        </View>
+        <SubHeader titulo="Detalhes da Viagem" onBack={() => navigation.goBack()} />
         <View style={styles.emptyContent}>
           <Icon name={IconNames.warning} size="xxl" color={colors.warning.main} />
           <Text style={styles.emptyText}>Dados da viagem não disponíveis</Text>
@@ -185,22 +173,11 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar">
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>Detalhes da Viagem</Text>
-            <Text style={styles.headerSubtitle}>
-              {viagem.tipo} • {horario}
-            </Text>
-          </View>
-          {/* Report problem button */}
+      <SubHeader
+        titulo="Detalhes da Viagem"
+        subtitulo={`${viagem.tipo} • ${horario}`}
+        onBack={() => navigation.goBack()}
+        direita={
           <TouchableOpacity
             style={styles.reportBtn}
             onPress={() => setReportVisible(true)}
@@ -209,8 +186,8 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
             accessibilityHint="Abre formulário para registrar uma ocorrência">
             <Icon name={IconNames.warning} size="md" color={colors.primary.contrast} />
           </TouchableOpacity>
-        </View>
-      </View>
+        }
+      />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>

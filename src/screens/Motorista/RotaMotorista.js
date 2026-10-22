@@ -18,6 +18,7 @@ import { colors, spacing, borderRadius, shadows, textStyles, fontWeight } from '
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const DIAS_ORDER = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
 const DIAS_SHORT = { SEG: 'Seg', TER: 'Ter', QUA: 'Qua', QUI: 'Qui', SEX: 'Sex', SAB: 'Sáb', DOM: 'Dom' };
@@ -356,21 +357,10 @@ const RotaMotorista = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>Minhas Rotas</Text>
-            <Text style={styles.subtitle}>
-              {loading ? '...' : `${rotas.length} rota${rotas.length !== 1 ? 's' : ''} cadastrada${rotas.length !== 1 ? 's' : ''}`}
-            </Text>
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.bus} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
+      <SubHeader
+        titulo="Minhas Rotas"
+        subtitulo={loading ? '...' : `${rotas.length} rota${rotas.length !== 1 ? 's' : ''} cadastrada${rotas.length !== 1 ? 's' : ''}`}
+        onBack={() => navigation.goBack()}>
         {isGestor && (
           <TouchableOpacity
             style={styles.criarRotaButton}
@@ -379,7 +369,7 @@ const RotaMotorista = ({ navigation }) => {
             <Text style={styles.criarRotaButtonText}>Nova Rota</Text>
           </TouchableOpacity>
         )}
-      </View>
+      </SubHeader>
 
       {loading ? (
         <View style={styles.loadingContainer}>
