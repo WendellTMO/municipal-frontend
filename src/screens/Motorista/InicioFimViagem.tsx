@@ -13,7 +13,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
-  Alert,
   Modal,
   SafeAreaView,
   ScrollView,
@@ -38,6 +37,7 @@ import { ReportSheet } from '../../components';
 import { CHIPS } from '../../components/ReportSheet';
 import { LocationMap, StaticRouteMap, useArrivalDetection, useRoutePolyline, normalizeRoutePoints } from '../../features/map/index';
 import SubHeader from '../../components/SubHeader';
+import ConfirmacaoTelaCheia from '../../components/ConfirmacaoTelaCheia';
 import { montarParadas } from '../../utils/paradasViagem';
 import { horaCurta } from '../../utils/viagemPainel';
 import { motoristaService } from '../../services/motoristaService';
@@ -87,6 +87,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
   const [concluidas, setConcluidas] = useState(0);
   const [listaAberta, setListaAberta] = useState(false);
+  const [finalizarVisivel, setFinalizarVisivel] = useState(false);
   const [tipoProblema, setTipoProblema] = useState<TipoOcorrencia | null>(null);
   const [posMotorista, setPosMotorista] = useState<{ latitude: number; longitude: number } | null>(null);
   const [alturaTopo, setAlturaTopo] = useState(0);
@@ -245,30 +246,19 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleFinalizarViagem = () => {
-    Alert.alert(
-      'Finalizar viagem',
-      'Confirma o encerramento desta viagem?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Finalizar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await motoristaService.finalizarViagem(viagemId!);
-              AccessibilityInfo.announceForAccessibility('Viagem finalizada');
-              toast.success('Viagem finalizada!');
-              navigation.goBack();
-            } catch (err: unknown) {
-              toast.error((err as Error)?.message || 'Erro ao finalizar viagem');
-              setLoading(false);
-            }
-          },
-        },
-      ],
-    );
+  // Só o "Sim, finalizar" da tela de confirmação chama o endpoint.
+  const confirmarFinalizar = async () => {
+    try {
+      setLoading(true);
+      await motoristaService.finalizarViagem(viagemId!);
+      setFinalizarVisivel(false);
+      AccessibilityInfo.announceForAccessibility('Viagem finalizada');
+      toast.success('Viagem finalizada!');
+      navigation.goBack();
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || 'Erro ao finalizar viagem');
+      setLoading(false);
+    }
   };
 
   const handleBroadcast = async (template: (typeof BROADCAST_TEMPLATES)[number]) => {
@@ -465,7 +455,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
           <TouchableOpacity
             style={[styles.finalizarButton, loading && styles.buttonDisabled]}
-            onPress={handleFinalizarViagem}
+            onPress={() => setFinalizarVisivel(true)}
             disabled={loading}
             accessibilityRole="button"
             accessibilityLabel="Finalizar viagem"
@@ -480,6 +470,30 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             )}
           </TouchableOpacity>
         </View>
+
+        <ConfirmacaoTelaCheia
+          visible={finalizarVisivel}
+          titulo="Finalizar a viagem?"
+          onCancelar={() => setFinalizarVisivel(false)}
+          principal={{ texto: 'Continuar viagem', cor: colors.success.main, onPress: () => setFinalizarVisivel(false) }}
+          secundario={{
+            texto: 'Sim, finalizar',
+            cor: colors.error.main,
+            corTexto: '#FFFFFF',
+            carregando: loading,
+            onPress: confirmarFinalizar,
+          }}>
+          <View style={styles.resumo}>
+            <Text style={styles.resumoRotulo}>Rota</Text>
+            <Text style={styles.resumoValor}>{(currentViagem.rota_nome as string) || '—'}</Text>
+            <Text style={styles.resumoRotulo}>Tempo decorrido</Text>
+            <Text style={styles.resumoValor}>{formatarTempo(tempoDecorrido)}</Text>
+            <Text style={styles.resumoRotulo}>Paradas feitas</Text>
+            <Text style={styles.resumoValor}>
+              {Math.min(concluidas, paradas.length)} de {paradas.length}
+            </Text>
+          </View>
+        </ConfirmacaoTelaCheia>
 
         {/* Broadcast Modal */}
         <Modal
@@ -811,6 +825,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chegueiTexto: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' as const },
+  resumo: { backgroundColor: colors.background.paper, borderRadius: 20, padding: spacing.lg, gap: spacing.xs },
+  resumoRotulo: { ...textStyles.caption, color: colors.text.secondary, letterSpacing: 1, marginTop: spacing.sm },
+  resumoValor: { ...textStyles.h4, color: colors.text.primary },
   // space-between com ícones de tamanho fixo: as bordas coincidem com as do Finalizar Viagem.
   acoesRow: { flexDirection: 'row', justifyContent: 'space-between' },
   acaoIcone: {
