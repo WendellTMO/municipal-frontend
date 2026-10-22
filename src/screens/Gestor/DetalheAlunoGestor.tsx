@@ -17,6 +17,7 @@ import { useFetch } from '../../hooks';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
 import type { AlunoResponse } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -125,18 +126,14 @@ const DetalheAlunoGestor = ({ route, navigation }: any) => {
   return (
     <SafeAreaView style={styles.root}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size="md" color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{aluno.nome}</Text>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusDot, { backgroundColor: statusColor[aluno.status ?? ''] ?? colors.text.disabled }]} />
-            <Text style={styles.statusText}>{statusLabel[aluno.status ?? ''] ?? aluno.status}</Text>
-          </View>
+      <SubHeader
+        titulo={aluno.nome}
+        onBack={() => navigation.goBack()}>
+        <View style={styles.statusRow}>
+          <View style={[styles.statusDot, { backgroundColor: statusColor[aluno.status ?? ''] ?? colors.text.disabled }]} />
+          <Text style={styles.statusText}>{statusLabel[aluno.status ?? ''] ?? aluno.status}</Text>
         </View>
-      </View>
+      </SubHeader>
 
       <ScrollView style={styles.scroll} contentContainerStyle={withFabSpace(styles.scrollContent)} showsVerticalScrollIndicator={false}>
 

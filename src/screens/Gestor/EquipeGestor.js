@@ -24,6 +24,7 @@ import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { api } from '../../api/client';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import SubHeader from '../../components/SubHeader';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const SEGMENT = { MOTORISTAS: 0, ALUNOS: 1 };
@@ -209,21 +210,22 @@ const EquipeGestor = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.headerTitle}>Equipe</Text>
-              <Text style={styles.headerSub}>{total} {segmento === SEGMENT.MOTORISTAS ? 'motorista(s)' : 'aluno(s)'}</Text>
-            </View>
-            {segmento === SEGMENT.MOTORISTAS && (
+        <SubHeader
+          titulo="Equipe"
+          subtitulo={`${total} ${segmento === SEGMENT.MOTORISTAS ? 'motorista(s)' : 'aluno(s)'}`}
+          onBack={navigation?.canGoBack?.() ? () => navigation.goBack() : undefined}
+          direita={
+            segmento === SEGMENT.MOTORISTAS ? (
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={() => setMostrarForm(!mostrarForm)}>
+                onPress={() => setMostrarForm(!mostrarForm)}
+                accessibilityRole="button"
+                accessibilityLabel={mostrarForm ? 'Fechar formulário' : 'Adicionar motorista'}>
                 <Icon name={mostrarForm ? IconNames.close : IconNames.add} size="md" color="#FFFFFF" />
               </TouchableOpacity>
-            )}
-          </View>
-        </View>
+            ) : null
+          }
+        />
 
         {/* Segment + Search */}
         <View style={styles.controls}>

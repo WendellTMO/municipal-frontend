@@ -16,6 +16,7 @@ import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeigh
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -103,26 +104,11 @@ const ListaViagens = ({navigation, route}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>
-              {rotaFiltro ? `Viagens` : 'Minhas Viagens'}
-            </Text>
-            {rotaFiltro && (
-              <Text style={styles.subtitle}>{rotaFiltro.nome}</Text>
-            )}
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.route} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
-      </View>
+      <SubHeader
+        titulo={rotaFiltro ? 'Viagens' : 'Minhas Viagens'}
+        subtitulo={rotaFiltro ? rotaFiltro.nome : undefined}
+        onBack={() => navigation.goBack()}
+      />
 
       {isLoading ? (
         <LoadingView message="Carregando viagens..." />

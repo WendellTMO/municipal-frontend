@@ -17,6 +17,7 @@ import { useToast } from '../components/Toast';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, lineHeight } from '../theme';
 import Icon, { IconNames } from '../components/Icon';
 import { withFabSpace } from '../config/feedback';
+import SubHeader from '../components/SubHeader';
 
 const roleLabel = (role?: string) => {
   const map: Record<string, string> = {
@@ -89,22 +90,7 @@ const ConfigNotificacoes = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>Configurações</Text>
-            <Text style={styles.headerSubtitle}>{headerSubtitle}</Text>
-          </View>
-
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.settings} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
-      </View>
+      <SubHeader titulo="Configurações" subtitulo={headerSubtitle} onBack={() => navigation.goBack()} />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={withFabSpace(styles.content)}>
         <AccountSection user={user} showProfileCard={isAluno} />

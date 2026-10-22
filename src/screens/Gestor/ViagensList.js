@@ -19,6 +19,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const GESTOR_COLOR = colors.roles.gestor;
 
@@ -118,22 +119,19 @@ const ViagensList = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.headerTitle}>Viagens</Text>
-            <Text style={styles.headerSub}>
-              {viagens ? `${viagens.length} resultado(s)` : 'Todas as viagens'}
-            </Text>
-          </View>
+      <SubHeader
+        titulo="Viagens"
+        subtitulo={viagens ? `${viagens.length} resultado(s)` : 'Todas as viagens'}
+        onBack={navigation?.canGoBack?.() ? () => navigation.goBack() : undefined}
+        direita={
           <TouchableOpacity
             style={styles.newButton}
             onPress={() => navigation.navigate('CriarViagem')}>
             <Icon name={IconNames.add} size="md" color="#FFFFFF" />
             <Text style={styles.newButtonText}>Nova</Text>
           </TouchableOpacity>
-        </View>
-      </View>
+        }
+      />
 
       {/* Filter chips */}
       <View style={styles.filtersWrap}>

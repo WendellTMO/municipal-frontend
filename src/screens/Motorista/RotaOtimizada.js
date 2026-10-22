@@ -10,6 +10,7 @@ import {
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight, lineHeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const RotaOtimizada = ({navigation, route}) => {
   const {viagem} = route?.params || {};
@@ -22,15 +23,7 @@ const RotaOtimizada = ({navigation, route}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Icon name={IconNames.back} size="md" color={colors.primary.dark} />
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Rota Otimizada</Text>
-      </View>
+      <SubHeader titulo="Rota Otimizada" onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>

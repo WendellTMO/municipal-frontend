@@ -18,6 +18,7 @@ import { Icon, IconNames, LoadingSpinner, EmptyState } from '../../components';
 import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import SubHeader from '../../components/SubHeader';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -119,20 +120,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              accessibilityRole="button"
-              accessibilityLabel="Voltar">
-              <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-            </TouchableOpacity>
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.title}>Notificações</Text>
-            </View>
-          </View>
-        </View>
+        <SubHeader titulo="Notificações" onBack={() => navigation.goBack()} />
         <View style={styles.errorContainer}>
           <Icon name={IconNames.error} size="xl" color={colors.error.main} />
           <Text style={styles.errorTitle}>Não foi possível carregar</Text>
@@ -157,26 +145,12 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar">
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title} accessibilityRole="header">
-              Notificações
-            </Text>
-            {unreadCount > 0 && (
-              <Text style={styles.headerSubtitle}>
-                {unreadCount} não {unreadCount === 1 ? 'lida' : 'lidas'}
-              </Text>
-            )}
-          </View>
-          {unreadCount > 0 && (
+      <SubHeader
+        titulo="Notificações"
+        subtitulo={unreadCount > 0 ? `${unreadCount} não ${unreadCount === 1 ? 'lida' : 'lidas'}` : undefined}
+        onBack={() => navigation.goBack()}
+        direita={
+          unreadCount > 0 ? (
             <TouchableOpacity
               style={styles.markAllButton}
               onPress={handleMarkAllAsRead}
@@ -184,9 +158,9 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
               accessibilityLabel={`Marcar todas as ${unreadCount} notificações como lidas`}>
               <Icon name={IconNames.checkCircle} size="md" color={colors.primary.contrast} />
             </TouchableOpacity>
-          )}
-        </View>
-      </View>
+          ) : null
+        }
+      />
 
       <FlatList
         data={notificacoes}

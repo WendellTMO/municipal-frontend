@@ -17,6 +17,7 @@ import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeigh
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const isWeb = Platform.OS === 'web';
 
@@ -163,16 +164,7 @@ const CriarViagem = ({ navigation, route }) => {
   if (loadingRotas) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-            </TouchableOpacity>
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.title}>Nova Viagem</Text>
-            </View>
-          </View>
-        </View>
+        <SubHeader titulo="Nova Viagem" onBack={() => navigation.goBack()} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary.dark} />
         </View>
@@ -182,20 +174,7 @@ const CriarViagem = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>Nova Viagem</Text>
-            <Text style={styles.subtitle}>Configure os detalhes da viagem</Text>
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.add} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
-      </View>
+      <SubHeader titulo="Nova Viagem" subtitulo="Configure os detalhes da viagem" onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>

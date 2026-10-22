@@ -17,6 +17,7 @@ import { useToast } from '../../components/Toast';
 import { StaticRouteMap, MapPointPicker } from '../../features/map/index';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const RotaMapaSimples = ({ pontos }) => {
   const { validPontos, hasValidPoints } = useMemo(() => {
@@ -648,14 +649,7 @@ const DefinirPontosRota = ({navigation, route}) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name={IconNames.back} size="md" color={colors.primary.dark} />
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Pontos da Rota</Text>
-        <Text style={styles.subtitle}>{rotaNome}</Text>
-      </View>
+      <SubHeader titulo="Pontos da Rota" subtitulo={rotaNome} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>

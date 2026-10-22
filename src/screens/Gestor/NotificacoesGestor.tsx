@@ -18,6 +18,7 @@ import { Icon, IconNames, LoadingSpinner, EmptyState } from '../../components';
 import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import SubHeader from '../../components/SubHeader';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -98,22 +99,11 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation.goBack()}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar">
-          <Icon name={IconNames.back} size="md" color="#FFFFFF" />
-        </TouchableOpacity>
-        <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>Notificações</Text>
-          {unreadCount > 0 && (
-            <Text style={styles.headerSub}>{unreadCount} não lida(s)</Text>
-          )}
-        </View>
-        <View style={{ width: 40 }} />
-      </View>
+      <SubHeader
+        titulo="Notificações"
+        subtitulo={unreadCount > 0 ? `${unreadCount} não lida(s)` : undefined}
+        onBack={() => navigation.goBack()}
+      />
 
       {loading ? (
         <LoadingSpinner message="Carregando notificações..." />

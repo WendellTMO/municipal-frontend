@@ -16,6 +16,7 @@ import { colors, spacing, borderRadius, shadows, textStyles } from '../../theme'
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import SubHeader from '../../components/SubHeader';
 
 const SelecaoRotas = ({navigation}) => {
   const [busca, setBusca] = useState('');
@@ -106,20 +107,7 @@ const SelecaoRotas = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Icon name={IconNames.back} size="md" color={colors.secondary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>Rotas</Text>
-            <Text style={styles.headerSubtitle}>Encontre sua rota escolar</Text>
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.bus} size="lg" color={colors.secondary.contrast} />
-          </View>
-        </View>
-      </View>
+      <SubHeader titulo="Rotas" subtitulo="Encontre sua rota escolar" onBack={() => navigation.goBack()} />
 
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
