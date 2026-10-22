@@ -18,6 +18,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/Toast';
 import { borderRadius, colors, fontWeight, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
+import { formatPhone, formatCep, onlyDigits } from '../../utils/masks';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -55,7 +56,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     if (user) {
       setForm({
         nome: (user.nome as string) ?? '',
-        telefone: (user.telefone as string) ?? '',
+        telefone: formatPhone((user.telefone as string) ?? ''),
         logradouro: '',
         numero: '',
         bairro: '',
@@ -79,7 +80,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
 
     const payload: Record<string, unknown> = {
       nome: form.nome.trim(),
-      telefone: form.telefone.trim() || undefined,
+      telefone: onlyDigits(form.telefone) || undefined,
     };
 
     const temEndereco =
@@ -95,7 +96,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
         numero: form.numero.trim() || undefined,
         bairro: form.bairro.trim() || undefined,
         cidade: form.cidade.trim() || undefined,
-        cep: form.cep.trim() || undefined,
+        cep: onlyDigits(form.cep) || undefined,
       };
     }
 
@@ -156,6 +157,8 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
                 placeholder="Seu nome"
                 placeholderTextColor={colors.text.hint}
                 autoCapitalize="words"
+                autoComplete="name"
+                textContentType="name"
                 accessibilityLabel="Nome completo"
               />
             </View>
@@ -165,10 +168,13 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 value={form.telefone}
-                onChangeText={v => setField('telefone', v)}
+                onChangeText={v => setField('telefone', formatPhone(v))}
                 placeholder="(83) 99999-9999"
                 placeholderTextColor={colors.text.hint}
                 keyboardType="phone-pad"
+                maxLength={15}
+                autoComplete="tel"
+                textContentType="telephoneNumber"
                 accessibilityLabel="Telefone"
               />
             </View>
@@ -211,7 +217,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
                   onChangeText={v => setField('numero', v)}
                   placeholder="123"
                   placeholderTextColor={colors.text.hint}
-                  keyboardType="numeric"
+                  keyboardType="number-pad"
                 />
               </View>
               <View style={[styles.fieldGroup, { flex: 2, marginLeft: spacing.sm }]}>
@@ -242,10 +248,11 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
                 <TextInput
                   style={styles.input}
                   value={form.cep}
-                  onChangeText={v => setField('cep', v)}
+                  onChangeText={v => setField('cep', formatCep(v))}
                   placeholder="58100-001"
                   placeholderTextColor={colors.text.hint}
-                  keyboardType="numeric"
+                  keyboardType="number-pad"
+                  maxLength={9}
                 />
               </View>
             </View>

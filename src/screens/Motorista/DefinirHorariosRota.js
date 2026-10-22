@@ -14,6 +14,7 @@ import { useToast } from '../../components/Toast';
 import { colors, spacing, borderRadius, shadows, textStyles, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
+import { formatTime } from '../../utils/masks';
 
 const DIAS_SEMANA = [
   { id: 'SEG', label: 'Seg' },
@@ -215,8 +216,8 @@ const DefinirHorariosRota = ({ navigation, route }) => {
                 placeholder="06:30"
                 placeholderTextColor={colors.text.hint}
                 value={novoHorario}
-                onChangeText={setNovoHorario}
-                keyboardType="numbers-and-punctuation"
+                onChangeText={v => setNovoHorario(formatTime(v))}
+                keyboardType="number-pad"
                 maxLength={5}
               />
             </View>

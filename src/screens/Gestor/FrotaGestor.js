@@ -19,6 +19,7 @@ import { useFetch } from '../../hooks';
 import { borderRadius, colors, fontWeight, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
+import { formatPlaca, onlyDigits } from '../../utils/masks';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 
 const GESTOR_COLOR = colors.roles.gestor;
@@ -43,7 +44,7 @@ const FrotaGestor = () => {
   const abrirEdicao = (onibusItem) => {
     setEditandoId(onibusItem.id);
     setEditForm({
-      placa: onibusItem.placa ?? '',
+      placa: formatPlaca(onibusItem.placa ?? ''),
       modelo: onibusItem.modelo ?? '',
       capacidade: String(onibusItem.capacidade ?? ''),
     });
@@ -198,16 +199,19 @@ const FrotaGestor = () => {
                 placeholder="Placa *"
                 placeholderTextColor={colors.text.hint}
                 value={form.placa}
-                onChangeText={v => setField('placa', v)}
+                onChangeText={v => setField('placa', formatPlaca(v))}
                 autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={7}
               />
               <TextInput
                 style={[styles.formInput, styles.formInputHalf]}
                 placeholder="Capacidade"
                 placeholderTextColor={colors.text.hint}
                 value={form.capacidade}
-                onChangeText={v => setField('capacidade', v)}
-                keyboardType="numeric"
+                onChangeText={v => setField('capacidade', onlyDigits(v))}
+                keyboardType="number-pad"
+                maxLength={3}
               />
             </View>
             <TextInput
@@ -307,16 +311,19 @@ const FrotaGestor = () => {
                           placeholder="Placa *"
                           placeholderTextColor={colors.text.hint}
                           value={editForm.placa}
-                          onChangeText={v => setEditField('placa', v)}
+                          onChangeText={v => setEditField('placa', formatPlaca(v))}
                           autoCapitalize="characters"
+                          autoCorrect={false}
+                          maxLength={7}
                         />
                         <TextInput
                           style={[styles.formInput, styles.formInputHalf]}
                           placeholder="Capacidade"
                           placeholderTextColor={colors.text.hint}
                           value={editForm.capacidade}
-                          onChangeText={v => setEditField('capacidade', v)}
-                          keyboardType="numeric"
+                          onChangeText={v => setEditField('capacidade', onlyDigits(v))}
+                          keyboardType="number-pad"
+                          maxLength={3}
                         />
                       </View>
                       <TextInput
