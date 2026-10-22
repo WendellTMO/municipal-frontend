@@ -24,7 +24,7 @@ type Result = {
   reloadKey: number;
 };
 
-export function useLeafletWebViewBridge(): Result {
+export function useLeafletWebViewBridge(onMapTap?: () => void): Result {
   const webViewRef = useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
   const [loadingMap, setLoadingMap] = useState(true);
@@ -55,6 +55,10 @@ export function useLeafletWebViewBridge(): Result {
         setLoadingMap(false);
       }
 
+      if (data.type === 'mapTap') {
+        onMapTap?.();
+      }
+
       if (data.type === 'mapError') {
         setMapReady(false);
         setLoadingMap(false);
@@ -63,7 +67,7 @@ export function useLeafletWebViewBridge(): Result {
     } catch (error) {
       console.warn('Mensagem inválida do WebView:', error);
     }
-  }, []);
+  }, [onMapTap]);
 
   const reloadMap = useCallback(() => {
     setMapReady(false);
