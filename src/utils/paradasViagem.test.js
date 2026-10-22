@@ -1,4 +1,4 @@
-import { instituicaoDaParada, montarParadas } from './paradasViagem';
+import { agruparConfirmadosPorInstituicao, instituicaoDaParada, montarParadas } from './paradasViagem';
 
 const ufcg = { nome: 'UFCG', tipo: 'Universidade Pública', latitude: -7.21676, longitude: -35.9082 };
 const uepb = { nome: 'UEPB', tipo: 'Universidade Pública', latitude: -7.2326, longitude: -35.8943 };
@@ -25,4 +25,33 @@ test('estados das paradas seguem o número de concluídas', () => {
   const estados = montarParadas(pontos, 1, []).map(p => p.estado);
   expect(estados).toEqual(['feita', 'proxima', 'pendente']);
   expect(montarParadas(pontos, 3, []).map(p => p.estado)).toEqual(['feita', 'feita', 'feita']);
+});
+
+const ufcgAluno = { nome: 'UFCG', tipo: 'Universidade Pública' };
+
+test('agrupa só os confirmados por instituição e ordena por quantidade', () => {
+  const alunos = [
+    { confirmacao: true, instituicao: { nome: 'UEPB', tipo: 'Universidade Pública' } },
+    { confirmacao: true, instituicao: ufcgAluno },
+    { confirmacao: true, instituicao: ufcgAluno },
+    { confirmacao: false, instituicao: ufcgAluno },
+  ];
+  const grupos = agruparConfirmadosPorInstituicao(alunos);
+  expect(grupos.map(g => [g.nome, g.quantidade])).toEqual([['UFCG', 2], ['UEPB', 1]]);
+  expect(grupos[0].tipo).toBe('Universidade Pública');
+});
+
+test('sem instituição usa ponto_destino e depois cai em Sem instituição informada', () => {
+  const alunos = [
+    { confirmacao: true, ponto_destino: 'Escola X' },
+    { confirmacao: true },
+    { confirmacao: true },
+  ];
+  const grupos = agruparConfirmadosPorInstituicao(alunos);
+  expect(grupos.map(g => [g.nome, g.quantidade])).toEqual([['Escola X', 1], ['Sem instituição informada', 2]]);
+});
+
+test('ninguém confirmou devolve lista vazia', () => {
+  expect(agruparConfirmadosPorInstituicao([{ confirmacao: false }])).toEqual([]);
+  expect(agruparConfirmadosPorInstituicao(undefined)).toEqual([]);
 });
