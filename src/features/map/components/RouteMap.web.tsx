@@ -7,6 +7,7 @@ import { useRoutePolyline } from '../hooks/useRoutePolyline';
 import { useArrivalDetection } from '../hooks/useArrivalDetection';
 import { normalizeRoutePoints, pointToLatLng, buildFitCoordinates } from '../utils/points';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
+import { destruirMapa } from '../utils/leafletSeguro';
 
 type LeafletModule = typeof LeafletNS;
 type LeafletMap = LeafletNS.Map;
@@ -81,7 +82,7 @@ export default function RouteMap({ pontosRota, onPontoChegado }: RouteMapProps) 
     return () => {
       mounted = false;
       if (mapInstance.current) {
-        mapInstance.current.remove();
+        destruirMapa(mapInstance.current);
         mapInstance.current = null;
       }
     };
