@@ -19,6 +19,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import ActionTile from '../../components/ActionTile';
 import PainelHeader from '../../components/PainelHeader';
 import EnviarAvisoSheet from '../../components/EnviarAvisoSheet';
+import MaisSheet from '../../components/MaisSheet';
 import { useToast } from '../../components/Toast';
 import { withFabSpace } from '../../config/feedback';
 import { webTitleProps } from '../../utils/webTitle';
@@ -43,6 +44,7 @@ const DashboardGestor = ({ navigation }) => {
   const [naoLidas, setNaoLidas] = useState(0);
   const [atualizando, setAtualizando] = useState(false);
   const [avisoVisivel, setAvisoVisivel] = useState(false);
+  const [maisVisivel, setMaisVisivel] = useState(false);
 
   const carregarBloco = async (setBloco, buscar) => {
     try {
@@ -100,16 +102,16 @@ const DashboardGestor = ({ navigation }) => {
     else navigation.navigate(aba, { screen: tela, params });
   };
 
+  const itensMais = [
+    { icone: IconNames.editCalendar, nome: 'Gerar lote', cor: colors.solid.teal, ir: () => irParaAba('ViagensTab') },
+    { icone: IconNames.person, nome: 'Equipe', cor: colors.solid.blue, ir: () => irParaAba('EquipeTab') },
+    { icone: IconNames.bus, nome: 'Frota', cor: colors.solid.green, ir: () => irParaAba('FrotaTab') },
+    { icone: IconNames.chart, nome: 'Resumo da semana', cor: colors.solid.amber, ir: () => abrir('PerfilTab', 'ResumoSemana') },
+  ];
+
   const totalCadastros = cadastros.dados ? cadastros.dados.length : null;
   const totalOcorrencias = ocorrencias.dados ? ocorrencias.dados.length : null;
-  const tudoEmDia = totalCadastros === 0 && totalOcorrencias === 0;
   const viagensHoje = hoje.dados || [];
-
-  const tituloHoje = () => {
-    if (!hoje.dados) return 'Hoje';
-    const n = hoje.dados.length;
-    return `Hoje · ${n} ${n === 1 ? 'viagem' : 'viagens'}`;
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -125,59 +127,39 @@ const DashboardGestor = ({ navigation }) => {
         />
 
         <View style={styles.content}>
-          {/* Precisa de atenção */}
-          {tudoEmDia ? (
-            <View style={styles.emDia} accessible accessibilityLabel="Tudo em dia">
-              <Icon name={IconNames.checkCircle} size="md" color={colors.solid.green} />
-              <Text style={styles.emDiaTexto}>Tudo em dia</Text>
-            </View>
-          ) : (
-            <>
-              <Text style={styles.sectionTitle}>Precisa de atenção</Text>
-              <View style={styles.atencaoRow}>
+          {/* Precisa de atenção: pílulas que somem quando o número é zero */}
+          {totalCadastros > 0 || totalOcorrencias > 0 ? (
+            <View style={styles.pilulas}>
+              {totalCadastros > 0 ? (
                 <TouchableOpacity
-                  style={styles.atencaoCard}
+                  style={[styles.pilula, { backgroundColor: colors.warning.light }]}
                   onPress={() => abrir('EquipeTab', 'CadastrosPendentes')}
                   accessibilityRole="button"
-                  accessibilityLabel={`Cadastros aguardando aprovação: ${totalCadastros ?? 'indisponível'}`}
+                  accessibilityLabel={`Cadastros aguardando aprovação: ${totalCadastros}`}
                   {...webTitleProps('Cadastros aguardando aprovação')}>
-                  <View style={[styles.quadrado, { backgroundColor: colors.solid.amber }]}>
-                    <Icon name={IconNames.cadastro} size="lg" color="#FFFFFF" />
-                  </View>
-                  <View>
-                    {cadastros.carregando ? (
-                      <ActivityIndicator size="small" color={colors.solid.amber} />
-                    ) : (
-                      <Text style={styles.numero}>{totalCadastros ?? '—'}</Text>
-                    )}
-                    <Text style={styles.numeroRotulo}>Cadastros</Text>
-                  </View>
+                  <Text style={[styles.pilulaTexto, { color: '#92400E' }]}>
+                    {totalCadastros} {totalCadastros === 1 ? 'cadastro' : 'cadastros'}
+                  </Text>
                 </TouchableOpacity>
+              ) : null}
+              {totalOcorrencias > 0 ? (
                 <TouchableOpacity
-                  style={styles.atencaoCard}
+                  style={[styles.pilula, { backgroundColor: colors.error.light }]}
                   onPress={() => abrir('PerfilTab', 'OcorrenciasGestor')}
                   accessibilityRole="button"
-                  accessibilityLabel={`Ocorrências abertas: ${totalOcorrencias ?? 'indisponível'}`}
+                  accessibilityLabel={`Ocorrências abertas: ${totalOcorrencias}`}
                   {...webTitleProps('Ocorrências abertas')}>
-                  <View style={[styles.quadrado, { backgroundColor: '#DC2626' }]}>
-                    <Icon name={IconNames.warning} size="lg" color="#FFFFFF" />
-                  </View>
-                  <View>
-                    {ocorrencias.carregando ? (
-                      <ActivityIndicator size="small" color="#DC2626" />
-                    ) : (
-                      <Text style={styles.numero}>{totalOcorrencias ?? '—'}</Text>
-                    )}
-                    <Text style={styles.numeroRotulo}>Ocorrências</Text>
-                  </View>
+                  <Text style={[styles.pilulaTexto, { color: '#B91C1C' }]}>
+                    {totalOcorrencias} {totalOcorrencias === 1 ? 'ocorrência' : 'ocorrências'}
+                  </Text>
                 </TouchableOpacity>
-              </View>
-            </>
-          )}
+              ) : null}
+            </View>
+          ) : null}
 
           {/* Hoje */}
           <View style={styles.hojeHeader}>
-            <Text style={styles.sectionTitle}>{tituloHoje()}</Text>
+            <Text style={styles.sectionTitle}>Hoje</Text>
             <TouchableOpacity
               onPress={() => irParaAba('ViagensTab')}
               accessibilityRole="button"
@@ -215,7 +197,7 @@ const DashboardGestor = ({ navigation }) => {
                   accessibilityLabel={`Viagem às ${horaCurta(v.horario_inicio)}, ${trajeto}, ${situacao.aviso || situacao.selo}`}>
                   <Text style={styles.viagemHora}>{horaCurta(v.horario_inicio)}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.viagemTrajeto} numberOfLines={1}>
+                    <Text style={styles.viagemTrajeto} numberOfLines={2}>
                       {trajeto}
                     </Text>
                     {situacao.aviso ? (
@@ -238,36 +220,26 @@ const DashboardGestor = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Ações rápidas</Text>
           <View style={styles.qaGrid}>
             <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.campaign} label="Enviar aviso" color={colors.solid.amber} onPress={() => setAvisoVisivel(true)} />
+              <ActionTile icon={IconNames.campaign} label="Aviso" accessibilityLabel="Enviar aviso" color={colors.solid.amber} onPress={() => setAvisoVisivel(true)} />
             </View>
             <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.add} label="Nova viagem" color={colors.solid.blue} onPress={() => irParaAba('ViagensTab')} />
+              <ActionTile icon={IconNames.add} label="Viagem" accessibilityLabel="Nova viagem" color={colors.solid.blue} onPress={() => irParaAba('ViagensTab')} />
             </View>
             <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.editCalendar} label="Gerar lote" color={colors.solid.teal} onPress={() => irParaAba('ViagensTab')} />
+              <ActionTile icon={IconNames.route} label="Rota" accessibilityLabel="Nova rota" color={colors.solid.green} onPress={() => irParaAba('RotasTab')} />
             </View>
             <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.route} label="Nova rota" color={colors.solid.green} onPress={() => irParaAba('RotasTab')} />
-            </View>
-            <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.person} label="Equipe" color={colors.solid.teal} onPress={() => irParaAba('EquipeTab')} />
-            </View>
-            <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.bus} label="Frota" color={colors.solid.blue} onPress={() => irParaAba('FrotaTab')} />
+              <ActionTile icon={IconNames.moreHoriz} label="Mais" accessibilityLabel="Mais ações" color={colors.neutral[600]} onPress={() => setMaisVisivel(true)} />
             </View>
           </View>
-
-          <TouchableOpacity
-            style={styles.resumoLink}
-            onPress={() => abrir('PerfilTab', 'ResumoSemana')}
-            accessibilityRole="button"
-            accessibilityLabel="Ver resumo da semana">
-            <Text style={styles.resumoLinkTexto}>Ver resumo da semana</Text>
-            <Icon name={IconNames.chevronRight} size="md" color={colors.primary.main} />
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
+      <MaisSheet
+        visible={maisVisivel}
+        onClose={() => setMaisVisivel(false)}
+        itens={itensMais}
+      />
       <EnviarAvisoSheet
         visible={avisoVisivel}
         onClose={() => setAvisoVisivel(false)}
@@ -290,27 +262,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: spacing.base,
   },
-  atencaoRow: { flexDirection: 'row', gap: spacing.md },
-  atencaoCard: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    ...shadows.sm,
-  },
-  quadrado: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  numero: { ...textStyles.h2, color: colors.text.primary },
-  numeroRotulo: { ...textStyles.caption, color: colors.text.secondary },
-  emDia: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  emDiaTexto: { ...textStyles.body, color: colors.text.secondary, fontWeight: '600' },
+  pilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  pilula: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 999 },
+  pilulaTexto: { ...textStyles.bodySmall, fontWeight: '800' },
   hojeHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   verTodas: { ...textStyles.body, color: colors.primary.main, fontWeight: '700' },
   viagem: {
@@ -336,16 +290,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     rowGap: spacing.lg,
   },
-  qaCell: { width: '33.33%', alignItems: 'center' },
-  resumoLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xl,
-    paddingVertical: spacing.sm,
-  },
-  resumoLinkTexto: { ...textStyles.body, color: colors.primary.main, fontWeight: '700' },
+  qaCell: { width: '25%', alignItems: 'center' },
 });
 
 export default DashboardGestor;
