@@ -8,6 +8,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import FeedbackLayer from './src/components/FeedbackLayer';
 import BiometriaOferta from './src/components/BiometriaOferta';
 import DesbloqueioBiometria from './src/screens/Auth/DesbloqueioBiometria';
+import { FeedbackPadraoProvider } from './src/components/FeedbackPadraoContext';
 import { FEEDBACK_ENABLED } from './src/config/feedback';
 import { navigationRef } from './src/navigation/currentRoute';
 import { Platform } from 'react-native';
@@ -39,6 +40,7 @@ export const App: React.FC = () => {
   return (
     <ToastProvider>
       <AuthProvider>
+        <FeedbackPadraoProvider>
         <NavigationContainer
           ref={navigationRef}
           documentTitle={{
@@ -48,6 +50,7 @@ export const App: React.FC = () => {
         >
           <Root />
         </NavigationContainer>
+        </FeedbackPadraoProvider>
       </AuthProvider>
     </ToastProvider>
   );

@@ -1,4 +1,5 @@
 import {
+  decidirPosicao,
   ehArraste,
   ladoMaisProximo,
   limitarBaixo,
@@ -35,4 +36,16 @@ test('posição guardada inválida volta ao padrão', () => {
   expect(posicaoGuardada(null)).toBeNull();
   expect(posicaoGuardada({ lado: 'meio', baixo: 1 })).toBeNull();
   expect(posicaoGuardada({ lado: 'esq', baixo: 'x' })).toBeNull();
+});
+
+test('posição salva vence o padrão da tela', () => {
+  const base = { altura: 800, tamanho: 56, rodape: 24 };
+  const guardada = { lado: 'esq', baixo: 200 };
+  expect(decidirPosicao({ ...base, guardada, padraoTela: 'topo' })).toEqual(guardada);
+});
+
+test('sem posição salva usa o padrão da tela e senão o canto de baixo', () => {
+  const base = { guardada: null, altura: 800, tamanho: 56, rodape: 24 };
+  expect(decidirPosicao({ ...base, padraoTela: 'topo' })).toEqual({ lado: 'dir', baixo: 800 - 56 - 200 });
+  expect(decidirPosicao({ ...base, padraoTela: null })).toEqual({ lado: 'dir', baixo: 24 });
 });

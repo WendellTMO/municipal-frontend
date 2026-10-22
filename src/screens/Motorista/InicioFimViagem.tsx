@@ -42,6 +42,7 @@ import { CHIPS } from '../../components/ReportSheet';
 import { LocationMap, StaticRouteMap, useArrivalDetection, useRoutePolyline, normalizeRoutePoints } from '../../features/map/index';
 import SubHeader from '../../components/SubHeader';
 import ConfirmacaoTelaCheia from '../../components/ConfirmacaoTelaCheia';
+import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { montarParadas } from '../../utils/paradasViagem';
 import { horaCurta } from '../../utils/viagemPainel';
@@ -94,6 +95,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
   const [concluidas, setConcluidas] = useState(0);
   const [listaAberta, setListaAberta] = useState(false);
+  // Durante a viagem o botão de feedback fica no alto, fora do painel de baixo.
+  useFeedbackPadrao(viagemIniciada ? 'topo' : null);
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
   const [iniciarVisivel, setIniciarVisivel] = useState(false);
   const [avisoTexto, setAvisoTexto] = useState('');

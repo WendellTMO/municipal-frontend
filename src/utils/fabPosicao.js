@@ -26,3 +26,17 @@ export const posicaoGuardada = valor => {
   if (typeof valor.baixo !== 'number' || !isFinite(valor.baixo)) return null;
   return { lado: valor.lado, baixo: valor.baixo };
 };
+
+// Cabeçalho azul (SubHeader) mais os botões + e - do mapa, que ficam no canto superior direito:
+// o botão por tela fica logo abaixo deles.
+export const ABAIXO_DO_CABECALHO = 200;
+
+// A posição salva pelo usuário sempre vence. Sem ela, vale o padrão da tela ('topo') e,
+// sem padrão de tela, o canto de baixo à direita.
+export const decidirPosicao = ({ guardada, padraoTela, altura, tamanho, rodape }) => {
+  if (guardada) return guardada;
+  if (padraoTela === 'topo') {
+    return { lado: 'dir', baixo: altura - tamanho - ABAIXO_DO_CABECALHO };
+  }
+  return { lado: 'dir', baixo: rodape };
+};
