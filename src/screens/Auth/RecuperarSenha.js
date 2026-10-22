@@ -12,15 +12,12 @@ import {
   ActivityIndicator,
   Animated,
   StatusBar,
-  ImageBackground,
-  Dimensions,
 } from 'react-native';
 import { colors, spacing, borderRadius, shadows } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
+import AuthBackground from '../../components/AuthBackground';
+import AuthLogo from '../../components/AuthLogo';
 import { api } from '../../api/client';
-
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('screen');
-const CARD_TOP = Math.max(SCREEN_H * 0.40, 220);
 
 const RecuperarSenha = ({navigation}) => {
   const [email, setEmail] = useState('');
@@ -62,23 +59,21 @@ const RecuperarSenha = ({navigation}) => {
   if (enviado) {
     return (
       <SafeAreaView style={styles.root}>
-        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-        <ImageBackground
-          source={require('../../../assets/login-background.png')}
-          style={styles.background}
-          resizeMode="cover"
-        />
+        <AuthBackground />
 
         <TouchableOpacity
           style={styles.floatingBack}
           onPress={() => navigation.navigate('Login')}
           activeOpacity={0.7}
         >
-          <Icon name={IconNames.back} size="md" color="rgba(255,255,255,0.9)" />
+          <Icon name={IconNames.back} size="md" color={colors.neutral[700]} />
         </TouchableOpacity>
 
-        <View style={[styles.successCard, {marginTop: CARD_TOP}]}>
+        <AuthLogo width={150} style={styles.logo} />
+
+        <View style={styles.successCard}>
           <View style={styles.successContent}>
             <Text style={styles.successTitle}>Verifique sua caixa de entrada</Text>
             <Text style={styles.successBody}>
@@ -109,20 +104,16 @@ const RecuperarSenha = ({navigation}) => {
   // ── Default state ──────────────────────────────────
   return (
     <SafeAreaView style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      <ImageBackground
-        source={require('../../../assets/login-background.png')}
-        style={styles.background}
-        resizeMode="cover"
-      />
+      <AuthBackground />
 
       <TouchableOpacity
         style={styles.floatingBack}
         onPress={() => navigation.goBack()}
         activeOpacity={0.7}
       >
-        <Icon name={IconNames.back} size="md" color="rgba(255,255,255,0.9)" />
+        <Icon name={IconNames.back} size="md" color={colors.neutral[700]} />
       </TouchableOpacity>
 
       <KeyboardAvoidingView
@@ -134,8 +125,9 @@ const RecuperarSenha = ({navigation}) => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <AuthLogo width={150} style={styles.logo} />
           <Animated.View
-            style={[styles.card, {marginTop: CARD_TOP, opacity: cardOpacity, transform: [{translateY: cardTranslateY}]}]}
+            style={[styles.card, {opacity: cardOpacity, transform: [{translateY: cardTranslateY}]}]}
           >
             {/* Card header */}
             <View style={styles.cardHeader}>
@@ -231,17 +223,13 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    backgroundColor: 'rgba(15,23,42,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  background: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SCREEN_W,
-    height: SCREEN_H,
+  logo: {
+    marginTop: 40,
   },
 
   kav: {
@@ -261,8 +249,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xxl,
     paddingBottom: spacing.xl,
-    ...shadows.xl,
-    minHeight: '100%',
   },
 
   cardHeader: {
@@ -412,7 +398,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xxl,
     paddingBottom: spacing.xl,
     justifyContent: 'space-between',
-    ...shadows.xl,
   },
 
   successContent: {
