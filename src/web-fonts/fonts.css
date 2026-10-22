@@ -1,0 +1,27 @@
+/* Nomes de fonte usados nos estilos nativos (theme/typography.js), apontando para a Inter (subset latin, @fontsource/inter 5.3.0, SIL OFL).
+   Os .ttf de assets/fonts são páginas HTML salvas por engano e não servem como fonte.
+   font-display: block evita mostrar a fonte serifada padrão enquanto o arquivo carrega. */
+@font-face {
+  font-family: 'Inter-Regular';
+  src: url('./Inter-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Inter-Medium';
+  src: url('./Inter-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Inter-SemiBold';
+  src: url('./Inter-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Inter-Bold';
+  src: url('./Inter-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: block;
+}

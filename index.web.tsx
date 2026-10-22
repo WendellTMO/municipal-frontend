@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
+import './src/web-fonts/fonts.css';
 
 // Surface async failures that never reach a render boundary.
 window.addEventListener('unhandledrejection', event => {
