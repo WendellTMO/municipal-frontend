@@ -7,7 +7,9 @@ import { PanResponder, Platform, StyleSheet, useWindowDimensions, View } from 'r
 import { colors } from '../theme';
 import Icon, { IconNames } from './Icon';
 import { Storage } from '../utils/storage';
+import { useFeedbackPadraoAtual } from './FeedbackPadraoContext';
 import {
+  decidirPosicao,
   ehArraste,
   ladoMaisProximo,
   limitarBaixo,
@@ -40,7 +42,9 @@ const CHAVE_POSICAO = 'feedback_fab_posicao';
 
 const FeedbackButton = ({ onPress }) => {
   const { width, height } = useWindowDimensions();
-  const [posicao, setPosicao] = useState({ lado: 'dir', baixo: RODAPE });
+  const padraoTela = useFeedbackPadraoAtual();
+  const [guardada, setGuardada] = useState(null);
+  const posicao = decidirPosicao({ guardada, padraoTela, altura: height, tamanho: TAMANHO, rodape: RODAPE });
   const [arrasto, setArrasto] = useState(null); // { x, y } em pixels enquanto o dedo move
 
   // O responder é criado uma vez; este ref entrega a ele os valores mais recentes.
@@ -52,8 +56,8 @@ const FeedbackButton = ({ onPress }) => {
   useEffect(() => {
     const carregar = async () => {
       try {
-        const guardada = posicaoGuardada(await Storage.getItem(CHAVE_POSICAO));
-        if (guardada) setPosicao(guardada);
+        const salva = posicaoGuardada(await Storage.getItem(CHAVE_POSICAO));
+        if (salva) setGuardada(salva);
       } catch (e) {
         // sem storage fica na posição padrão
       }
@@ -104,7 +108,7 @@ const FeedbackButton = ({ onPress }) => {
           lado: ladoMaisProximo(solto.x + TAMANHO / 2, w),
           baixo: limitarBaixo(h - TAMANHO - solto.y, h, TAMANHO, TOPO, RODAPE),
         };
-        setPosicao(nova);
+        setGuardada(nova);
         setArrasto(null);
         Storage.setItem(CHAVE_POSICAO, nova);
       },
