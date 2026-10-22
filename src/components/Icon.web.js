@@ -105,6 +105,7 @@ export const IconNames = {
   warning: 'warning',
   error: 'error',
   info: 'info',
+  priorityHigh: 'priority-high',
   
   // Communication
   notifications: 'notifications',
