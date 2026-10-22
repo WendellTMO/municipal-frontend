@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import type * as LeafletNS from 'leaflet';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
+import { destruirMapa } from '../utils/leafletSeguro';
 
 type LeafletModule = typeof LeafletNS;
 type LeafletMap = LeafletNS.Map;
@@ -112,7 +113,7 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
     return () => {
       mounted = false;
       if (mapInstance.current) {
-        mapInstance.current.remove();
+        destruirMapa(mapInstance.current);
         mapInstance.current = null;
       }
     };

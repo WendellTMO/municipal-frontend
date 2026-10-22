@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import type * as LeafletNS from 'leaflet';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
+import { destruirMapa } from '../utils/leafletSeguro';
 
 type LeafletModule = typeof LeafletNS;
 type LeafletMap = LeafletNS.Map;
@@ -115,7 +116,7 @@ export default function MapPointPicker({
     return () => {
       mounted = false;
       if (mapInstance.current) {
-        mapInstance.current.remove();
+        destruirMapa(mapInstance.current);
         mapInstance.current = null;
         markerRef.current = null;
       }
