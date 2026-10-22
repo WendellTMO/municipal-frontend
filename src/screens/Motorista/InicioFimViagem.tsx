@@ -13,11 +13,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -63,6 +66,8 @@ try {
 }
 
 const GPS_SEND_INTERVAL_MS = 20_000;
+const AVISO_MIN = 3;
+const AVISO_MAX = 300;
 
 const BROADCAST_TEMPLATES = [
   { id: 'saindo', label: 'Saindo agora', icon: IconNames.play, msg: 'O ônibus está saindo agora. Dirija-se ao ponto!' },
@@ -88,6 +93,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [concluidas, setConcluidas] = useState(0);
   const [listaAberta, setListaAberta] = useState(false);
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
+  const [avisoTexto, setAvisoTexto] = useState('');
   const [tipoProblema, setTipoProblema] = useState<TipoOcorrencia | null>(null);
   const [posMotorista, setPosMotorista] = useState<{ latitude: number; longitude: number } | null>(null);
   const [alturaTopo, setAlturaTopo] = useState(0);
@@ -261,17 +267,18 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleBroadcast = async (template: (typeof BROADCAST_TEMPLATES)[number]) => {
+  const enviarAviso = async (titulo: string, mensagem: string) => {
     if (!viagemId) return;
     setSendingBroadcast(true);
     try {
       await createNotificacao({
-        titulo: template.label,
-        mensagem: template.msg,
+        titulo,
+        mensagem,
         viagem_id: viagemId,
       } as Parameters<typeof createNotificacao>[0]);
       toast.success('Aviso enviado aos alunos!');
       AccessibilityInfo.announceForAccessibility('Aviso enviado com sucesso');
+      setAvisoTexto('');
     } catch {
       toast.error('Não foi possível enviar o aviso.');
     } finally {
@@ -279,6 +286,11 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       setBroadcastVisible(false);
     }
   };
+
+  const handleBroadcast = (template: (typeof BROADCAST_TEMPLATES)[number]) =>
+    enviarAviso(template.label, template.msg);
+
+  const avisoValido = avisoTexto.trim().length >= AVISO_MIN;
 
   // ── Empty / loading guards ─────────────────────────────────────────────────
 
@@ -502,7 +514,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           animationType="slide"
           onRequestClose={() => setBroadcastVisible(false)}
           accessibilityViewIsModal>
-          <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <TouchableOpacity
               style={StyleSheet.absoluteFillObject}
               onPress={() => setBroadcastVisible(false)}
@@ -540,6 +552,30 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                   )}
                 </TouchableOpacity>
               ))}
+              <Text style={styles.modalSecao}>Escrever outro aviso</Text>
+              <TextInput
+                style={styles.avisoCampo}
+                value={avisoTexto}
+                onChangeText={setAvisoTexto}
+                maxLength={AVISO_MAX}
+                multiline
+                textAlignVertical="top"
+                placeholder="Digite a mensagem para os alunos"
+                placeholderTextColor={colors.text.hint}
+                accessibilityLabel="Escrever outro aviso"
+              />
+              <Text style={styles.avisoContador}>
+                {avisoTexto.length} / {AVISO_MAX}
+              </Text>
+              <TouchableOpacity
+                style={[styles.avisoEnviar, (!avisoValido || sendingBroadcast) && styles.acaoDesabilitada]}
+                onPress={() => enviarAviso('Aviso do motorista', avisoTexto.trim())}
+                disabled={!avisoValido || sendingBroadcast}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !avisoValido || sendingBroadcast }}
+                accessibilityLabel="Enviar aviso">
+                <Text style={styles.avisoEnviarTexto}>Enviar</Text>
+              </TouchableOpacity>
               <Text style={styles.modalSecao}>Registrar problema para a gestão</Text>
               <View style={styles.problemaChips}>
                 {CHIPS.map((chip) => (
@@ -560,7 +596,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               </View>
               </ScrollView>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
 
         <ReportSheet
@@ -1030,6 +1066,25 @@ const styles = StyleSheet.create({
 
   // Broadcast modal
   modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  avisoCampo: {
+    minHeight: 96,
+    borderWidth: 1.5,
+    borderColor: colors.border.light,
+    borderRadius: 14,
+    backgroundColor: colors.neutral[50],
+    padding: spacing.md,
+    fontSize: 16,
+    color: colors.text.primary,
+  },
+  avisoContador: { ...textStyles.caption, color: colors.text.hint, textAlign: 'right' },
+  avisoEnviar: {
+    minHeight: 52,
+    borderRadius: 14,
+    backgroundColor: colors.primary.main,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avisoEnviarTexto: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' as const },
   modalScroll: { flexGrow: 0 },
   modalSheet: {
     maxHeight: '92%',
