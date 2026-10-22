@@ -19,6 +19,7 @@ import { useToast } from '../../components/Toast';
 import { borderRadius, colors, fontWeight, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { formatPhone, formatCep, onlyDigits } from '../../utils/masks';
+import { withFabSpace } from '../../config/feedback';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -141,7 +142,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={withFabSpace(styles.scrollContent)}
           keyboardShouldPersistTaps="handled">
 
           {/* Dados pessoais */}

@@ -27,6 +27,7 @@ import { useToast } from '../../components/Toast';
 import { confirmAction } from '../../utils/confirm';
 import { webTitleProps } from '../../utils/webTitle';
 import ActionTile from '../../components/ActionTile';
+import { withFabSpace } from '../../config/feedback';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const GESTOR_DARK  = colors.accent.dark;
@@ -277,6 +278,7 @@ const DashboardGestor = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
+        contentContainerStyle={withFabSpace()}
         style={styles.scroll}
         refreshControl={
           <RefreshControl

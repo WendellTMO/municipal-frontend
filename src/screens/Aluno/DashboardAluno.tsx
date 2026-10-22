@@ -25,6 +25,7 @@ import { dayLabel } from '../../utils/dayLabel';
 import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
+import { withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = { navigation: NativeStackNavigationProp<RootParamList> };
@@ -297,6 +298,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
       <TripAlertBanner alert={alert} onDismiss={() => setAlert(null)} />
 
       <ScrollView
+        contentContainerStyle={withFabSpace()}
         style={styles.scrollView}
         refreshControl={
           <RefreshControl

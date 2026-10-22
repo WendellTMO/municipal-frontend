@@ -15,6 +15,7 @@ import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeigh
 import { ActionTile, Icon, IconNames, LoadingSpinner, TripHeroCard } from '../../components';
 import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
@@ -167,7 +168,7 @@ const DashboardMotorista = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>

@@ -15,6 +15,7 @@ import { alunoService } from '../../services';
 import { colors, spacing, borderRadius, shadows, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 const SelecaoRotas = ({navigation}) => {
   const [busca, setBusca] = useState('');
@@ -145,6 +146,7 @@ const SelecaoRotas = ({navigation}) => {
         </View>
       ) : (
         <ScrollView
+          contentContainerStyle={withFabSpace()}
           style={styles.scrollView}
           refreshControl={
             <RefreshControl 

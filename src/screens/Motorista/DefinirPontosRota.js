@@ -16,6 +16,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
 import { StaticRouteMap, MapPointPicker } from '../../features/map/index';
 import { unwrapItems } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 const RotaMapaSimples = ({ pontos }) => {
   const { validPontos, hasValidPoints } = useMemo(() => {
@@ -656,7 +657,7 @@ const DefinirPontosRota = ({navigation, route}) => {
         <Text style={styles.subtitle}>{rotaNome}</Text>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>
           
           {/* Route Map Visualization */}

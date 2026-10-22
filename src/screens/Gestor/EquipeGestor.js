@@ -22,6 +22,7 @@ import { useToast } from '../../components/Toast';
 import { formatCpf, onlyDigits } from '../../utils/masks';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { api } from '../../api/client';
+import { withFabSpace } from '../../config/feedback';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const SEGMENT = { MOTORISTAS: 0, ALUNOS: 1 };
@@ -319,6 +320,7 @@ const EquipeGestor = ({ navigation }) => {
           <ErrorView message={errMsg ?? 'Erro ao carregar'} onRetry={onRetry} />
         ) : (
           <ScrollView
+            contentContainerStyle={withFabSpace()}
             style={styles.list}
             refreshControl={
               <RefreshControl

@@ -16,6 +16,7 @@ import {
 import { borderRadius, colors, shadows, spacing, textStyles, fontWeight } from '../../theme';
 import { Icon, IconNames, LoadingSpinner, EmptyState } from '../../components';
 import type { Notificacao } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -126,7 +127,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
           data={notificacoes}
           keyExtractor={item => String(item.id)}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={withFabSpace(styles.listContent)}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

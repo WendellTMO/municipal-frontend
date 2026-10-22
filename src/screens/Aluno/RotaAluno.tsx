@@ -18,6 +18,7 @@ import { useToast } from '../../components/Toast';
 import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
+import { withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -219,6 +220,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
       </View>
 
       <ScrollView
+        contentContainerStyle={withFabSpace()}
         style={styles.scrollView}
         refreshControl={
           <RefreshControl

@@ -15,6 +15,7 @@ import { colors, spacing, borderRadius, shadows, textStyles, fontWeight } from '
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { formatTime } from '../../utils/masks';
+import { withFabSpace } from '../../config/feedback';
 
 const DIAS_SEMANA = [
   { id: 'SEG', label: 'Seg' },
@@ -167,7 +168,7 @@ const DefinirHorariosRota = ({ navigation, route }) => {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>
           {/* Existing Schedules */}
           <View style={styles.card}>

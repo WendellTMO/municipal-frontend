@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
+import { withFabSpace } from '../../config/feedback';
 
 const ListaAlunosConfirmados = ({navigation, route}) => {
   const viagem = route?.params?.viagem || {};
@@ -47,7 +48,7 @@ const ListaAlunosConfirmados = ({navigation, route}) => {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>
           <View style={styles.resumo}>
             <Text style={styles.resumoText}>
