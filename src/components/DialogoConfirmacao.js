@@ -37,7 +37,7 @@ const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, se
           {secundario.carregando ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={[styles.botaoTexto, styles.botaoTextoSecundario]}>{secundario.texto}</Text>
+            <Text style={styles.botaoTexto}>{secundario.texto}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -62,11 +62,10 @@ const styles = StyleSheet.create({
   },
   titulo: { ...textStyles.h3, color: colors.text.primary, textAlign: 'center' },
   resumo: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.xs, marginBottom: spacing.md },
-  // Continuar (verde) é o maior e mais forte; Sim, finalizar (vermelho) é menor e mais leve.
+  // Mesma fonte nos dois botões; a diferença fica na altura e na cor.
   botao: { minHeight: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  botaoTexto: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
+  botaoTexto: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
   botaoSecundario: { minHeight: 48, marginTop: 14 },
-  botaoTextoSecundario: { fontSize: 16, fontWeight: '600' },
 });
 
 export default DialogoConfirmacao;
