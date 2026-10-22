@@ -143,6 +143,7 @@ export const IconNames = {
   seat: 'event-seat',
   editCalendar: 'edit-calendar',
   inbox: 'inbox',
+  noPonto: 'where-to-vote',
   campaign: 'campaign',
   cadastro: 'how-to-reg',
   
