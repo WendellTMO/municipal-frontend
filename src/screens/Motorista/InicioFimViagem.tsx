@@ -12,6 +12,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
+  BackHandler,
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
@@ -221,6 +222,23 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     minRefetchDistanceMeters: 20,
   });
 
+  // Escape (web) e voltar do sistema (Android) fecham a lista de paradas.
+  useEffect(() => {
+    if (!listaAberta) return;
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setListaAberta(false);
+    };
+    if (Platform.OS === 'web') {
+      window.addEventListener('keydown', aoTeclar);
+      return () => window.removeEventListener('keydown', aoTeclar);
+    }
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setListaAberta(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [listaAberta]);
+
   const formatarTempo = (s: number) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -367,46 +385,64 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         {/* Floating bottom: secondary actions + finalizar */}
-        {/* Lista de paradas sobre o mapa, abre e fecha pelo ícone Paradas */}
+        {/* Folha de paradas: fundo escurecido fecha, X fecha, Paradas alterna, Escape/voltar fecham */}
         {listaAberta ? (
-          <View style={[styles.listaFlutuante, { bottom: alturaPainel + spacing.sm }]}>
-            <Text style={styles.listaTitulo}>
-              Paradas ({Math.min(concluidas, paradas.length)} de {paradas.length})
-            </Text>
-            <ScrollView nestedScrollEnabled>
-              {paradas.map((p) => (
-                <View key={p.ponto.id ?? p.numero} style={styles.paradaLinha}>
-                  <View
-                    style={[
-                      styles.paradaNumero,
-                      p.estado === 'feita' && { backgroundColor: colors.success.main },
-                      p.estado === 'proxima' && { backgroundColor: '#1565C0' },
-                    ]}>
-                    {p.estado === 'feita' ? (
-                      <Icon name={IconNames.check} size="xs" color="#FFFFFF" />
-                    ) : (
-                      <Text style={styles.paradaNumeroTexto}>{p.numero}</Text>
-                    )}
+          <View style={[styles.listaCamada, { bottom: alturaPainel }]}>
+            <TouchableOpacity
+              style={StyleSheet.absoluteFillObject}
+              activeOpacity={1}
+              onPress={() => setListaAberta(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar lista de paradas"
+            />
+            <View style={styles.listaFolha}>
+              <View style={styles.listaCabecalho}>
+                <Text style={styles.listaTitulo} accessibilityRole="header">
+                  Paradas ({Math.min(concluidas, paradas.length)} de {paradas.length})
+                </Text>
+                <TouchableOpacity
+                  style={styles.listaFechar}
+                  onPress={() => setListaAberta(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Fechar">
+                  <Icon name={IconNames.close} size="md" color={colors.text.secondary} />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.listaRolagem} contentContainerStyle={styles.listaConteudo}>
+                {paradas.map((p) => (
+                  <View key={p.ponto.id ?? p.numero} style={styles.paradaLinha}>
+                    <View
+                      style={[
+                        styles.paradaNumero,
+                        p.estado === 'feita' && { backgroundColor: colors.success.main },
+                        p.estado === 'proxima' && { backgroundColor: '#1565C0' },
+                      ]}>
+                      {p.estado === 'feita' ? (
+                        <Icon name={IconNames.check} size="xs" color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.paradaNumeroTexto}>{p.numero}</Text>
+                      )}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[styles.paradaNome, p.estado === 'feita' && styles.paradaFeita]}
+                        numberOfLines={2}>
+                        {p.ponto.apelido}
+                      </Text>
+                      {p.instituicao ? (
+                        <View style={styles.instituicaoLinha}>
+                          <Icon name={IconNames.school} size="xs" color={colors.primary.main} />
+                          <Text style={styles.instituicaoTexto} numberOfLines={2}>
+                            {p.instituicao.nome}
+                            {p.instituicao.tipo ? ` · ${p.instituicao.tipo}` : ''}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={[styles.paradaNome, p.estado === 'feita' && styles.paradaFeita]}
-                      numberOfLines={2}>
-                      {p.ponto.apelido}
-                    </Text>
-                    {p.instituicao ? (
-                      <View style={styles.instituicaoLinha}>
-                        <Icon name={IconNames.school} size="xs" color={colors.primary.main} />
-                        <Text style={styles.instituicaoTexto} numberOfLines={1}>
-                          {p.instituicao.nome}
-                          {p.instituicao.tipo ? ` · ${p.instituicao.tipo}` : ''}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
+                ))}
+              </ScrollView>
+            </View>
           </View>
         ) : null}
 
@@ -874,18 +910,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   acaoDesabilitada: { opacity: 0.4 },
-  listaFlutuante: {
+  listaCamada: {
     position: 'absolute',
-    left: spacing.base,
-    right: spacing.base,
-    maxHeight: 260,
-    backgroundColor: '#FFFFFF',
-    borderRadius: borderRadius.xl,
-    padding: spacing.base,
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 20,
-    ...shadows.xl,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(15,23,42,0.45)',
   },
-  listaTitulo: { ...textStyles.h5, color: colors.text.primary, marginBottom: spacing.xs },
+  listaFolha: {
+    maxHeight: '65%',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: borderRadius.xxl,
+    borderTopRightRadius: borderRadius.xxl,
+    padding: spacing.base,
+  },
+  listaCabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  listaTitulo: { ...textStyles.h4, color: colors.text.primary },
+  listaFechar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.neutral[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listaRolagem: { flexShrink: 1 },
+  listaConteudo: { paddingBottom: spacing.base },
   modalSecao: { ...textStyles.h5, color: colors.text.primary, marginTop: spacing.base, marginBottom: spacing.sm },
   problemaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   problemaChip: {
