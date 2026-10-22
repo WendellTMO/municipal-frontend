@@ -16,6 +16,8 @@ export { default as AuthBackground } from './AuthBackground';
 export { default as AuthLogo } from './AuthLogo';
 export { default as ActionTile } from './ActionTile';
 export { default as TripHeroCard } from './TripHeroCard';
+export { default as PainelHeader } from './PainelHeader';
+export { default as SubHeader } from './SubHeader';
 
 // State Components
 export { 
