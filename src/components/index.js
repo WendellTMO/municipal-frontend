@@ -14,6 +14,8 @@ export { ToastProvider, useToast } from './Toast';
 export { default as Button } from './Button';
 export { default as AuthBackground } from './AuthBackground';
 export { default as AuthLogo } from './AuthLogo';
+export { default as ActionTile } from './ActionTile';
+export { default as TripHeroCard } from './TripHeroCard';
 
 // State Components
 export { 
