@@ -94,6 +94,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [concluidas, setConcluidas] = useState(0);
   const [listaAberta, setListaAberta] = useState(false);
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
+  const [iniciarVisivel, setIniciarVisivel] = useState(false);
   const [avisoTexto, setAvisoTexto] = useState('');
   const [tipoProblema, setTipoProblema] = useState<TipoOcorrencia | null>(null);
   const [posMotorista, setPosMotorista] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -247,8 +248,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     return h > 0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
   };
 
+  // Só o botão da tela de instituições chama o endpoint de iniciar.
   const handleIniciarViagem = async () => {
     if (!viagemId) return;
+    setIniciarVisivel(false);
     try {
       setLoading(true);
       await motoristaService.iniciarViagem(viagemId);
@@ -744,7 +747,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         {/* Iniciar button */}
         <TouchableOpacity
           style={[styles.iniciarButton, loading && styles.buttonDisabled]}
-          onPress={handleIniciarViagem}
+          onPress={() => setIniciarVisivel(true)}
           disabled={loading}
           accessibilityRole="button"
           accessibilityLabel="Iniciar viagem"
@@ -759,6 +762,41 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      <ConfirmacaoTelaCheia
+        visible={iniciarVisivel}
+        titulo="Instituições de ensino desta rota"
+        onCancelar={() => setIniciarVisivel(false)}
+        principal={{ texto: 'Iniciar viagem', cor: colors.success.main, onPress: handleIniciarViagem }}
+        secundario={{
+          texto: 'Voltar',
+          cor: colors.neutral[200],
+          corTexto: colors.text.primary,
+          onPress: () => setIniciarVisivel(false),
+        }}>
+        {paradas.filter((p) => p.instituicao).length === 0 ? (
+          <Text style={styles.semInstituicao}>Nenhuma instituição vinculada a esta rota</Text>
+        ) : (
+          paradas
+            .filter((p) => p.instituicao)
+            .map((p) => (
+              <View key={p.ponto.id ?? p.numero} style={styles.instituicaoCard}>
+                <View style={styles.instituicaoIcone}>
+                  <Icon name={IconNames.school} size="md" color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.instituicaoNome}>{p.instituicao!.nome}</Text>
+                  <Text style={styles.instituicaoDetalhe}>
+                    {p.instituicao!.endereco || p.instituicao!.tipo || ''}
+                  </Text>
+                  <Text style={styles.instituicaoParada}>
+                    Parada {p.numero}: {p.ponto.apelido}
+                  </Text>
+                </View>
+              </View>
+            ))
+        )}
+      </ConfirmacaoTelaCheia>
 
       {/* Broadcast Modal */}
       <Modal
@@ -897,6 +935,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chegueiTexto: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' as const },
+  semInstituicao: { ...textStyles.body, color: colors.text.secondary },
+  instituicaoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.background.paper,
+    borderRadius: 18,
+    padding: spacing.base,
+  },
+  instituicaoIcone: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: colors.solid.blue,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  instituicaoNome: { ...textStyles.h5, color: colors.text.primary },
+  instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
+  instituicaoParada: { ...textStyles.caption, color: colors.primary.main, marginTop: 2 },
   resumo: { backgroundColor: colors.background.paper, borderRadius: 20, padding: spacing.lg, gap: spacing.xs },
   resumoRotulo: { ...textStyles.caption, color: colors.text.secondary, letterSpacing: 1, marginTop: spacing.sm },
   resumoValor: { ...textStyles.h4, color: colors.text.primary },
