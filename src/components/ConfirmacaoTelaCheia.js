@@ -1,7 +1,6 @@
 /**
  * Tela cheia de confirmação (Modal em tela cheia, funciona igual na web e no nativo).
- * Conteúdo e botões ficam juntos no alto (sem vazio no meio); se a lista crescer, ela
- * rola e os botões continuam visíveis embaixo dela. Voltar do sistema ou Escape cancelam.
+ * Os botões ficam fixos embaixo, sempre visíveis; só a lista entre o título e eles rola. Voltar do sistema ou Escape cancelam.
  */
 import React from 'react';
 import { ActivityIndicator, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -53,10 +52,17 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.default },
   conteudo: { flex: 1, padding: spacing.lg },
   titulo: { ...textStyles.h2, color: colors.text.primary, marginTop: spacing.lg, marginBottom: spacing.base },
-  // O corpo tem a altura do conteúdo e só rola quando passa da tela; os botões ficam logo abaixo.
-  corpo: { flexGrow: 0, flexShrink: 1 },
+  // A lista ocupa o espaço entre o título e a barra de botões e rola sozinha.
+  corpo: { flex: 1 },
   corpoConteudo: { gap: spacing.md, paddingBottom: spacing.base },
-  botoes: { paddingTop: spacing.base, paddingBottom: spacing.base },
+  // Barra fixa embaixo, com fundo sólido: os botões nunca saem da tela, qualquer que seja a lista.
+  botoes: {
+    paddingTop: spacing.base,
+    paddingBottom: spacing.lg,
+    backgroundColor: colors.background.default,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+  },
   principal: { minHeight: 80, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   principalTexto: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
   espaco: { height: spacing.base },
