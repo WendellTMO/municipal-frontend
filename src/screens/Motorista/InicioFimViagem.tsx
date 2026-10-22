@@ -45,7 +45,7 @@ import { createNotificacao } from '../../services/notificacaoService';
 import { useToast } from '../../components/Toast';
 import { unwrapItems } from '../../types';
 import type { InstituicaoResponse, PontoFlatResponse, TipoOcorrencia } from '../../types';
-import { FEEDBACK_FAB_SPACE, withFabSpace } from '../../config/feedback';
+import { withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -785,7 +785,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: borderRadius.xxl,
     borderTopRightRadius: borderRadius.xxl,
     padding: spacing.base,
-    paddingBottom: Math.max(spacing.xl, FEEDBACK_FAB_SPACE),
+    paddingBottom: spacing.xl,
     gap: spacing.md,
     ...shadows.xl,
   },
@@ -811,7 +811,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chegueiTexto: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' as const },
-  acoesRow: { flexDirection: 'row', justifyContent: 'space-evenly' },
+  // space-between com ícones de tamanho fixo: as bordas coincidem com as do Finalizar Viagem.
+  acoesRow: { flexDirection: 'row', justifyContent: 'space-between' },
   acaoIcone: {
     width: 64,
     height: 64,
