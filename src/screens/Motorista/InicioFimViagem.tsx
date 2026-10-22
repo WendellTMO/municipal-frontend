@@ -943,10 +943,10 @@ const styles = StyleSheet.create({
   instituicaoNome: { ...textStyles.h5, color: colors.text.primary },
   instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
   instituicaoQtd: { ...textStyles.h5, color: colors.primary.main },
-  // space-between com ícones de tamanho fixo: as bordas coincidem com as do Finalizar Viagem.
-  acoesRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  // Quatro botões com flex igual e vão de 8 px: ocupam a largura do Finalizar Viagem, sem sobras.
+  acoesRow: { flexDirection: 'row', gap: spacing.sm },
   acaoIcone: {
-    width: 64,
+    flex: 1,
     height: 64,
     borderRadius: 18,
     alignItems: 'center',
