@@ -16,6 +16,7 @@ import { userService } from '../services/userService';
 import { useToast } from '../components/Toast';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, lineHeight } from '../theme';
 import Icon, { IconNames } from '../components/Icon';
+import { withFabSpace } from '../config/feedback';
 
 const roleLabel = (role?: string) => {
   const map: Record<string, string> = {
@@ -105,7 +106,7 @@ const ConfigNotificacoes = ({ navigation }) => {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={withFabSpace(styles.content)}>
         <AccountSection user={user} showProfileCard={isAluno} />
 
         {isAluno && (

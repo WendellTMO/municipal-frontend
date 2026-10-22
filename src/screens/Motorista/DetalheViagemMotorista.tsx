@@ -33,6 +33,7 @@ import { motoristaService } from '../../services/motoristaService';
 import { useAuth } from '../../contexts/AuthContext';
 import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -119,7 +120,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
 
           {/* Summary card */}

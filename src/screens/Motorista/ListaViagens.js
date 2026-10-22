@@ -15,6 +15,7 @@ import { LoadingView, ErrorView, EmptyView } from '../../components/LoadingState
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -140,6 +141,7 @@ const ListaViagens = ({navigation, route}) => {
         />
       ) : (
         <ScrollView
+          contentContainerStyle={withFabSpace()}
           style={styles.scrollView}
           refreshControl={
             <RefreshControl 

@@ -17,6 +17,7 @@ import { useToast } from '../../components/Toast';
 import { colors, spacing, borderRadius, shadows, textStyles, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 const DIAS_ORDER = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
 const DIAS_SHORT = { SEG: 'Seg', TER: 'Ter', QUA: 'Qua', QUI: 'Qui', SEX: 'Sex', SAB: 'Sáb', DOM: 'Dom' };
@@ -387,6 +388,7 @@ const RotaMotorista = ({ navigation }) => {
         </View>
       ) : (
         <ScrollView
+          contentContainerStyle={withFabSpace()}
           style={styles.scrollView}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
           <View style={styles.content}>

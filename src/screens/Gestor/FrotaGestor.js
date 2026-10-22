@@ -21,6 +21,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
 import { formatPlaca, onlyDigits } from '../../utils/masks';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
+import { withFabSpace } from '../../config/feedback';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const INFO_COLOR = colors.info.main;
@@ -251,6 +252,7 @@ const FrotaGestor = () => {
           </View>
         ) : (
           <ScrollView
+            contentContainerStyle={withFabSpace()}
             style={styles.list}
             refreshControl={
               <RefreshControl

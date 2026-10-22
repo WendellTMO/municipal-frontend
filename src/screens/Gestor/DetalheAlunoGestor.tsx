@@ -16,6 +16,7 @@ import { useToast } from '../../components/Toast';
 import { useFetch } from '../../hooks';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
 import type { AlunoResponse } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -137,7 +138,7 @@ const DetalheAlunoGestor = ({ route, navigation }: any) => {
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={withFabSpace(styles.scrollContent)} showsVerticalScrollIndicator={false}>
 
         {/* Section: Minor info */}
         <SectionCard title="Dados do Estudante" icon="person">

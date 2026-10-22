@@ -41,6 +41,7 @@ import { createNotificacao } from '../../services/notificacaoService';
 import { useToast } from '../../components/Toast';
 import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -459,7 +460,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.preContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withFabSpace(styles.preContent)} showsVerticalScrollIndicator={false}>
         {/* Route summary card */}
         <View style={styles.card}>
           <View style={styles.routeRow}>

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight, lineHeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
+import { withFabSpace } from '../../config/feedback';
 
 const RotaOtimizada = ({navigation, route}) => {
   const {viagem} = route?.params || {};
@@ -31,7 +32,7 @@ const RotaOtimizada = ({navigation, route}) => {
         <Text style={styles.title}>Rota Otimizada</Text>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>
           {/* Aviso se não estiver totalmente otimizada */}
           {pontosForaDeOrdem.length > 0 && (

@@ -16,6 +16,7 @@ import { useToast } from '../../components/Toast';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
+import { withFabSpace } from '../../config/feedback';
 
 const SelectorCard = ({ item, selected, onPress, label, sublabel }) => (
   <TouchableOpacity
@@ -108,7 +109,7 @@ const CriarRota = ({ navigation }) => {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
           <View style={styles.infoBox}>
             <Icon name={IconNames.info} size="md" color={colors.info.main} style={styles.infoIcon} />

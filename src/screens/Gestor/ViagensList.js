@@ -18,6 +18,7 @@ import { borderRadius, colors, fontWeight, shadows, spacing, textStyles } from '
 import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
+import { withFabSpace } from '../../config/feedback';
 
 const GESTOR_COLOR = colors.roles.gestor;
 
@@ -168,6 +169,7 @@ const ViagensList = ({ navigation }) => {
         </View>
       ) : (
         <ScrollView
+          contentContainerStyle={withFabSpace()}
           style={styles.list}
           refreshControl={
             <RefreshControl

@@ -18,6 +18,7 @@ import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { StaticRouteMap } from '../../features/map/index';
+import { withFabSpace } from '../../config/feedback';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -211,7 +212,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>
           {/* Main Info Card */}
           <View style={styles.card}>
