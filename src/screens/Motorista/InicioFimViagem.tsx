@@ -42,6 +42,7 @@ import { CHIPS } from '../../components/ReportSheet';
 import { LocationMap, StaticRouteMap, useArrivalDetection, useRoutePolyline, normalizeRoutePoints } from '../../features/map/index';
 import SubHeader from '../../components/SubHeader';
 import ConfirmacaoTelaCheia from '../../components/ConfirmacaoTelaCheia';
+import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { montarParadas } from '../../utils/paradasViagem';
 import { horaCurta } from '../../utils/viagemPainel';
 import { motoristaService } from '../../services/motoristaService';
@@ -522,29 +523,14 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
 
-        <ConfirmacaoTelaCheia
+        <DialogoConfirmacao
           visible={finalizarVisivel}
           titulo="Finalizar a viagem?"
+          resumo={`${formatarTempo(tempoDecorrido)} · paradas feitas ${Math.min(concluidas, paradas.length)} de ${paradas.length}`}
           onCancelar={() => setFinalizarVisivel(false)}
           principal={{ texto: 'Continuar viagem', cor: colors.success.main, onPress: () => setFinalizarVisivel(false) }}
-          secundario={{
-            texto: 'Sim, finalizar',
-            cor: colors.error.main,
-            corTexto: '#FFFFFF',
-            carregando: loading,
-            onPress: confirmarFinalizar,
-          }}>
-          <View style={styles.resumo}>
-            <Text style={styles.resumoRotulo}>Rota</Text>
-            <Text style={styles.resumoValor}>{(currentViagem.rota_nome as string) || '—'}</Text>
-            <Text style={styles.resumoRotulo}>Tempo decorrido</Text>
-            <Text style={styles.resumoValor}>{formatarTempo(tempoDecorrido)}</Text>
-            <Text style={styles.resumoRotulo}>Paradas feitas</Text>
-            <Text style={styles.resumoValor}>
-              {Math.min(concluidas, paradas.length)} de {paradas.length}
-            </Text>
-          </View>
-        </ConfirmacaoTelaCheia>
+          secundario={{ texto: 'Sim, finalizar', cor: colors.error.main, carregando: loading, onPress: confirmarFinalizar }}
+        />
 
         {/* Broadcast Modal */}
         <Modal
@@ -955,9 +941,6 @@ const styles = StyleSheet.create({
   instituicaoNome: { ...textStyles.h5, color: colors.text.primary },
   instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
   instituicaoParada: { ...textStyles.caption, color: colors.primary.main, marginTop: 2 },
-  resumo: { backgroundColor: colors.background.paper, borderRadius: 20, padding: spacing.lg, gap: spacing.xs },
-  resumoRotulo: { ...textStyles.caption, color: colors.text.secondary, letterSpacing: 1, marginTop: spacing.sm },
-  resumoValor: { ...textStyles.h4, color: colors.text.primary },
   // space-between com ícones de tamanho fixo: as bordas coincidem com as do Finalizar Viagem.
   acoesRow: { flexDirection: 'row', justifyContent: 'space-between' },
   acaoIcone: {
