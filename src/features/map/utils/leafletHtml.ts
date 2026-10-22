@@ -88,6 +88,9 @@ export function buildLeafletHtml(): string {
           mapInstance: null,
           userMarker: null,
           destMarker: null,
+          permitirSeguir: true,
+          seguindo: true,
+          programatico: false,
           routeLine: null,
           stopMarkers: [],
           enquadrou: false,
@@ -107,6 +110,16 @@ export function buildLeafletHtml(): string {
               maxZoom: ${TILE_MAX_ZOOM},
             }).addTo(this.mapInstance);
   
+            // Arrastar ou dar zoom para de seguir o ônibus; o botão Minha posição religa.
+            var self = this;
+            var parar = function () {
+              if (!self.seguindo) return;
+              self.seguindo = false;
+              postMessage({ type: 'seguir', valor: false });
+            };
+            this.mapInstance.on('dragstart', parar);
+            this.mapInstance.on('zoomstart', function () { if (!self.programatico) parar(); });
+
             postMessage({ type: 'mapReady' });
           },
   
@@ -126,7 +139,11 @@ export function buildLeafletHtml(): string {
               this.destMarker = L.marker(latLng, { icon }).addTo(this.mapInstance);
             }
 
-            this.mapInstance.setView(latLng, this.mapInstance.getZoom());
+            if (this.seguindo) {
+              this.programatico = true;
+              this.mapInstance.setView(latLng, this.mapInstance.getZoom());
+              this.programatico = false;
+            }
           },
   
           clearDestination() {

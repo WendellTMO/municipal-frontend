@@ -34,6 +34,8 @@ export type LocationMapProps = {
   seguirOnibus?: boolean;
   /** Cada aumento deste número leva o mapa ao ônibus (zoom 16 ou o atual, se maior). */
   centralizarTick?: number;
+  /** Avisa quando o seguimento automático do ônibus liga ou desliga (arrastar ou dar zoom desliga). */
+  onSeguirChange?: (seguindo: boolean) => void;
 };
 
 export type RouteMapProps = {
