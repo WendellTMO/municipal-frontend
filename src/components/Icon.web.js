@@ -148,6 +148,7 @@ export const IconNames = {
   moreVert: 'more-vert',
   moreHoriz: 'more-horiz',
   logout: 'logout',
+  fingerprint: 'fingerprint',
   login: 'login',
   send: 'send',
   flag: 'flag',
