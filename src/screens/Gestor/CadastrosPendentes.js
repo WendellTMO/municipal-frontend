@@ -16,6 +16,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import SubHeader from '../../components/SubHeader';
 import { getErrorMessageFromError } from '../../utils/errors';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 const CadastrosPendentes = ({ navigation }) => {
   const [alunos, setAlunos] = useState([]);
@@ -94,6 +95,7 @@ const CadastrosPendentes = ({ navigation }) => {
             </TouchableOpacity>
           ))
         )}
+        <SairDaConta />
       </ScrollView>
     </SafeAreaView>
   );

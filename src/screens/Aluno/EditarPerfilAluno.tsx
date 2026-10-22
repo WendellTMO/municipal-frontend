@@ -21,6 +21,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { confirmAction } from '../../utils/confirm';
 import { formatPhone, formatCep, onlyDigits } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -311,6 +312,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
               </>
             )}
           </TouchableOpacity>
+          <SairDaConta />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

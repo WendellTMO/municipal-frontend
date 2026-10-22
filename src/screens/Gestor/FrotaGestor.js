@@ -22,6 +22,7 @@ import { useToast } from '../../components/Toast';
 import { formatPlaca, onlyDigits } from '../../utils/masks';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const INFO_COLOR = colors.info.main;
@@ -353,6 +354,7 @@ const FrotaGestor = () => {
                 </View>
               ))}
             </View>
+            <SairDaConta />
           </ScrollView>
         )}
       </KeyboardAvoidingView>

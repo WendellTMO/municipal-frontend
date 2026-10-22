@@ -23,6 +23,7 @@ import { formatCpf, onlyDigits } from '../../utils/masks';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { api } from '../../api/client';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const SEGMENT = { MOTORISTAS: 0, ALUNOS: 1 };
@@ -389,6 +390,7 @@ const EquipeGestor = ({ navigation }) => {
                   ))
               }
             </View>
+            <SairDaConta />
           </ScrollView>
         )}
       </KeyboardAvoidingView>

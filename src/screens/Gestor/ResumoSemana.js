@@ -7,6 +7,7 @@ import SubHeader from '../../components/SubHeader';
 import { getErrorMessageFromError } from '../../utils/errors';
 import { periodoUltimosDias, isoLocal } from '../../utils/saudacao';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 const ResumoSemana = ({ navigation }) => {
   const [dados, setDados] = useState(null);
@@ -62,6 +63,7 @@ const ResumoSemana = ({ navigation }) => {
             </View>
           ))
         )}
+        <SairDaConta />
       </ScrollView>
     </SafeAreaView>
   );
