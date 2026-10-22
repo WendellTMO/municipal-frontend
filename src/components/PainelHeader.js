@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     backgroundColor: colors.primary.main,
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.xl + 18,
     paddingBottom: spacing.xl,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   contadorTexto: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   fundo: { flex: 1, backgroundColor: 'rgba(15,23,42,0.35)' },
   menu: {
-    marginTop: 72,
+    marginTop: 90,
     marginLeft: spacing.base,
     width: 270,
     backgroundColor: '#FFFFFF',
