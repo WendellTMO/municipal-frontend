@@ -17,8 +17,13 @@ export default function LocationMap({
   posicaoAluno,
   margemSuperior = 0,
   margemInferior = 0,
-  controles = true,
+  previa = false,
+  onToque,
 }: LocationMapProps) {
+  const controles = !previa;
+  // O mapa é criado uma vez; o ref entrega a ele o onToque mais recente.
+  const onToqueRef = useRef(onToque);
+  onToqueRef.current = onToque;
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<LeafletMap | null>(null);
   const LRef = useRef<LeafletModule | null>(null);
@@ -49,10 +54,24 @@ export default function LocationMap({
       if (!mounted || !mapRef.current) return;
 
       // Zoom à direita: o canto de cima à esquerda é do selo de estado do ônibus.
-      // Na prévia (controles = false) a atribuição vai curta para não cobrir o mapa pequeno.
-      const map = L.map(mapRef.current, { zoomControl: false, attributionControl: controles }).setView([-23.55, -46.63], 13);
-      if (!controles) L.control.attribution({ prefix: false }).addAttribution('© OSM').addTo(map);
-      if (controles) L.control.zoom({ position: 'topright' }).addTo(map);
+      // Prévia: só pinça de dois dedos dá zoom. O arraste de um dedo fica desligado
+      // para a página continuar rolando, e a rolagem do mouse não é capturada.
+      const map = L.map(mapRef.current, {
+        zoomControl: false,
+        attributionControl: controles,
+        dragging: controles,
+        scrollWheelZoom: controles,
+        doubleClickZoom: controles,
+        boxZoom: controles,
+        keyboard: controles,
+        touchZoom: true,
+      }).setView([-23.55, -46.63], 13);
+      if (controles) {
+        L.control.zoom({ position: 'topright' }).addTo(map);
+      } else {
+        L.control.attribution({ prefix: false }).addAttribution('© OSM').addTo(map);
+        map.on('click', () => onToqueRef.current?.());
+      }
 
       L.tileLayer(TILE_URL, {
         attribution: controles ? TILE_ATTRIBUTION : '',
@@ -105,6 +124,7 @@ export default function LocationMap({
           iconSize: [32, 32],
           iconAnchor: [16, 16],
         }),
+        interactive: controles,
       }).addTo(map);
     }
 
@@ -163,10 +183,11 @@ export default function LocationMap({
           iconSize: [22, 22],
           iconAnchor: [11, 11],
         }),
+        interactive: controles, // na prévia o toque no marcador também abre a tela cheia
       }).addTo(map);
       // Popup em vez de tooltip: tooltip depende de passar o mouse, que não
       // existe em tela de toque.
-      marcador.bindPopup(
+      if (controles) marcador.bindPopup(
         '<b>' + (i + 1) + '.</b> ' + (parada.apelido ?? 'Parada ' + (i + 1)),
         { closeButton: false, offset: [0, -6] },
       );

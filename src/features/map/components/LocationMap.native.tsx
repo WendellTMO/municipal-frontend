@@ -7,8 +7,20 @@ import type { LocationMapProps } from '../types';
 import { useLeafletWebViewBridge } from '../hooks/useLeafletWebViewBridge';
 import { normalizeRoutePoints } from '../utils/points';
 
-const ESCONDE_ZOOM =
-  "document.head.insertAdjacentHTML('beforeend','<style>.leaflet-control-zoom{display:none}</style>');true;";
+// Prévia: esconde o zoom, desliga o arraste de um dedo (a página continua rolando)
+// e avisa o app no toque simples. A pinça de dois dedos segue ligada.
+const CONFIGURA_PREVIA = `
+  document.head.insertAdjacentHTML('beforeend','<style>.leaflet-control-zoom{display:none}.leaflet-marker-icon{pointer-events:none}</style>');
+  (function configurar() {
+    var mapa = window.BuskaMap && window.BuskaMap.mapInstance;
+    if (!mapa) { setTimeout(configurar, 200); return; }
+    mapa.dragging.disable();
+    mapa.doubleClickZoom.disable();
+    mapa.keyboard.disable();
+    mapa.on('click', function () { postMessage({ type: 'mapTap' }); });
+  })();
+  true;
+`;
 
 export default function LocationMap({
   pontosRota,
@@ -17,7 +29,8 @@ export default function LocationMap({
   posicaoAluno,
   margemSuperior = 0,
   margemInferior = 0,
-  controles = true,
+  previa = false,
+  onToque,
 }: LocationMapProps) {
   const paradas = useMemo(() => normalizeRoutePoints(pontosRota), [pontosRota]);
 
@@ -36,7 +49,7 @@ export default function LocationMap({
     setStops,
     setMargins,
     reloadKey,
-  } = useLeafletWebViewBridge();
+  } = useLeafletWebViewBridge(onToque);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -85,7 +98,7 @@ export default function LocationMap({
         nestedScrollEnabled={false}
         setSupportMultipleWindows={false}
         onMessage={handleMessage}
-        injectedJavaScript={controles ? undefined : ESCONDE_ZOOM}
+        injectedJavaScript={previa ? CONFIGURA_PREVIA : undefined}
         androidLayerType="software"
       />
 

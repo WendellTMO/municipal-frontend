@@ -24,8 +24,10 @@ export type LocationMapProps = {
    *  Leaflet não sumirem embaixo do cabeçalho nem do painel. */
   margemSuperior?: number;
   margemInferior?: number;
-  /** false esconde o zoom, para o mapa servir de prévia sem interação. */
-  controles?: boolean;
+  /** Modo prévia: sem botões de zoom, sem arraste e sem rolagem do mouse. Só a
+   *  pinça de dois dedos dá zoom, e o toque simples chama onToque. */
+  previa?: boolean;
+  onToque?: () => void;
 };
 
 export type RouteMapProps = {

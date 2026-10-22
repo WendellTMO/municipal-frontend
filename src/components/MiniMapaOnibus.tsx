@@ -64,29 +64,33 @@ const MiniMapaOnibus = ({ rotaId, viagemId, embarqueId, altura = 140, onPress }:
     };
   }, [viagemId]);
 
+  if (!posicao) {
+    return (
+      <TouchableOpacity
+        style={[styles.caixa, styles.espera, { height: altura }]}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel="Aguardando sinal do ônibus, toque para abrir o mapa">
+        <Icon name={IconNames.bus} size="lg" color={colors.neutral[400]} style={undefined} />
+        <Text style={styles.esperaTexto}>Aguardando sinal do ônibus</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  // O toque simples vem do próprio mapa (previa + onToque), porque no nativo o
+  // WebView consome os toques e um botão por cima bloquearia a pinça.
   return (
-    <TouchableOpacity
+    <View
       style={[styles.caixa, { height: altura }]}
-      onPress={onPress}
-      activeOpacity={0.9}
-      accessibilityRole="button"
-      accessibilityLabel="Mapa do ônibus, toque para abrir">
-      {posicao ? (
-        <View style={styles.mapa} pointerEvents="none">
-          <LocationMap
-            pontosRota={pontos}
-            posicaoOnibus={posicao}
-            proximaParadaId={embarqueId ?? null}
-            controles={false}
-          />
-        </View>
-      ) : (
-        <View style={styles.espera}>
-          <Icon name={IconNames.bus} size="lg" color={colors.neutral[400]} style={undefined} />
-          <Text style={styles.esperaTexto}>Aguardando sinal do ônibus</Text>
-        </View>
-      )}
-    </TouchableOpacity>
+      accessibilityLabel="Mapa do ônibus, toque para abrir, pinça para dar zoom">
+      <LocationMap
+        pontosRota={pontos}
+        posicaoOnibus={posicao}
+        proximaParadaId={embarqueId ?? null}
+        previa
+        onToque={onPress}
+      />
+    </View>
   );
 };
 
@@ -97,8 +101,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#EAF1FD',
   },
-  mapa: { flex: 1 },
-  espera: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  espera: { alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   esperaTexto: { ...textStyles.bodySmall, color: colors.text.secondary, fontWeight: '600' },
 });
 
