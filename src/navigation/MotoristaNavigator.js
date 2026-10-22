@@ -10,6 +10,7 @@ import ListaAlunosConfirmados from '../screens/Motorista/ListaAlunosConfirmados'
 import DefinirPontosRota from '../screens/Motorista/DefinirPontosRota';
 import DefinirHorariosRota from '../screens/Motorista/DefinirHorariosRota';
 import InicioFimViagem from '../screens/Motorista/InicioFimViagem';
+import NotificacoesInbox from '../screens/Aluno/NotificacoesAluno';
 import ConfigNotificacoes from '../screens/ConfigNotificacoes';
 import {
   NavigationProvider,
@@ -59,6 +60,7 @@ const MotoristaNavigator = () => {
             name="ConfigNotificacoesMotorista"
             component={ConfigNotificacoes}
           />
+          <Screen name="NotificacoesMotorista" component={NotificacoesInbox} />
         </Navigator>
       </NavigationProvider>
     );
@@ -98,6 +100,7 @@ const MotoristaNavigator = () => {
         name="ConfigNotificacoesMotorista"
         component={ConfigNotificacoes}
       />
+      <Stack.Screen name="NotificacoesMotorista" component={NotificacoesInbox} />
     </Stack.Navigator>
   );
 };
