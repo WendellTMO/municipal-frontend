@@ -32,6 +32,8 @@ export type LocationMapProps = {
   rotaCoordenadas?: LatLng[];
   /** false mantém o enquadramento das paradas em vez de recentrar no ônibus a cada leitura. */
   seguirOnibus?: boolean;
+  /** Cada aumento deste número leva o mapa ao ônibus (zoom 16 ou o atual, se maior). */
+  centralizarTick?: number;
 };
 
 export type RouteMapProps = {
