@@ -13,6 +13,14 @@ import { parseApiError, requiresReauth, errorLogger } from '../utils/errors';
 import { ErrorCode } from '../utils/errors/errorTypes';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { useToast } from '../components/Toast';
+import {
+  biometriaDisponivel,
+  desligarNoLogout,
+  gravarPreferencia,
+  lerPreferencia,
+  pedirBiometria,
+} from '../services/biometria';
+import { deveBloquear, deveOferecer } from '../utils/biometriaFluxo';
 import type { 
   AlunoResponse,
   AlunoSelfSignupRequest,
@@ -63,6 +71,17 @@ type AuthContextValue = {
   register: (userData: AlunoSelfSignupRequest) => Promise<AlunoResponse>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
+  biometria: {
+    disponivel: boolean;
+    ativa: boolean;
+    /** Pergunta pós-login pendente (Sim / Agora não). */
+    oferta: boolean;
+    /** Sessão restaurada que ainda espera a biometria. */
+    bloqueado: boolean;
+    responderOferta: (aceitou: boolean) => Promise<void>;
+    alternar: (ligar: boolean) => Promise<void>;
+    desbloquear: () => Promise<boolean>;
+  };
 };
 
 type AuthProviderProps = {
@@ -75,6 +94,10 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   const [user, setUser] = useState<UserResponse | UserInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [bioDisponivel, setBioDisponivel] = useState<boolean>(false);
+  const [bioAtiva, setBioAtiva] = useState<boolean>(false);
+  const [bioOferta, setBioOferta] = useState<boolean>(false);
+  const [bioBloqueado, setBioBloqueado] = useState<boolean>(false);
 
   const toast = useToast();
 
@@ -95,6 +118,12 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       try {
         const fullUserData = await userService.getCurrentUser();
         setUser(fullUserData);
+        // Decide o bloqueio antes de marcar como autenticado, para o painel não piscar.
+        const disponivel = await biometriaDisponivel();
+        const preferencia = await lerPreferencia();
+        setBioDisponivel(disponivel);
+        setBioAtiva(preferencia === 'sim');
+        setBioBloqueado(deveBloquear({ disponivel, preferencia }));
         setIsAuthenticated(true);
       } catch (error: unknown) {
         const parsedError = parseApiError(error);
@@ -116,6 +145,48 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
     void checkAuthStatus();
   }, [checkAuthStatus]);
 
+  // Depois de um login com senha, pergunta uma vez se quer entrar com biometria.
+  const prepararOferta = useCallback(async (): Promise<void> => {
+    const disponivel = await biometriaDisponivel();
+    const preferencia = await lerPreferencia();
+    setBioDisponivel(disponivel);
+    setBioAtiva(preferencia === 'sim');
+    setBioBloqueado(false);
+    setBioOferta(deveOferecer({ disponivel, preferencia }));
+  }, []);
+
+  const responderOferta = useCallback(async (aceitou: boolean): Promise<void> => {
+    setBioOferta(false);
+    if (!aceitou) {
+      await gravarPreferencia('nao');
+      return;
+    }
+    const confirmou = await pedirBiometria('Confirme para ativar a biometria');
+    if (confirmou) {
+      await gravarPreferencia('sim');
+      setBioAtiva(true);
+    }
+  }, []);
+
+  const alternarBiometria = useCallback(async (ligar: boolean): Promise<void> => {
+    if (!ligar) {
+      await gravarPreferencia('nao');
+      setBioAtiva(false);
+      return;
+    }
+    const confirmou = await pedirBiometria('Confirme para ativar a biometria');
+    if (confirmou) {
+      await gravarPreferencia('sim');
+      setBioAtiva(true);
+    }
+  }, []);
+
+  const desbloquear = useCallback(async (): Promise<boolean> => {
+    const confirmou = await pedirBiometria('Confirme que é você para entrar');
+    if (confirmou) setBioBloqueado(false);
+    return confirmou;
+  }, []);
+
   const login = useCallback(
     async (loginData: LoginRequest): Promise<LoginResult> => {
       try {
@@ -126,6 +197,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
           await authService.updateStoredUser(fullUserData);
           setUser(fullUserData);
           setIsAuthenticated(true);
+          void prepararOferta();
 
           return {
             success: true,
@@ -135,6 +207,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
           if (loggedInUser) {
             setUser(loggedInUser);
             setIsAuthenticated(true);
+            void prepararOferta();
 
             return {
               success: true,
@@ -163,7 +236,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
         };
       }
     },
-    [],
+    [prepararOferta],
   );
 
   const register = useCallback(
@@ -199,6 +272,10 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
     try {
       errorLogger.info('Logout initiated', { userId: user?.id });
       await authService.logout();
+      await desligarNoLogout();
+      setBioAtiva(false);
+      setBioBloqueado(false);
+      setBioOferta(false);
       setUser(null);
       setIsAuthenticated(false);
 
@@ -223,8 +300,32 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       register,
       logout,
       checkAuthStatus,
+      biometria: {
+        disponivel: bioDisponivel,
+        ativa: bioAtiva,
+        oferta: bioOferta,
+        bloqueado: bioBloqueado,
+        responderOferta,
+        alternar: alternarBiometria,
+        desbloquear,
+      },
     }),
-    [user, loading, isAuthenticated, login, register, logout, checkAuthStatus],
+    [
+      user,
+      loading,
+      isAuthenticated,
+      login,
+      register,
+      logout,
+      checkAuthStatus,
+      bioDisponivel,
+      bioAtiva,
+      bioOferta,
+      bioBloqueado,
+      responderOferta,
+      alternarBiometria,
+      desbloquear,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

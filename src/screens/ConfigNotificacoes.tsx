@@ -30,7 +30,7 @@ const roleLabel = (role?: string) => {
 };
 
 const ConfigNotificacoes = ({ navigation }) => {
-  const { user, logout, refreshUser } = useAuth() as any;
+  const { user, logout, refreshUser, biometria } = useAuth() as any;
   const toast = useToast();
   const role = user?.role?.toLowerCase();
 
@@ -116,6 +116,30 @@ const ConfigNotificacoes = ({ navigation }) => {
           salvando={salvandoPrefs}
           role={role}
         />
+
+        {biometria.disponivel && (
+          <>
+            <SectionHeader title="Segurança" />
+            <View style={styles.section}>
+              <View style={styles.settingRowTopAligned}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingTitle}>Entrar com biometria</Text>
+                  <Text style={styles.settingDescription}>
+                    Use digital ou rosto para abrir o app. Sua senha não é guardada.
+                  </Text>
+                </View>
+                <Switch
+                  value={biometria.ativa}
+                  onValueChange={(ligar) => void biometria.alternar(ligar)}
+                  trackColor={{ false: colors.border.light, true: colors.primary.dark }}
+                  thumbColor={colors.background.paper}
+                  accessibilityLabel="Entrar com biometria"
+                  accessibilityRole="switch"
+                />
+              </View>
+            </View>
+          </>
+        )}
 
         <SectionHeader title="Conta" />
 

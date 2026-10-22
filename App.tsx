@@ -6,12 +6,14 @@ import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { ToastProvider } from './src/components';
 import SplashScreen from './src/screens/SplashScreen';
 import FeedbackLayer from './src/components/FeedbackLayer';
+import BiometriaOferta from './src/components/BiometriaOferta';
+import DesbloqueioBiometria from './src/screens/Auth/DesbloqueioBiometria';
 import { FEEDBACK_ENABLED } from './src/config/feedback';
 import { navigationRef } from './src/navigation/currentRoute';
 import { Platform } from 'react-native';
 
 const Root: React.FC = () => {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, biometria } = useAuth();
 
   const DEBUG_HOLD_SPLASH = __DEV__ && Platform.OS !== 'web';
   const [released, setReleased] = React.useState(!DEBUG_HOLD_SPLASH);
@@ -20,9 +22,14 @@ const Root: React.FC = () => {
     return <SplashScreen onContinue={() => setReleased(true)} />;
   }
 
+  if (isAuthenticated && biometria.bloqueado) {
+    return <DesbloqueioBiometria />;
+  }
+
   return (
     <>
       <MainNavigator />
+      {isAuthenticated ? <BiometriaOferta /> : null}
       {isAuthenticated && FEEDBACK_ENABLED ? <FeedbackLayer /> : null}
     </>
   );
