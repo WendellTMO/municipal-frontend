@@ -381,6 +381,20 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             disabled={!proximaViagem && !emAndamento}
             onPress={abrirLocalizacao}
           />
+          <ActionTile
+            icon={IconNames.route}
+            label="Rotas"
+            accessibilityLabel="Rotas disponíveis"
+            color={colors.solid.teal}
+            onPress={() => navigation.navigate('SelecaoRotas')}
+          />
+          <ActionTile
+            icon={IconNames.person}
+            label="Perfil"
+            accessibilityLabel="Editar meu perfil"
+            color={colors.neutral[600]}
+            onPress={() => navigation.navigate('EditarPerfilAluno')}
+          />
         </View>
 
         {/* Enrolled Routes */}
@@ -508,10 +522,9 @@ const styles = StyleSheet.create({
   // Quick Actions
   botoesRapidos: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
     marginTop: spacing.lg,
-    marginBottom: spacing.xl,
-    gap: spacing.xl,
+    marginBottom: spacing.base,
   },
 
   // Routes
