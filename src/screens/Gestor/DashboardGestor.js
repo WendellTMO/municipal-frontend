@@ -129,21 +129,6 @@ const DashboardGestor = ({ navigation }) => {
 
         <View style={styles.content}>
           {/* Ações rápidas */}
-          <View style={styles.qaGrid} accessibilityRole="toolbar">
-            <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.add} label="Viagem" accessibilityLabel="Nova viagem" color={colors.solid.blue} onPress={() => irParaAba('ViagensTab')} />
-            </View>
-            <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.campaign} label="Aviso" accessibilityLabel="Enviar aviso" color={colors.solid.amber} onPress={() => setAvisoVisivel(true)} />
-            </View>
-            <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.route} label="Rota" accessibilityLabel="Nova rota" color={colors.solid.green} onPress={() => irParaAba('RotasTab')} />
-            </View>
-            <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.moreHoriz} label="Mais" accessibilityLabel="Mais ações" color={colors.neutral[600]} onPress={() => setMaisVisivel(true)} />
-            </View>
-          </View>
-
           {/* Precisa de atenção: pílulas que somem quando o número é zero */}
           {totalCadastros > 0 || totalOcorrencias > 0 ? (
             <View style={styles.pilulas}>
@@ -173,6 +158,21 @@ const DashboardGestor = ({ navigation }) => {
               ) : null}
             </View>
           ) : null}
+
+          <View style={styles.qaGrid} accessibilityRole="toolbar">
+            <View style={styles.qaCell}>
+              <ActionTile icon={IconNames.add} label="Viagem" accessibilityLabel="Nova viagem" color={colors.solid.blue} onPress={() => irParaAba('ViagensTab')} />
+            </View>
+            <View style={styles.qaCell}>
+              <ActionTile icon={IconNames.campaign} label="Aviso" accessibilityLabel="Enviar aviso" color={colors.solid.amber} onPress={() => setAvisoVisivel(true)} />
+            </View>
+            <View style={styles.qaCell}>
+              <ActionTile icon={IconNames.route} label="Rota" accessibilityLabel="Nova rota" color={colors.solid.green} onPress={() => irParaAba('RotasTab')} />
+            </View>
+            <View style={styles.qaCell}>
+              <ActionTile icon={IconNames.moreHoriz} label="Mais" accessibilityLabel="Mais ações" color={colors.neutral[600]} onPress={() => setMaisVisivel(true)} />
+            </View>
+          </View>
 
           {/* Hoje */}
           <View style={styles.hojeHeader}>
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: spacing.base,
   },
-  pilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
+  pilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pilula: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 999 },
   pilulaTexto: { ...textStyles.bodySmall, fontWeight: '800' },
   hojeHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     rowGap: spacing.lg,
-    marginTop: spacing.sm,
+    marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
   qaCell: { width: '25%', alignItems: 'center' },
