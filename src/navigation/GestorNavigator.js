@@ -8,6 +8,9 @@ import EquipeGestor from '../screens/Gestor/EquipeGestor';
 import FrotaGestor from '../screens/Gestor/FrotaGestor';
 import NotificacoesGestor from '../screens/Gestor/NotificacoesGestor';
 import DetalheAlunoGestor from '../screens/Gestor/DetalheAlunoGestor';
+import OcorrenciasGestor from '../screens/Gestor/OcorrenciasGestor';
+import CadastrosPendentes from '../screens/Gestor/CadastrosPendentes';
+import ResumoSemana from '../screens/Gestor/ResumoSemana';
 
 // Shared screens (reused from Motorista)
 import RotaMotorista from '../screens/Motorista/RotaMotorista';
@@ -114,6 +117,7 @@ function EquipeStack() {
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="EquipeGestor" component={EquipeGestor} />
       <Stack.Screen name="DetalheAlunoGestor" component={DetalheAlunoGestor} />
+      <Stack.Screen name="CadastrosPendentes" component={CadastrosPendentes} />
     </Stack.Navigator>
   );
 }
@@ -127,6 +131,8 @@ function PerfilStack() {
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="ConfigNotificacoesGestor" component={ConfigNotificacoes} />
       <Stack.Screen name="NotificacoesGestor" component={NotificacoesGestor} />
+      <Stack.Screen name="OcorrenciasGestor" component={OcorrenciasGestor} />
+      <Stack.Screen name="ResumoSemana" component={ResumoSemana} />
     </Stack.Navigator>
   );
 }
@@ -157,6 +163,9 @@ const GestorNavigator = () => {
           <Screen name="FrotaGestor" component={FrotaGestor} />
           <Screen name="ConfigNotificacoesGestor" component={ConfigNotificacoes} />
           <Screen name="NotificacoesGestor" component={NotificacoesGestor} />
+          <Screen name="OcorrenciasGestor" component={OcorrenciasGestor} />
+          <Screen name="CadastrosPendentes" component={CadastrosPendentes} />
+          <Screen name="ResumoSemana" component={ResumoSemana} />
         </Navigator>
       </NavigationProvider>
     );
