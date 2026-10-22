@@ -109,6 +109,8 @@ export const IconNames = {
   speed: 'speed',
   seat: 'event-seat',
   editCalendar: 'edit-calendar',
+  campaign: 'campaign',
+  cadastro: 'how-to-reg',
   
   // Communication
   notifications: 'notifications',
