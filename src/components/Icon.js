@@ -139,6 +139,9 @@ export const IconNames = {
   error: 'error',
   info: 'info',
   priorityHigh: 'priority-high',
+  speed: 'speed',
+  seat: 'event-seat',
+  editCalendar: 'edit-calendar',
   
   // Communication
   notifications: 'notifications',
