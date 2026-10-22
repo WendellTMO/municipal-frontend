@@ -199,10 +199,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
 
           {/* Endereço */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Endereço (opcional)</Text>
-            <Text style={styles.sectionHint}>
-              Preencha para que o sistema calcule seu ponto de embarque mais próximo.
-            </Text>
+            <Text style={styles.sectionTitle}>Endereço</Text>
 
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Logradouro</Text>
@@ -362,12 +359,6 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontWeight: fontWeight.semiBold as 'bold',
     marginBottom: spacing.md,
-  },
-  sectionHint: {
-    ...textStyles.caption,
-    color: colors.text.secondary,
-    marginBottom: spacing.md,
-    marginTop: -spacing.sm,
   },
   fieldGroup: {
     marginBottom: spacing.md,
