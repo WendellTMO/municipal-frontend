@@ -18,6 +18,7 @@ import {
   Icon,
   IconNames,
   LoadingSpinner,
+  PainelHeader,
   TripAlertBanner,
   TripHeroCard,
 } from '../../components';
@@ -94,13 +95,6 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
       // non-critical — badge just won't update
     }
   }, [navigation]);
-
-  const getUserInfo = () => {
-    const mun = (user as Record<string, unknown>)?.municipio as
-      | { nome: string; uf?: string }
-      | undefined;
-    return mun ? `${mun.nome}${mun.uf ? ` - ${mun.uf}` : ''}` : '';
-  };
 
   const loadData = useCallback(async () => {
     try {
@@ -308,35 +302,12 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             tintColor={colors.primary.main}
           />
         }>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerText}>
-              <Text style={styles.greeting} accessibilityRole="header">
-                Olá, {user?.nome || 'Aluno'}!
-              </Text>
-              {getUserInfo() ? <Text style={styles.subtitle}>{getUserInfo()}</Text> : null}
-            </View>
-            <TouchableOpacity
-              style={styles.avatarContainer}
-              onPress={() => navigation.navigate('Notificacoes')}
-              accessibilityRole="button"
-              accessibilityLabel={
-                unreadCount > 0
-                  ? `Notificações, ${unreadCount} não lida${unreadCount > 1 ? 's' : ''}`
-                  : 'Notificações'
-              }>
-              <Icon name={IconNames.notifications} size="xl" color={colors.primary.contrast} />
-              {unreadCount > 0 && (
-                <View style={styles.badge} accessibilityElementsHidden>
-                  <Text style={styles.badgeText}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+        <PainelHeader
+          perfil="Aluno"
+          unreadCount={unreadCount}
+          onBellPress={() => navigation.navigate('Notificacoes')}
+          onOpenConfig={() => navigation.navigate('ConfigNotificacoesAluno')}
+        />
 
         {/* Today's Trip Banner */}
         {todayBannerConfig && (
@@ -515,56 +486,6 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
 
   // Header
-  header: {
-    backgroundColor: colors.primary.main,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxl,
-    borderBottomLeftRadius: borderRadius.xxl,
-    borderBottomRightRadius: borderRadius.xxl,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerText: { flex: 1 },
-  greeting: {
-    ...textStyles.h2,
-    color: colors.primary.contrast,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...textStyles.bodySmall,
-    color: colors.secondary.light,
-  },
-  avatarContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary.light,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.error.main,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 3,
-    borderWidth: 1.5,
-    borderColor: colors.primary.light,
-  },
-  badgeText: {
-    color: colors.text.inverse,
-    fontSize: 10,
-    fontWeight: '700',
-  },
 
   // Today Banner
   todayBanner: {
@@ -601,10 +522,10 @@ const styles = StyleSheet.create({
   // Quick Actions
   botoesRapidos: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.xs,
+    justifyContent: 'center',
     marginTop: spacing.lg,
     marginBottom: spacing.xl,
-    gap: spacing.xs,
+    gap: spacing.xl,
   },
 
   // Routes

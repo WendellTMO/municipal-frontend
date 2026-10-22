@@ -18,6 +18,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/Toast';
 import { borderRadius, colors, fontWeight, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
+import { confirmAction } from '../../utils/confirm';
 import { formatPhone, formatCep, onlyDigits } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
 
@@ -36,9 +37,10 @@ type FormState = {
 const ALUNO_COLOR = colors.roles?.aluno ?? colors.primary.main;
 
 const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
-  const { user, refreshUser } = useAuth() as {
+  const { user, refreshUser, logout } = useAuth() as {
     user: Record<string, unknown>;
     refreshUser?: () => Promise<void>;
+    logout: () => Promise<void>;
   };
   const toast = useToast();
 
@@ -113,6 +115,18 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     } finally {
       setSalvando(false);
     }
+  };
+
+  const handleSair = () => {
+    confirmAction({
+      title: 'Sair da conta',
+      message: 'Deseja encerrar sua sessão?',
+      confirmText: 'Sair',
+      cancelText: 'Cancelar',
+      destructive: true,
+      onConfirm: () => logout(),
+      onCancel: undefined,
+    });
   };
 
   const handleAlterarSenha = () => {
@@ -270,6 +284,15 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.changePasswordText}>Alterar senha</Text>
               <Icon name={IconNames.chevronRight} size="sm" color={colors.text.secondary} />
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.changePasswordBtn}
+              onPress={handleSair}
+              accessibilityRole="button"
+              accessibilityLabel="Sair da conta">
+              <Icon name={IconNames.logout} size="sm" color={colors.error.main} style={undefined} />
+              <Text style={styles.sairText}>Sair da conta</Text>
+              <Icon name={IconNames.chevronRight} size="sm" color={colors.text.secondary} />
+            </TouchableOpacity>
           </View>
 
           {/* Save button */}
@@ -295,6 +318,12 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  sairText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.error.main,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
