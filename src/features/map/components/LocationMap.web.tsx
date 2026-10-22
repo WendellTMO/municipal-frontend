@@ -19,6 +19,8 @@ export default function LocationMap({
   margemInferior = 0,
   previa = false,
   onToque,
+  rotaCoordenadas,
+  seguirOnibus = true,
 }: LocationMapProps) {
   const controles = !previa;
   // O mapa é criado uma vez; o ref entrega a ele o onToque mais recente.
@@ -29,8 +31,9 @@ export default function LocationMap({
   const LRef = useRef<LeafletModule | null>(null);
   const destMarkerRef = useRef<LeafletMarker | null>(null);
   const alunoMarkerRef = useRef<LeafletMarker | null>(null);
+  const rotaLinhaRef = useRef<LeafletNS.Polyline | null>(null);
   const paradasRef = useRef<LeafletMarker[]>([]);
-  const enquadrouRef = useRef(false);
+  const enquadrouRef = useRef<string | null>(null);
 
   const [mapReady, setMapReady] = useState(false);
   const [loadingMap, setLoadingMap] = useState(true);
@@ -97,6 +100,23 @@ export default function LocationMap({
     };
   }, []);
 
+  // ─── Trajeto até a próxima parada ─────────────────────────────────────────
+
+  useEffect(() => {
+    if (!mapReady || !mapInstance.current || !LRef.current) return;
+    const map = mapInstance.current;
+    const L = LRef.current;
+    if (rotaLinhaRef.current) {
+      map.removeLayer(rotaLinhaRef.current);
+      rotaLinhaRef.current = null;
+    }
+    if (!rotaCoordenadas || rotaCoordenadas.length < 2) return;
+    rotaLinhaRef.current = L.polyline(
+      rotaCoordenadas.map((c) => L.latLng(c.latitude, c.longitude)),
+      { color: '#1565C0', weight: 5, opacity: 0.8 },
+    ).addTo(map);
+  }, [mapReady, rotaCoordenadas]);
+
   // ─── Destination marker ───────────────────────────────────────────────────
 
   useEffect(() => {
@@ -128,8 +148,8 @@ export default function LocationMap({
       }).addTo(map);
     }
 
-    map.setView(latLng, map.getZoom());
-  }, [mapReady, destinationLatLng]);
+    if (seguirOnibus) map.setView(latLng, map.getZoom());
+  }, [mapReady, destinationLatLng, seguirOnibus]);
 
   useEffect(() => {
     if (!mapReady || !mapInstance.current || !LRef.current) return;
@@ -194,16 +214,20 @@ export default function LocationMap({
       paradasRef.current.push(marcador);
     });
 
-    // Na primeira vez, enquadra a rota inteira. Sem isso o mapa abre no zoom
-    // 13, que mostra 7 km, e uma rota de 600 m vira um amontoado de pontos.
-    if (!enquadrouRef.current && paradas.length > 1) {
+    // Enquadra a rota inteira na primeira vez e de novo quando as faixas de interface
+    // (cabeçalho e painel) mudam de altura, para nenhuma parada ficar embaixo delas.
+    const chave = `${margemSuperior}:${margemInferior}`;
+    if (paradas.length > 1 && enquadrouRef.current !== chave) {
       map.fitBounds(
         paradas.map((p) => [p.latitude, p.longitude] as [number, number]),
-        { padding: [40, 40] },
+        {
+          paddingTopLeft: [40, 40 + margemSuperior],
+          paddingBottomRight: [40, 40 + margemInferior],
+        },
       );
-      enquadrouRef.current = true;
+      enquadrouRef.current = chave;
     }
-  }, [mapReady, paradas, proximaParadaId]);
+  }, [mapReady, paradas, proximaParadaId, margemSuperior, margemInferior]);
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;

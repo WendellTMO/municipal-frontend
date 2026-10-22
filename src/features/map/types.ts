@@ -28,6 +28,10 @@ export type LocationMapProps = {
    *  pinça de dois dedos dá zoom, e o toque simples chama onToque. */
   previa?: boolean;
   onToque?: () => void;
+  /** Linha do trajeto até a próxima parada (motorista). */
+  rotaCoordenadas?: LatLng[];
+  /** false mantém o enquadramento das paradas em vez de recentrar no ônibus a cada leitura. */
+  seguirOnibus?: boolean;
 };
 
 export type RouteMapProps = {
