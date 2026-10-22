@@ -12,6 +12,8 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as EmptyState } from './EmptyState';
 export { ToastProvider, useToast } from './Toast';
 export { default as Button } from './Button';
+export { default as AuthBackground } from './AuthBackground';
+export { default as AuthLogo } from './AuthLogo';
 
 // State Components
 export { 
