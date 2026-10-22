@@ -28,6 +28,7 @@ import {
   errorLogger,
 } from '../../utils/errors';
 import {unwrapItems} from '@/types';
+import {formatCpf, formatPhone, formatCep, formatDate} from '../../utils/masks';
 
 const {height: SCREEN_H} = Dimensions.get('screen');
 
@@ -89,13 +90,6 @@ const CriarConta = ({navigation}) => {
   };
 
   const isMinor = calcAge(dataNascimento) !== null && calcAge(dataNascimento) < 18;
-
-  const formatDate = text => {
-    const digits = text.replace(/\D/g, '').slice(0, 8);
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-  };
 
   const toIsoDate = rawDate => {
     const digits = rawDate.replace(/\D/g, '');
@@ -244,32 +238,6 @@ const CriarConta = ({navigation}) => {
     if (generalError) setGeneralError('');
   };
 
-  const formatCPF = text => {
-    const digits = text.replace(/\D/g, '');
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) {
-      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    }
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(
-      6,
-      9,
-    )}-${digits.slice(9, 11)}`;
-  };
-
-  const formatPhone = text => {
-    const digits = text.replace(/\D/g, '').slice(0, 11);
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    if (digits.length <= 11) {
-      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(
-        7,
-        11,
-      )}`;
-    }
-    return digits;
-  };
-
   const validateStep1 = () => {
     const newErrors = {};
 
@@ -415,11 +383,7 @@ const CriarConta = ({navigation}) => {
   };
 
   const handleCepChange = text => {
-    let formatted = text.replace(/\D/g, '').slice(0, 8);
-
-    if (formatted.length > 5) {
-      formatted = formatted.replace(/^(\d{5})(\d)/, '$1-$2');
-    }
+    const formatted = formatCep(text);
 
     setCep(formatted);
     clearFieldError('cep');
@@ -804,6 +768,8 @@ const CriarConta = ({navigation}) => {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    autoComplete="email"
+                    textContentType="emailAddress"
                   />
                 </View>
                 {renderFieldError('email')}
@@ -826,6 +792,7 @@ const CriarConta = ({navigation}) => {
                     }}
                     secureTextEntry={!showSenha}
                     autoCapitalize="none"
+                    autoCorrect={false}
                   />
                   <TouchableOpacity
                     onPress={() => setShowSenha(prev => !prev)}
@@ -861,6 +828,7 @@ const CriarConta = ({navigation}) => {
                     }}
                     secureTextEntry={!showConfirmarSenha}
                     autoCapitalize="none"
+                    autoCorrect={false}
                   />
                   <TouchableOpacity
                     onPress={() => setShowConfirmarSenha(prev => !prev)}
@@ -899,6 +867,8 @@ const CriarConta = ({navigation}) => {
                       clearFieldError('nome');
                     }}
                     autoCapitalize="words"
+                    autoComplete="name"
+                    textContentType="name"
                   />
                 </View>
                 {renderFieldError('nome')}
@@ -916,10 +886,10 @@ const CriarConta = ({navigation}) => {
                     placeholderTextColor={colors.neutral[400]}
                     value={cpf}
                     onChangeText={text => {
-                      setCpf(formatCPF(text));
+                      setCpf(formatCpf(text));
                       clearFieldError('cpf');
                     }}
-                    keyboardType="numeric"
+                    keyboardType="number-pad"
                     maxLength={14}
                   />
                 </View>
@@ -993,6 +963,9 @@ const CriarConta = ({navigation}) => {
                       clearFieldError('telefone');
                     }}
                     keyboardType="phone-pad"
+                    maxLength={15}
+                    autoComplete="tel"
+                    textContentType="telephoneNumber"
                   />
                 </View>
                 {renderFieldError('telefone')}
@@ -1014,7 +987,7 @@ const CriarConta = ({navigation}) => {
                       clearFieldError('dataNascimento');
                       clearFieldError('emailResponsavel');
                     }}
-                    keyboardType="numeric"
+                    keyboardType="number-pad"
                     maxLength={10}
                   />
                 </View>
@@ -1075,7 +1048,7 @@ const CriarConta = ({navigation}) => {
                     placeholderTextColor={colors.neutral[400]}
                     value={cep}
                     onChangeText={handleCepChange}
-                    keyboardType="numeric"
+                    keyboardType="number-pad"
                     maxLength={9}
                     editable={!loadingCep}
                   />

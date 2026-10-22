@@ -19,6 +19,7 @@ import { useFetch } from '../../hooks';
 import { borderRadius, colors, fontWeight, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
+import { formatCpf, onlyDigits } from '../../utils/masks';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { api } from '../../api/client';
 
@@ -177,8 +178,8 @@ const EquipeGestor = ({ navigation }) => {
         nome: form.nome.trim(),
         email: form.email.trim(),
         password: form.password.trim(),
-        cpf: form.cpf.trim(),
-        cnh: form.cnh.trim(),
+        cpf: onlyDigits(form.cpf),
+        cnh: onlyDigits(form.cnh),
       });
       toast.success('Motorista cadastrado com sucesso!');
       setForm({ nome: '', email: '', password: '', cpf: '', cnh: '' });
@@ -272,8 +273,8 @@ const EquipeGestor = ({ navigation }) => {
               { field: 'nome', placeholder: 'Nome completo *', keyboardType: 'default' },
               { field: 'email', placeholder: 'E-mail *', keyboardType: 'email-address' },
               { field: 'password', placeholder: 'Senha *', secure: true },
-              { field: 'cpf', placeholder: 'CPF *', keyboardType: 'numeric' },
-              { field: 'cnh', placeholder: 'CNH *', keyboardType: 'default' },
+              { field: 'cpf', placeholder: 'CPF *', keyboardType: 'number-pad' },
+              { field: 'cnh', placeholder: 'CNH *', keyboardType: 'number-pad' },
             ].map(({ field, placeholder, keyboardType, secure }) => (
               <TextInput
                 key={field}
@@ -281,10 +282,18 @@ const EquipeGestor = ({ navigation }) => {
                 placeholder={placeholder}
                 placeholderTextColor={colors.text.hint}
                 value={form[field]}
-                onChangeText={v => setField(field, v)}
+                onChangeText={v => {
+                  if (field === 'cpf') setField(field, formatCpf(v));
+                  else if (field === 'cnh') setField(field, onlyDigits(v).slice(0, 11));
+                  else setField(field, v);
+                }}
                 keyboardType={keyboardType}
                 secureTextEntry={secure}
-                autoCapitalize={field === 'email' ? 'none' : 'words'}
+                autoCapitalize={field === 'nome' ? 'words' : 'none'}
+                autoCorrect={field === 'nome'}
+                autoComplete={field === 'nome' ? 'name' : undefined}
+                textContentType={field === 'nome' ? 'name' : undefined}
+                maxLength={field === 'cpf' ? 14 : field === 'cnh' ? 11 : undefined}
               />
             ))}
             <TouchableOpacity
