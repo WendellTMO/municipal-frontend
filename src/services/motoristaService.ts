@@ -1,4 +1,4 @@
-import { LocalizacaoRequest, PontoCreateRequest, PontoFlatListResponse, PontoListResponse, PontoResponse, RotaCreateRequest, RotaDetailResponse, RotaHorarioCreateRequest, RotaHorarioListResponse, RotaHorarioResponse, RotaListResponse, RotaPontosAddRequest, RotaResponse, RotaUpdateRequest, UserListResponse, ViagemCreateRequest, ViagemListQueryParams, ViagemListResponse, ViagemResponse, ViagemAcaoRequest } from '@/types';
+import { InstituicaoListResponse, LocalizacaoRequest, PontoCreateRequest, PontoFlatListResponse, PontoListResponse, PontoResponse, RotaCreateRequest, RotaDetailResponse, RotaHorarioCreateRequest, RotaHorarioListResponse, RotaHorarioResponse, RotaListResponse, RotaPontosAddRequest, RotaResponse, RotaUpdateRequest, UserListResponse, ViagemCreateRequest, ViagemListQueryParams, ViagemListResponse, ViagemResponse, ViagemAcaoRequest } from '@/types';
 import { api } from '../api/client';
 
 interface LocalizacaoResponse {
@@ -95,6 +95,15 @@ export const motoristaService = {
   async listarPontosRota(rotaId: string): Promise<PontoFlatListResponse> {
     if (!rotaId) return { items: [], total: 0 };
     const response = await api.get<PontoFlatListResponse>(`/rotas/${rotaId}/pontos`);
+    return response.data;
+  },
+
+  /**
+   * Instituições de ensino (nome, tipo e coordenadas), para marcar as paradas que são escolas.
+   * Backend: GET /v1/instituicoes/
+   */
+  async listarInstituicoes(): Promise<InstituicaoListResponse> {
+    const response = await api.get<InstituicaoListResponse>('/instituicoes/');
     return response.data;
   },
 

@@ -31,6 +31,7 @@ export default function LocationMap({
   margemInferior = 0,
   previa = false,
   onToque,
+  rotaCoordenadas,
 }: LocationMapProps) {
   const paradas = useMemo(() => normalizeRoutePoints(pontosRota), [pontosRota]);
 
@@ -47,6 +48,8 @@ export default function LocationMap({
     setUserMarker,
     clearUserMarker,
     setStops,
+    setRoute,
+    clearRoute,
     setMargins,
     reloadKey,
   } = useLeafletWebViewBridge(onToque);
@@ -72,6 +75,12 @@ export default function LocationMap({
 
     setUserMarker(posicaoAluno);
   }, [mapReady, posicaoAluno, clearUserMarker, setUserMarker]);
+
+  useEffect(() => {
+    if (!mapReady) return;
+    if (rotaCoordenadas && rotaCoordenadas.length >= 2) setRoute(rotaCoordenadas);
+    else clearRoute();
+  }, [mapReady, rotaCoordenadas, setRoute, clearRoute]);
 
   useEffect(() => {
     if (!mapReady) return;
