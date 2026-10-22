@@ -12,7 +12,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import {motoristaService} from '../../services/motoristaService';
 import pontoService from '../../services/pontoService';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
-import { ActionTile, Icon, IconNames, LoadingSpinner, TripHeroCard } from '../../components';
+import { ActionTile, Icon, IconNames, LoadingSpinner, PainelHeader, TripHeroCard } from '../../components';
+import { getNotificacoes } from '../../services/notificacaoService';
 import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
@@ -20,22 +21,19 @@ import { withFabSpace } from '../../config/feedback';
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
 
-  const getRoleLabel = (role) => {
-    const roleMap = {
-      'aluno': 'Aluno',
-      'motorista': 'Motorista',
-      'gestor': 'Gestor'
-    };
-    return roleMap[role] || role;
-  };
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const getUserInfo = () => {
-    const roleLabel = getRoleLabel(user?.role);
-    const municipioInfo = user?.municipio 
-      ? `${user.municipio.nome}${user.municipio.uf ? ` - ${user.municipio.uf}` : ''}`
-      : '';
-    return municipioInfo ? `${roleLabel} • ${municipioInfo}` : roleLabel;
-  };
+  useEffect(() => {
+    const carregarNaoLidas = async () => {
+      try {
+        const notifs = await getNotificacoes();
+        setUnreadCount(notifs.filter((n) => !n.enviada).length);
+      } catch (e) {
+        // o contador é secundário
+      }
+    };
+    carregarNaoLidas();
+  }, []);
 
   const [proximaViagem, setProximaViagem] = useState(null);
   const [loadingViagem, setLoadingViagem] = useState(true);
@@ -166,25 +164,17 @@ const DashboardMotorista = ({navigation}) => {
     });
   }, [proximaViagem]);
 
+  const emAndamento = proximaViagem?.status === 'Em andamento';
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerText}>
-              <Text style={styles.greeting}>
-                Olá, {user?.nome || 'Motorista'}!
-              </Text>
-              <Text style={styles.subtitle}>
-                {getUserInfo()}
-              </Text>
-            </View>
-            <View style={styles.avatarContainer}>
-              <Icon name={IconNames.person} size="xl" color={colors.primary.contrast} />
-            </View>
-          </View>
-        </View>
+        <PainelHeader
+          perfil="Motorista"
+          unreadCount={unreadCount}
+          onBellPress={() => navigation.navigate('NotificacoesMotorista')}
+          onOpenConfig={() => navigation.navigate('ConfigNotificacoesMotorista')}
+        />
 
         {/* Próxima Viagem */}
         {proximaViagem ? (
@@ -215,12 +205,19 @@ const DashboardMotorista = ({navigation}) => {
               </Text>
             </View>
             <TouchableOpacity
-              style={styles.iniciarButton}
+              style={[
+                styles.iniciarButton,
+                emAndamento ? styles.continuarButton : null,
+              ]}
               onPress={() =>
                 navigation.navigate('InicioFimViagem', {viagem: proximaViagem})
-              }>
-              <Icon name={IconNames.route} size="md" color={colors.text.inverse} />
-              <Text style={styles.iniciarButtonText}>Iniciar Viagem</Text>
+              }
+              accessibilityRole="button"
+              accessibilityLabel={emAndamento ? 'Continuar viagem' : 'Iniciar viagem'}>
+              <Icon name={IconNames.play} size={30} color="#FFFFFF" />
+              <Text style={styles.iniciarButtonText}>
+                {emAndamento ? 'Continuar viagem' : 'Iniciar viagem'}
+              </Text>
             </TouchableOpacity>
           </TripHeroCard>
         ) : (
@@ -301,44 +298,11 @@ const styles = StyleSheet.create({
   },
   
   // Header - Styled like DashboardAluno
-  header: {
-    backgroundColor: colors.primary.dark,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxl,
-    borderBottomLeftRadius: borderRadius.xxl,
-    borderBottomRightRadius: borderRadius.xxl,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerText: {
-    flex: 1,
-  },
-  greeting: {
-    ...textStyles.h2,
-    color: colors.primary.contrast,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...textStyles.bodySmall,
-    color: 'rgba(255,255,255,0.75)',
-  },
-  avatarContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary.main,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   
   // Próxima Viagem Card - Overlaps header
   proximaViagemCard: {
     margin: spacing.base,
-    marginTop: -spacing.xl,
+    marginTop: spacing.lg,
     padding: spacing.lg,
     backgroundColor: colors.primary.lighter,
     borderRadius: borderRadius.xl,
@@ -368,18 +332,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.success.main,
-    borderRadius: borderRadius.md,
-    padding: spacing.base,
+    gap: spacing.md,
+    height: 68,
+    borderRadius: 18,
+    backgroundColor: '#10B981',
+    shadowColor: '#10B981',
+    shadowOpacity: 0.4,
+    shadowOffset: {width: 0, height: 8},
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  continuarButton: {
+    backgroundColor: colors.solid.blue,
+    shadowColor: colors.solid.blue,
   },
   iniciarButtonText: {
-    ...textStyles.button,
-    color: colors.text.inverse,
-    fontSize: fontSize.h4,
-    fontWeight: fontWeight.bold,
+    color: '#FFFFFF',
+    fontSize: 21,
+    fontWeight: '800',
   },
-  
+
   // Empty State
   emptyState: {
     padding: spacing.xl,
@@ -400,7 +372,7 @@ const styles = StyleSheet.create({
   botoesRapidos: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.xs,
+    justifyContent: 'space-evenly',
     marginTop: spacing.lg,
     marginBottom: spacing.xl,
     rowGap: spacing.lg,
