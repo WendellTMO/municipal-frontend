@@ -120,6 +120,17 @@ export const IconNames = {
   stop: 'stop',
   pause: 'pause',
   
+  // Forms / Auth
+  email: 'email',
+  lock: 'lock',
+  check: 'check',
+  phone: 'phone',
+  school: 'school',
+
+  // Security / Data
+  shield: 'shield',
+  chart: 'bar-chart',
+
   // Misc
   visibility: 'visibility',
   visibilityOff: 'visibility-off',
