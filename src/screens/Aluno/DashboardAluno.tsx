@@ -284,25 +284,6 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           onOpenConfig={() => navigation.navigate('ConfigNotificacoesAluno')}
         />
 
-        {/* Quick Actions */}
-        <View style={styles.botoesRapidos} accessibilityRole="toolbar">
-          <ActionTile
-            icon={IconNames.bus}
-            label="Viagens"
-            accessibilityLabel="Minhas Viagens"
-            color={colors.solid.blue}
-            onPress={() => navigation.navigate('RotaAluno')}
-          />
-          <ActionTile
-            icon={IconNames.location}
-            label="Localização"
-            accessibilityLabel="Localização do ônibus"
-            color={colors.solid.green}
-            disabled={!proximaViagem && !emAndamento}
-            onPress={abrirLocalizacao}
-          />
-        </View>
-
         {/* Today's Trip Banner */}
         {todayBannerConfig && (
           <TouchableOpacity
@@ -382,6 +363,25 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             onPress={abrirDetalheViagem}
           />
         )}
+
+        {/* Quick Actions */}
+        <View style={styles.botoesRapidos} accessibilityRole="toolbar">
+          <ActionTile
+            icon={IconNames.bus}
+            label="Viagens"
+            accessibilityLabel="Minhas Viagens"
+            color={colors.solid.blue}
+            onPress={() => navigation.navigate('RotaAluno')}
+          />
+          <ActionTile
+            icon={IconNames.location}
+            label="Localização"
+            accessibilityLabel="Localização do ônibus"
+            color={colors.solid.green}
+            disabled={!proximaViagem && !emAndamento}
+            onPress={abrirLocalizacao}
+          />
+        </View>
 
         {/* Enrolled Routes */}
         <View style={styles.rotasSection}>
