@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     backgroundColor: colors.primary.main,
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.xl + 18,
     paddingBottom: spacing.xl,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
