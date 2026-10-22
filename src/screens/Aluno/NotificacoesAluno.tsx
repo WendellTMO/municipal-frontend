@@ -17,6 +17,7 @@ import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme'
 import { Icon, IconNames, LoadingSpinner, EmptyState } from '../../components';
 import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -213,6 +214,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
             message="Quando houver avisos sobre as suas viagens eles aparecerão aqui."
           />
         }
+        ListFooterComponent={<SairDaConta />}
         accessibilityLabel="Lista de notificações"
       />
     </SafeAreaView>

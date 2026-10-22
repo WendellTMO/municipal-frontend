@@ -17,6 +17,7 @@ import { getNotificacoes } from '../../services/notificacaoService';
 import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
@@ -283,6 +284,8 @@ const DashboardMotorista = ({navigation}) => {
             onPress={() => navigation.navigate('ConfigNotificacoesMotorista')}
           />
         </View>
+
+        <SairDaConta />
       </ScrollView>
     </SafeAreaView>
   );

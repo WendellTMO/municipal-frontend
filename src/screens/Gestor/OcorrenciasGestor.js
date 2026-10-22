@@ -18,6 +18,7 @@ import { useToast } from '../../components/Toast';
 import { confirmAction } from '../../utils/confirm';
 import { getErrorMessageFromError } from '../../utils/errors';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 const TIPOS = {
   ATRASO: 'Atraso',
@@ -164,6 +165,7 @@ const OcorrenciasGestor = ({ navigation }) => {
             </TouchableOpacity>
           ))
         )}
+        <SairDaConta />
       </ScrollView>
 
       <Modal visible={!!detalhe} transparent animationType="slide" onRequestClose={() => setDetalhe(null)}>

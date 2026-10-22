@@ -25,6 +25,7 @@ import { withFabSpace } from '../../config/feedback';
 import { webTitleProps } from '../../utils/webTitle';
 import { isoLocal } from '../../utils/saudacao';
 import { ehDeHoje, horaCurta, ordenarPorHorario, situacaoViagem } from '../../utils/viagemPainel';
+import SairDaConta from '../../components/SairDaConta';
 
 const TONS = {
   verde: { fundo: colors.success.light, texto: colors.success.dark },
@@ -232,6 +233,8 @@ const DashboardGestor = ({ navigation }) => {
               <ActionTile icon={IconNames.moreHoriz} label="Mais" accessibilityLabel="Mais ações" color={colors.neutral[600]} onPress={() => setMaisVisivel(true)} />
             </View>
           </View>
+
+          <SairDaConta />
         </View>
       </ScrollView>
 

@@ -28,6 +28,7 @@ import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
+import SairDaConta from '../../components/SairDaConta';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = { navigation: NativeStackNavigationProp<RootParamList> };
@@ -464,6 +465,8 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.configButtonText}>Configurações</Text>
           <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} accessibilityElementsHidden />
         </TouchableOpacity>
+
+        <SairDaConta />
 
         <View style={{ height: spacing.xxl }} />
       </ScrollView>

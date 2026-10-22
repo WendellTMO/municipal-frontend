@@ -7,7 +7,7 @@ import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
 import { useAuth } from '../contexts/AuthContext';
-import { confirmAction } from '../utils/confirm';
+import { confirmarSaida } from './SairDaConta';
 import { saudacao, primeiroNome, iniciais, linhaPerfil } from '../utils/saudacao';
 
 const PainelHeader = ({
@@ -24,14 +24,7 @@ const PainelHeader = ({
 
   const handleSair = () => {
     setMenuVisivel(false);
-    confirmAction({
-      title: 'Sair da conta',
-      message: 'Deseja encerrar sua sessão?',
-      confirmText: 'Sair',
-      cancelText: 'Cancelar',
-      destructive: true,
-      onConfirm: () => logout(),
-    });
+    confirmarSaida(logout);
   };
 
   const handleConfig = () => {
