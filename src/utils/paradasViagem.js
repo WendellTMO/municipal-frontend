@@ -39,3 +39,35 @@ export const montarParadas = (pontos, concluidas, instituicoes) => {
   }
   return resultado;
 };
+
+const SEM_INSTITUICAO = 'Sem instituição informada';
+
+// Alunos confirmados agrupados por instituição de ensino, para o motorista saber por
+// quais precisa passar. Usa aluno.instituicao ({ id, nome, tipo }) do backend e, enquanto
+// ele não vier, o ponto_destino do aluno. Sem nenhum dos dois, vai para "Sem instituição".
+// Ordem: mais alunos primeiro; "Sem instituição informada" por último.
+export const agruparConfirmadosPorInstituicao = alunos => {
+  const grupos = new Map();
+  for (const aluno of alunos || []) {
+    if (!aluno.confirmacao) continue;
+    let nome = SEM_INSTITUICAO;
+    let tipo = null;
+    let semInstituicao = true;
+    if (aluno.instituicao && aluno.instituicao.nome) {
+      nome = aluno.instituicao.nome;
+      tipo = aluno.instituicao.tipo || null;
+      semInstituicao = false;
+    } else if (aluno.ponto_destino) {
+      nome = aluno.ponto_destino;
+      semInstituicao = false;
+    }
+    if (!grupos.has(nome)) grupos.set(nome, { nome, tipo, quantidade: 0, semInstituicao });
+    grupos.get(nome).quantidade += 1;
+  }
+  const lista = Array.from(grupos.values());
+  lista.sort((a, b) => {
+    if (a.semInstituicao !== b.semInstituicao) return a.semInstituicao ? 1 : -1;
+    return b.quantidade - a.quantidade;
+  });
+  return lista;
+};

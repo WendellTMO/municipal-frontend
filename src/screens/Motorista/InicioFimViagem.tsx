@@ -44,7 +44,7 @@ import SubHeader from '../../components/SubHeader';
 import ConfirmacaoTelaCheia from '../../components/ConfirmacaoTelaCheia';
 import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
-import { montarParadas } from '../../utils/paradasViagem';
+import { agruparConfirmadosPorInstituicao, montarParadas } from '../../utils/paradasViagem';
 import { horaCurta } from '../../utils/viagemPainel';
 import { motoristaService } from '../../services/motoristaService';
 import { createNotificacao } from '../../services/notificacaoService';
@@ -204,6 +204,9 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const pontosValidos = normalizeRoutePoints(pontosRota);
   const paradas = montarParadas(pontosValidos, concluidas, instituicoes);
   const proxima = paradas.find((p) => p.estado === 'proxima') ?? null;
+  const gruposConfirmados = agruparConfirmadosPorInstituicao(
+    (currentViagem?.alunos as Record<string, unknown>[] | undefined) ?? [],
+  );
   const todasFeitas = pontosValidos.length > 0 && concluidas >= pontosValidos.length;
 
   const marcarChegada = () => {
@@ -754,7 +757,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
       <ConfirmacaoTelaCheia
         visible={iniciarVisivel}
-        titulo="Instituições de ensino desta rota"
+        titulo="Instituições de ensino com alunos confirmados"
         onCancelar={() => setIniciarVisivel(false)}
         principal={{ texto: 'Iniciar viagem', cor: colors.success.main, onPress: handleIniciarViagem }}
         secundario={{
@@ -763,27 +766,23 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           corTexto: colors.text.primary,
           onPress: () => setIniciarVisivel(false),
         }}>
-        {paradas.filter((p) => p.instituicao).length === 0 ? (
-          <Text style={styles.semInstituicao}>Nenhuma instituição vinculada a esta rota</Text>
+        {gruposConfirmados.length === 0 ? (
+          <Text style={styles.semInstituicao}>Nenhum aluno confirmou ainda</Text>
         ) : (
-          paradas
-            .filter((p) => p.instituicao)
-            .map((p) => (
-              <View key={p.ponto.id ?? p.numero} style={styles.instituicaoCard}>
-                <View style={styles.instituicaoIcone}>
-                  <Icon name={IconNames.school} size="md" color="#FFFFFF" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.instituicaoNome}>{p.instituicao!.nome}</Text>
-                  <Text style={styles.instituicaoDetalhe}>
-                    {p.instituicao!.endereco || p.instituicao!.tipo || ''}
-                  </Text>
-                  <Text style={styles.instituicaoParada}>
-                    Parada {p.numero}: {p.ponto.apelido}
-                  </Text>
-                </View>
+          gruposConfirmados.map((g) => (
+            <View key={g.nome} style={styles.instituicaoCard}>
+              <View style={styles.instituicaoIcone}>
+                <Icon name={IconNames.school} size="md" color="#FFFFFF" />
               </View>
-            ))
+              <View style={{ flex: 1 }}>
+                <Text style={styles.instituicaoNome}>{g.nome}</Text>
+                {g.tipo ? <Text style={styles.instituicaoDetalhe}>{g.tipo}</Text> : null}
+              </View>
+              <Text style={styles.instituicaoQtd}>
+                {g.quantidade} {g.quantidade === 1 ? 'aluno' : 'alunos'}
+              </Text>
+            </View>
+          ))
         )}
       </ConfirmacaoTelaCheia>
 
@@ -943,7 +942,7 @@ const styles = StyleSheet.create({
   },
   instituicaoNome: { ...textStyles.h5, color: colors.text.primary },
   instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
-  instituicaoParada: { ...textStyles.caption, color: colors.primary.main, marginTop: 2 },
+  instituicaoQtd: { ...textStyles.h5, color: colors.primary.main },
   // space-between com ícones de tamanho fixo: as bordas coincidem com as do Finalizar Viagem.
   acoesRow: { flexDirection: 'row', justifyContent: 'space-between' },
   acaoIcone: {
