@@ -221,10 +221,10 @@ const DashboardGestor = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Ações rápidas</Text>
           <View style={styles.qaGrid}>
             <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.campaign} label="Aviso" accessibilityLabel="Enviar aviso" color={colors.solid.amber} onPress={() => setAvisoVisivel(true)} />
+              <ActionTile icon={IconNames.add} label="Viagem" accessibilityLabel="Nova viagem" color={colors.solid.blue} onPress={() => irParaAba('ViagensTab')} />
             </View>
             <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.add} label="Viagem" accessibilityLabel="Nova viagem" color={colors.solid.blue} onPress={() => irParaAba('ViagensTab')} />
+              <ActionTile icon={IconNames.campaign} label="Aviso" accessibilityLabel="Enviar aviso" color={colors.solid.amber} onPress={() => setAvisoVisivel(true)} />
             </View>
             <View style={styles.qaCell}>
               <ActionTile icon={IconNames.route} label="Rota" accessibilityLabel="Nova rota" color={colors.solid.green} onPress={() => irParaAba('RotasTab')} />
