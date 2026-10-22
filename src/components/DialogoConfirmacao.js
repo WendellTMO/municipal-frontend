@@ -28,9 +28,8 @@ const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, se
           accessibilityLabel={principal.texto}>
           <Text style={styles.botaoTexto}>{principal.texto}</Text>
         </TouchableOpacity>
-        <View style={styles.espaco} />
         <TouchableOpacity
-          style={[styles.botao, { backgroundColor: secundario.cor }]}
+          style={[styles.botao, styles.botaoSecundario, { backgroundColor: secundario.cor }]}
           onPress={secundario.onPress}
           disabled={secundario.carregando}
           accessibilityRole="button"
@@ -38,7 +37,7 @@ const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, se
           {secundario.carregando ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.botaoTexto}>{secundario.texto}</Text>
+            <Text style={[styles.botaoTexto, styles.botaoTextoSecundario]}>{secundario.texto}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -62,10 +61,12 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   titulo: { ...textStyles.h3, color: colors.text.primary, textAlign: 'center' },
-  resumo: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.sm, marginBottom: spacing.lg },
-  botao: { minHeight: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: spacing.sm },
+  resumo: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.xs, marginBottom: spacing.md },
+  // Continuar (verde) é o maior e mais forte; Sim, finalizar (vermelho) é menor e mais leve.
+  botao: { minHeight: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   botaoTexto: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
-  espaco: { height: spacing.xl },
+  botaoSecundario: { minHeight: 48, marginTop: 14 },
+  botaoTextoSecundario: { fontSize: 16, fontWeight: '600' },
 });
 
 export default DialogoConfirmacao;
