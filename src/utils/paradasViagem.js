@@ -6,7 +6,7 @@ import { distanceInMeters } from '../features/map/utils/geo';
 const RAIO_INSTITUICAO_M = 150;
 
 export const instituicaoDaParada = (ponto, instituicoes) => {
-  if (ponto.instituicao) return { nome: ponto.instituicao, tipo: null };
+  if (ponto.instituicao) return { nome: ponto.instituicao, tipo: null, endereco: null };
   let melhor = null;
   let menor = RAIO_INSTITUICAO_M;
   for (const inst of instituicoes) {
@@ -17,7 +17,7 @@ export const instituicaoDaParada = (ponto, instituicoes) => {
     );
     if (metros <= menor) {
       menor = metros;
-      melhor = { nome: inst.nome, tipo: inst.tipo || null };
+      melhor = { nome: inst.nome, tipo: inst.tipo || null, endereco: inst.endereco || null };
     }
   }
   return melhor;
