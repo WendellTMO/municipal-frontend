@@ -12,7 +12,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import {motoristaService} from '../../services/motoristaService';
 import pontoService from '../../services/pontoService';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
-import { Icon, IconNames, LoadingSpinner } from '../../components';
+import { ActionTile, Icon, IconNames, LoadingSpinner, TripHeroCard } from '../../components';
+import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 
 const DashboardMotorista = ({navigation}) => {
@@ -164,29 +165,6 @@ const DashboardMotorista = ({navigation}) => {
     });
   }, [proximaViagem]);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString + 'T00:00:00'); // Adiciona hora para evitar problemas de timezone
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    date.setHours(0, 0, 0, 0);
-    
-    if (date.getTime() === today.getTime()) {
-      return 'Hoje';
-    } else if (date.getTime() === tomorrow.getTime()) {
-      return 'Amanhã';
-    } else {
-      const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-      const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-      const weekday = weekdays[date.getDay()];
-      const day = date.getDate();
-      const month = months[date.getMonth()];
-      return `${weekday}, ${day} de ${month}`;
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -208,168 +186,104 @@ const DashboardMotorista = ({navigation}) => {
         </View>
 
         {/* Próxima Viagem */}
-        <View style={styles.proximaViagemCard}>
-          <View style={styles.cardHeader}>
-            <Icon name={IconNames.schedule} size="md" color={colors.primary.dark} />
-            <Text style={styles.cardTitle}>Próxima Viagem</Text>
+        {proximaViagem ? (
+          <TripHeroCard
+            dayLabel={dayLabel(proximaViagem.data)}
+            time={proximaViagem.horario}
+            statusLabel={proximaViagem.status}
+            statusColor={
+              proximaViagem.status === 'Em andamento' ? colors.success.main : colors.warning.main
+            }
+            statusIcon={
+              proximaViagem.status === 'Em andamento' ? IconNames.route : IconNames.schedule
+            }
+            title={`${proximaViagem.origem || 'Origem'} → ${proximaViagem.destino || 'Destino'}`}
+            subtitle={proximaViagem.tipo}
+            accessibilityLabel={`Ver detalhes da próxima viagem, ${dayLabel(proximaViagem.data)} às ${proximaViagem.horario}, ${proximaViagem.origem || 'origem'} para ${proximaViagem.destino || 'destino'}, ${proximaViagem.status}`}
+            onPress={() =>
+              navigation.navigate('DetalheViagemMotorista', {
+                viagem: proximaViagem,
+              })
+            }>
+            <View style={styles.alunosLinha}>
+              <Icon name={IconNames.group} size="sm" color="#FFFFFF" />
+              <Text style={styles.alunosTexto}>
+                {alunosInfo.totalAlunos > 0
+                  ? `${alunosInfo.alunosConfirmados} de ${alunosInfo.totalAlunos} alunos confirmados`
+                  : 'Nenhum aluno inscrito nesta rota'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.iniciarButton}
+              onPress={() =>
+                navigation.navigate('InicioFimViagem', {viagem: proximaViagem})
+              }>
+              <Icon name={IconNames.route} size="md" color={colors.text.inverse} />
+              <Text style={styles.iniciarButtonText}>Iniciar Viagem</Text>
+            </TouchableOpacity>
+          </TripHeroCard>
+        ) : (
+          <View style={styles.proximaViagemCard}>
+            <View style={styles.cardHeader}>
+              <Icon name={IconNames.schedule} size="md" color={colors.primary.dark} />
+              <Text style={styles.cardTitle}>Próxima Viagem</Text>
+            </View>
+            {loadingViagem ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.primary.dark} />
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <Icon name={IconNames.route} size="xxl" color={colors.neutral[300]} />
+                <Text style={styles.emptyText}>Nenhuma viagem agendada</Text>
+                <Text style={styles.emptySubtext}>Aguarde o gestor atribuir viagens para você</Text>
+              </View>
+            )}
           </View>
-          {loadingViagem ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={colors.primary.dark} />
-            </View>
-          ) : proximaViagem ? (
-            <>
-              <View style={styles.viagemInfo}>
-                <View style={styles.viagemHeader}>
-                  <Text style={styles.viagemHorario}>{proximaViagem.horario}</Text>
-                  <View style={[
-                    styles.statusBadge,
-                    proximaViagem.status === 'Em andamento' 
-                      ? styles.statusEmAndamento 
-                      : styles.statusAIniciar
-                  ]}>
-                    <Icon 
-                      name={proximaViagem.status === 'Em andamento' ? IconNames.route : IconNames.schedule} 
-                      size="xs" 
-                      color={colors.text.inverse} 
-                    />
-                    <Text style={styles.statusText}>{proximaViagem.status}</Text>
-                  </View>
-                </View>
-                
-                {proximaViagem.data && (
-                  <Text style={styles.viagemData}>
-                    {formatDate(proximaViagem.data)} • {proximaViagem.tipo}
-                  </Text>
-                )}
+        )}
 
-                <View style={styles.rotaInfo}>
-                  <View style={styles.pontoRota}>
-                    <Icon name={IconNames.location} size="sm" color={colors.success.main} />
-                    <Text style={styles.pontoNome}>{proximaViagem.origem || 'Origem'}</Text>
-                  </View>
-                  <View style={styles.linhaRota} />
-                  <View style={styles.pontoRota}>
-                    <Icon name={IconNames.location} size="sm" color={colors.error.main} />
-                    <Text style={styles.pontoNome}>{proximaViagem.destino || 'Destino'}</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Informações de Alunos */}
-              <View style={styles.alunosInfo}>
-                <View style={styles.alunosHeader}>
-                  <Icon name={IconNames.group} size="sm" color={colors.primary.dark} />
-                  <Text style={styles.alunosText}>
-                    {alunosInfo.alunosConfirmados} de {alunosInfo.totalAlunos} alunos confirmados
-                  </Text>
-                </View>
-                {alunosInfo.totalAlunos > 0 ? (
-                  <View style={styles.alunosBar}>
-                    <View
-                      style={[
-                        styles.alunosBarFill,
-                        {
-                          width: `${(alunosInfo.alunosConfirmados / alunosInfo.totalAlunos) * 100}%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                ) : (
-                  <Text style={styles.emptyAlunosText}>
-                    Nenhum aluno inscrito nesta rota
-                  </Text>
-                )}
-              </View>
-
-              {/* Botões de Ação */}
-              <View style={styles.acoesContainer}>
-                <TouchableOpacity
-                  style={styles.verDetalhesButton}
-                  onPress={() =>
-                    navigation.navigate('DetalheViagemMotorista', {
-                      viagem: proximaViagem,
-                    })
-                  }>
-                  <Text style={styles.verDetalhesButtonText}>Ver Detalhes</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.iniciarButton}
-                  onPress={() =>
-                    navigation.navigate('InicioFimViagem', {viagem: proximaViagem})
-                  }>
-                  <Icon name={IconNames.route} size="md" color={colors.text.inverse} />
-                  <Text style={styles.iniciarButtonText}>Iniciar Viagem</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <View style={styles.emptyState}>
-              <Icon name={IconNames.route} size="xxl" color={colors.neutral[300]} />
-              <Text style={styles.emptyText}>Nenhuma viagem agendada</Text>
-              <Text style={styles.emptySubtext}>Aguarde o gestor atribuir viagens para você</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Botões Rápidos */}
+        {/* Ações rápidas */}
         <View style={styles.botoesRapidos}>
-          <View style={styles.botoesRow}>
-            <TouchableOpacity
-              style={styles.botaoRapido}
-              onPress={() => navigation.navigate('RotaMotorista')}>
-              <View style={styles.botaoIconContainer}>
-                <Icon name={IconNames.bus} size="lg" color={colors.primary.dark} />
-              </View>
-              <Text style={styles.botaoRapidoText}>Minhas Rotas</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.botaoRapido}
-              onPress={() => navigation.navigate('ListaViagens')}>
-              <View style={styles.botaoIconContainer}>
-                <Icon name={IconNames.route} size="lg" color={colors.primary.dark} />
-              </View>
-              <Text style={styles.botaoRapidoText}>Minhas Viagens</Text>
-            </TouchableOpacity>
-          </View>
-
+          <ActionTile
+            icon={IconNames.bus}
+            label="Rotas"
+            accessibilityLabel="Minhas Rotas"
+            color={colors.solid.blue}
+            onPress={() => navigation.navigate('RotaMotorista')}
+          />
+          <ActionTile
+            icon={IconNames.route}
+            label="Viagens"
+            accessibilityLabel="Minhas Viagens"
+            color={colors.solid.teal}
+            onPress={() => navigation.navigate('ListaViagens')}
+          />
           {/* Gestor-only buttons */}
           {user?.role?.toLowerCase() === 'gestor' && (
-            <View style={styles.botoesRow}>
-              <TouchableOpacity
-                style={styles.botaoRapido}
-                onPress={() => navigation.navigate('CriarRota')}>
-                <View style={[styles.botaoIconContainer, { backgroundColor: colors.success.lighter }]}>
-                  <Icon name={IconNames.add} size="lg" color={colors.success.main} />
-                </View>
-                <Text style={styles.botaoRapidoText}>Criar Rota</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.botaoRapido}
-                onPress={() => navigation.navigate('CriarViagem')}>
-                <View style={[styles.botaoIconContainer, { backgroundColor: colors.success.lighter }]}>
-                  <Icon name={IconNames.route} size="lg" color={colors.success.main} />
-                </View>
-                <Text style={styles.botaoRapidoText}>Criar Viagem</Text>
-              </TouchableOpacity>
-            </View>
+            <>
+              <ActionTile
+                icon={IconNames.add}
+                label="Nova rota"
+                accessibilityLabel="Criar Rota"
+                color={colors.solid.green}
+                onPress={() => navigation.navigate('CriarRota')}
+              />
+              <ActionTile
+                icon={IconNames.editCalendar}
+                label="Nova viagem"
+                accessibilityLabel="Criar Viagem"
+                color={colors.solid.amber}
+                onPress={() => navigation.navigate('CriarViagem')}
+              />
+            </>
           )}
-
-          <View style={styles.botoesRow}>
-            
-
-            <TouchableOpacity
-              style={styles.botaoRapido}
-              onPress={() => navigation.navigate('ConfigNotificacoesMotorista')}>
-              <View style={styles.botaoIconContainer}>
-                <Icon name={IconNames.settings} size="lg" color={colors.primary.dark} />
-              </View>
-              <Text style={styles.botaoRapidoText}>Configurações</Text>
-            </TouchableOpacity>
-          </View>
+          <ActionTile
+            icon={IconNames.settings}
+            label="Ajustes"
+            accessibilityLabel="Configurações"
+            color={colors.neutral[600]}
+            onPress={() => navigation.navigate('ConfigNotificacoesMotorista')}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -445,116 +359,10 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     alignItems: 'center',
   },
-  viagemInfo: {
-    marginBottom: spacing.base,
-  },
-  viagemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  viagemHorario: {
-    ...textStyles.display2,
-    color: colors.text.primary,
-  },
-  viagemData: {
-    ...textStyles.bodySmall,
-    color: colors.text.secondary,
-    marginBottom: spacing.md,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-  },
-  statusAIniciar: {
-    backgroundColor: colors.warning.main,
-  },
-  statusEmAndamento: {
-    backgroundColor: colors.success.main,
-  },
-  statusText: {
-    ...textStyles.caption,
-    color: colors.text.inverse,
-    fontWeight: fontWeight.semiBold,
-  },
-  rotaInfo: {
-    marginTop: spacing.md,
-  },
-  pontoRota: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  pontoNome: {
-    ...textStyles.body,
-    color: colors.text.primary,
-    fontWeight: fontWeight.medium,
-  },
-  linhaRota: {
-    width: 2,
-    height: spacing.base,
-    backgroundColor: colors.neutral[300],
-    marginLeft: spacing.sm,
-    opacity: 0.5,
-  },
   
   // Alunos Info
-  alunosInfo: {
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.md,
-  },
-  alunosHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  alunosText: {
-    ...textStyles.bodySmall,
-    color: colors.text.secondary,
-  },
-  alunosBar: {
-    height: spacing.sm,
-    backgroundColor: colors.border.light,
-    borderRadius: borderRadius.xs,
-    overflow: 'hidden',
-  },
-  alunosBarFill: {
-    height: '100%',
-    backgroundColor: colors.success.main,
-    borderRadius: borderRadius.xs,
-  },
-  emptyAlunosText: {
-    ...textStyles.caption,
-    color: colors.text.hint,
-    fontStyle: 'italic',
-  },
   
   // Action Buttons
-  acoesContainer: {
-    gap: spacing.sm,
-  },
-  verDetalhesButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-  },
-  verDetalhesButtonText: {
-    ...textStyles.button,
-    color: colors.primary.dark,
-  },
   iniciarButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -563,7 +371,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success.main,
     borderRadius: borderRadius.md,
     padding: spacing.base,
-    ...shadows.sm,
   },
   iniciarButtonText: {
     ...textStyles.button,
@@ -590,65 +397,23 @@ const styles = StyleSheet.create({
   },
   // Botões Rápidos
   botoesRapidos: {
-    paddingHorizontal: spacing.base,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: spacing.xs,
     marginTop: spacing.lg,
     marginBottom: spacing.xl,
+    rowGap: spacing.lg,
   },
-  botoesRow: {
-    flexDirection: 'row',
-    marginBottom: spacing.md,
-    gap: spacing.md,
-  },
-  botaoRapido: {
-    flex: 1,
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
-    alignItems: 'center',
-    ...shadows.sm,
-  },
-  botaoIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.primary.lighter,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  botaoRapidoText: {
-    ...textStyles.caption,
-    color: colors.text.primary,
-    fontWeight: fontWeight.medium,
-    textAlign: 'center',
-  },
-  acessoRapido: {
-    padding: spacing.base,
-  },
-  sectionTitle: {
-    ...textStyles.h3,
-    color: colors.text.primary,
-    marginBottom: spacing.md,
-  },
-  rapidoCard: {
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
+  alunosLinha: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border.light,
-    ...shadows.xs,
   },
-  rapidoIcon: {
-    fontSize: fontSize.h3,
-    marginRight: spacing.md,
-  },
-  rapidoText: {
-    ...textStyles.body,
-    color: colors.text.primary,
-    fontWeight: fontWeight.medium,
+  alunosTexto: {
+    ...textStyles.bodySmall,
+    color: '#FFFFFF',
   },
   emptyState: {
     padding: spacing.xl,
