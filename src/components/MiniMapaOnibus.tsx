@@ -25,7 +25,7 @@ type Props = {
 
 type LatLng = { latitude: number; longitude: number };
 
-const MiniMapaOnibus = ({ rotaId, viagemId, embarqueId, altura = 140, onPress }: Props) => {
+const MiniMapaOnibus = ({ rotaId, viagemId, embarqueId, altura = 220, onPress }: Props) => {
   const [pontos, setPontos] = useState<PontoFlatResponse[]>([]);
   const [posicao, setPosicao] = useState<LatLng | null>(null);
 
