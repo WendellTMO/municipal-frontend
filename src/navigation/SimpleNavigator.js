@@ -20,6 +20,10 @@ const ROUTE_ALIASES = {
   PerfilTab: 'ConfigNotificacoesGestor',
 };
 
+// Rota visível do provider mais interno (maior profundidade), lida pelo botão de feedback.
+let activeRoute = {depth: -1, route: null};
+export const getActiveWebRoute = () => activeRoute.route;
+
 export const resolveRoute = (routeName) => ROUTE_ALIASES[routeName] || routeName;
 
 export const NavigationProvider = ({children, initialRoute = 'Login'}) => {
@@ -37,6 +41,18 @@ export const NavigationProvider = ({children, initialRoute = 'Login'}) => {
       document.title = formatTitle(currentRoute);
     }
   }, [currentRoute]);
+
+  useEffect(() => {
+    if (depth >= activeRoute.depth) {
+      activeRoute = {depth, route: currentRoute};
+    }
+  }, [depth, currentRoute]);
+
+  useEffect(() => () => {
+    if (activeRoute.depth === depth) {
+      activeRoute = {depth: depth - 1, route: null};
+    }
+  }, [depth]);
 
   const navigate = (routeName, params = {}) => {
     const target = resolveRoute(routeName);
