@@ -70,8 +70,9 @@ export const gestorService = {
    * List all students
    * Backend: GET /v1/alunos/
    */
-  async listarAlunos(): Promise<AlunoListResponse> {
-    const response = await api.get<AlunoListResponse>('/alunos/');
+  async listarAlunos(status?: string): Promise<AlunoListResponse> {
+    const params = status ? { status } : undefined;
+    const response = await api.get<AlunoListResponse>('/alunos/', { params });
     return response.data;
   },
 
