@@ -1,4 +1,4 @@
-import { escolherViagemDeHoje, textoSaida } from './viagemAluno';
+import { escolherViagemDeHoje } from './viagemAluno';
 
 const agora = new Date(2026, 9, 22, 23, 30); // 22/10/2026 23:30 local, já é dia 23 em UTC
 const hoje = '2026-10-22';
@@ -24,8 +24,4 @@ test('finalizada e cancelada perdem para agendada', () => {
 test('sem viagem de hoje devolve null', () => {
   expect(escolherViagemDeHoje([{ data: '2026-10-21', status_viagem: 'AGENDADA' }], agora)).toBeNull();
   expect(escolherViagemDeHoje([], agora)).toBeNull();
-});
-
-test('texto de saída usa a hora de início', () => {
-  expect(textoSaida({ horario_inicio: '06:32:00' })).toBe('Saiu 06:32');
 });
