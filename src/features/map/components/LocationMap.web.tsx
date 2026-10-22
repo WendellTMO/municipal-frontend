@@ -24,11 +24,29 @@ export default function LocationMap({
   rotaCoordenadas,
   seguirOnibus = true,
   centralizarTick = 0,
+  onSeguirChange,
 }: LocationMapProps) {
   const controles = !previa;
   // O mapa é criado uma vez; o ref entrega a ele o onToque mais recente.
   const onToqueRef = useRef(onToque);
   onToqueRef.current = onToque;
+  const onSeguirRef = useRef(onSeguirChange);
+  onSeguirRef.current = onSeguirChange;
+  // Seguir o ônibus: arrastar ou dar zoom para; o botão Minha posição religa.
+  const seguindoRef = useRef(seguirOnibus);
+  const programaticoRef = useRef(false);
+
+  const pararDeSeguir = () => {
+    if (!seguindoRef.current) return;
+    seguindoRef.current = false;
+    onSeguirRef.current?.(false);
+  };
+  // setView feito pelo app não conta como gesto do usuário (o zoomstart sai síncrono).
+  const irPara = (map: LeafletMap, centro: [number, number], zoom: number) => {
+    programaticoRef.current = true;
+    map.setView(centro, zoom);
+    programaticoRef.current = false;
+  };
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<LeafletMap | null>(null);
   const LRef = useRef<LeafletModule | null>(null);
@@ -84,6 +102,10 @@ export default function LocationMap({
         maxZoom: TILE_MAX_ZOOM,
       }).addTo(map);
 
+      map.on('dragstart', pararDeSeguir);
+      map.on('zoomstart', () => {
+        if (!programaticoRef.current) pararDeSeguir();
+      });
       mapInstance.current = map;
       setMapReady(true);
       setLoadingMap(false);
@@ -125,7 +147,12 @@ export default function LocationMap({
   useEffect(() => {
     if (!centralizarTick || !mapReady || !mapInstance.current || !destinationLatLng) return;
     const map = mapInstance.current;
-    map.setView(
+    if (seguirOnibus && !seguindoRef.current) {
+      seguindoRef.current = true;
+      onSeguirRef.current?.(true);
+    }
+    irPara(
+      map,
       [destinationLatLng.latitude, destinationLatLng.longitude],
       Math.max(map.getZoom(), ZOOM_CENTRALIZAR),
     );
@@ -163,7 +190,7 @@ export default function LocationMap({
       }).addTo(map);
     }
 
-    if (seguirOnibus) map.setView(latLng, map.getZoom());
+    if (seguirOnibus && seguindoRef.current) irPara(map, [latLng.lat, latLng.lng], map.getZoom());
   }, [mapReady, destinationLatLng, seguirOnibus]);
 
   useEffect(() => {

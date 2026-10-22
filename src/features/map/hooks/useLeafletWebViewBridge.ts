@@ -21,11 +21,15 @@ type Result = {
   fitToCoordinates: (coords: LatLng[]) => void;
   setStops: (paradas: NormalizedRoutePoint[], proximaId?: string | null) => void;
   setMargins: (topo: number, base: number) => void;
+  definirSeguir: (permitir: boolean) => void;
   centralizarOnibus: () => void;
   reloadKey: number;
 };
 
-export function useLeafletWebViewBridge(onMapTap?: () => void): Result {
+export function useLeafletWebViewBridge(
+  onMapTap?: () => void,
+  onSeguirChange?: (seguindo: boolean) => void,
+): Result {
   const webViewRef = useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
   const [loadingMap, setLoadingMap] = useState(true);
@@ -56,6 +60,10 @@ export function useLeafletWebViewBridge(onMapTap?: () => void): Result {
         setLoadingMap(false);
       }
 
+      if (data.type === 'seguir') {
+        onSeguirChange?.(!!data.valor);
+      }
+
       if (data.type === 'mapTap') {
         onMapTap?.();
       }
@@ -68,7 +76,7 @@ export function useLeafletWebViewBridge(onMapTap?: () => void): Result {
     } catch (error) {
       console.warn('Mensagem inválida do WebView:', error);
     }
-  }, [onMapTap]);
+  }, [onMapTap, onSeguirChange]);
 
   const reloadMap = useCallback(() => {
     setMapReady(false);
@@ -106,9 +114,16 @@ export function useLeafletWebViewBridge(onMapTap?: () => void): Result {
     [inject]
   );
 
+  const definirSeguir = useCallback(
+    (permitir: boolean) => {
+      inject(`window.BuskaMap.permitirSeguir = ${permitir}; window.BuskaMap.seguindo = ${permitir};`);
+    },
+    [inject],
+  );
+
   const centralizarOnibus = useCallback(() => {
     inject(
-      `var m = window.BuskaMap; if (m && m.mapInstance && m.destMarker) { m.mapInstance.setView(m.destMarker.getLatLng(), Math.max(m.mapInstance.getZoom(), 16)); }`,
+      `var m = window.BuskaMap; if (m && m.mapInstance && m.destMarker) { if (m.permitirSeguir && !m.seguindo) { m.seguindo = true; window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'seguir', valor: true })); } m.programatico = true; m.mapInstance.setView(m.destMarker.getLatLng(), Math.max(m.mapInstance.getZoom(), 16)); m.programatico = false; }`,
     );
   }, [inject]);
 
@@ -154,6 +169,7 @@ export function useLeafletWebViewBridge(onMapTap?: () => void): Result {
     setRoute,
     clearRoute,
     centralizarOnibus,
+    definirSeguir,
     fitToCoordinates,
     setStops,
     setMargins,

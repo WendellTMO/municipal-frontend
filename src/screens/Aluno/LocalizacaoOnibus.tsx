@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  PanResponder,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -92,6 +93,9 @@ function etaMinutos(distanciaMetros: number): number {
   return Math.max(1, Math.round((km / 25) * 60));
 }
 
+// Lembra na sessão se o painel de informações está recolhido.
+let painelRecolhidoNaSessao = false;
+
 const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   const { rota, viagem } = route?.params || {};
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
@@ -105,6 +109,25 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   const [proximoPonto, setProximoPonto] = useState<PontoFlatResponse | null>(null);
   const [estadoOnibus, setEstadoOnibus] = useState<EstadoOnibus>('semSinal');
   const [mostrarEstado, setMostrarEstado] = useState(false);
+  const [centralizarTick, setCentralizarTick] = useState(0);
+  const [recolhido, setRecolhido] = useState(painelRecolhidoNaSessao);
+
+  const definirRecolhido = (valor: boolean) => {
+    painelRecolhidoNaSessao = valor;
+    setRecolhido(valor);
+  };
+  // Alça do painel: toque alterna; arrastar para baixo recolhe, para cima expande.
+  const recolhidoRef = useRef(recolhido);
+  recolhidoRef.current = recolhido;
+  const alca = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderRelease: (_e, g) => {
+        if (Math.abs(g.dy) < 8) definirRecolhido(!recolhidoRef.current);
+        else definirRecolhido(g.dy > 0);
+      },
+    }),
+  ).current;
   const posicaoAnterior = useRef<LatLng | null>(null);
 
   const viagemId = (viagem?.id ?? viagem?.viagem_id) as string | undefined;
@@ -270,6 +293,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
             posicaoAluno={posicaoAluno}
             margemSuperior={alturaCabecalho}
             margemInferior={alturaPainel}
+            centralizarTick={centralizarTick}
           />
         )}
       </View>
@@ -282,6 +306,17 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
         accessibilityLabel={`Estado: ${ESTADOS[estadoOnibus].texto}`}>
         <View style={[styles.bolhaPonto, { backgroundColor: ESTADOS[estadoOnibus].cor }]} />
         {mostrarEstado && <Text style={styles.bolhaTexto}>{ESTADOS[estadoOnibus].texto}</Text>}
+      </TouchableOpacity>
+
+      {/* Minha posição: centraliza o mapa no ônibus e volta a seguí-lo */}
+      <TouchableOpacity
+        style={[styles.minhaPosicao, { bottom: alturaPainel + spacing.base }, !posicaoMotorista && styles.minhaPosicaoApagada]}
+        onPress={() => setCentralizarTick((n) => n + 1)}
+        disabled={!posicaoMotorista}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !posicaoMotorista }}
+        accessibilityLabel="Centralizar no ônibus">
+        <Icon name={IconNames.myLocation} size="lg" color="#FFFFFF" />
       </TouchableOpacity>
 
       {/* Header */}
@@ -312,6 +347,31 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
       <View
         style={styles.infoPanel}
         onLayout={(e) => setAlturaPainel(e.nativeEvent.layout.height)}>
+        {/* Alça: toque ou arraste recolhe e expande o painel */}
+        <View
+          style={styles.alca}
+          {...alca.panHandlers}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={recolhido ? 'Expandir painel de informações' : 'Recolher painel de informações'}>
+          <Icon
+            name={recolhido ? IconNames.expandLess : IconNames.expandMore}
+            size="md"
+            color={colors.text.secondary}
+          />
+          {recolhido ? (
+            <Text style={styles.alcaResumo} numberOfLines={1}>
+              {etaParaProximoPonto != null
+                ? `Próxima parada ~${etaParaProximoPonto} min`
+                : etaParaOnibus != null
+                ? `Ônibus a ~${etaParaOnibus} min`
+                : 'Informações do ônibus'}
+            </Text>
+          ) : null}
+        </View>
+
+        {!recolhido && (
+          <>
         {/* Próxima parada, cabeçalho do painel */}
         {proximoPonto && etaParaProximoPonto != null && (
           <>
@@ -378,7 +438,8 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
             </Text>
           </View>
         </View>
-
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -499,6 +560,29 @@ const styles = StyleSheet.create({
   infoValue: { ...textStyles.h3, color: colors.primary.main },
   infoDivider: { width: 1, backgroundColor: colors.border.light, marginHorizontal: spacing.base },
 
+  minhaPosicao: {
+    position: 'absolute',
+    right: spacing.base,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.solid.blue,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 15,
+    ...shadows.lg,
+  },
+  minhaPosicaoApagada: { opacity: 0.4 },
+  alca: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    minHeight: 32,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  alcaResumo: { ...textStyles.bodySmall, color: colors.text.primary, fontWeight: '700' },
   bolhaEstado: {
     position: 'absolute',
     left: spacing.base,
