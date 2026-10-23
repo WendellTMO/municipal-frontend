@@ -2,7 +2,7 @@
  * Botão flutuante de feedback (círculo dourado com uma exclamação).
  * FeedbackBadge é o mesmo desenho sem posição, usado no aviso beta.
  */
-import React, { useRef, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { PanResponder, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { colors } from '../theme';
 import Icon, { IconNames } from './Icon';
@@ -13,6 +13,7 @@ import {
   ehArraste,
   encaixar,
   limitarBaixo,
+  limitarPonto,
   xDoLado,
 } from '../utils/fabPosicao';
 
@@ -58,52 +59,103 @@ const FeedbackButton = ({ onPress }) => {
 
   const posicaoDoToque = g => {
     const { width: w, height: h } = atual.current;
-    const baixoMax = limitarBaixo(h, h, TAMANHO, TOPO, RODAPE);
-    const yMax = h - TAMANHO - RODAPE;
-    const yMin = h - TAMANHO - baixoMax;
-    let novoX = inicio.current.x + g.dx;
-    let novoY = inicio.current.y + g.dy;
-    if (novoX < 0) novoX = 0;
-    if (novoX > w - TAMANHO) novoX = w - TAMANHO;
-    if (novoY < yMin) novoY = yMin;
-    if (novoY > yMax) novoY = yMax;
-    return { x: novoX, y: novoY };
+    return limitarPonto({
+      x: inicio.current.x + g.dx,
+      y: inicio.current.y + g.dy,
+      largura: w,
+      altura: h,
+      tamanho: TAMANHO,
+      topo: TOPO,
+      rodape: RODAPE,
+    });
   };
 
+  const comecar = () => {
+    const { width: w, height: h, posicao: p } = atual.current;
+    const baixo = limitarBaixo(p.baixo, h, TAMANHO, TOPO, RODAPE);
+    inicio.current = { x: xDoLado(p.lado, w, TAMANHO, MARGEM), y: h - TAMANHO - baixo };
+    moveu.current = false;
+  };
+
+  const mexer = g => {
+    if (!moveu.current && !ehArraste(g.dx, g.dy)) return;
+    moveu.current = true;
+    setArrasto(posicaoDoToque(g));
+  };
+
+  const soltar = g => {
+    if (!moveu.current) {
+      atual.current.onPress();
+      return;
+    }
+    const solto = posicaoDoToque(g);
+    const { width: w, height: h } = atual.current;
+    definirPosicao(
+      encaixar({ x: solto.x, y: solto.y, largura: w, altura: h, tamanho: TAMANHO, topo: TOPO, rodape: RODAPE }),
+    );
+    setArrasto(null);
+  };
+
+  // Nativo: PanResponder.
   const responder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        const { width: w, height: h, posicao: p } = atual.current;
-        const baixo = limitarBaixo(p.baixo, h, TAMANHO, TOPO, RODAPE);
-        inicio.current = { x: xDoLado(p.lado, w, TAMANHO, MARGEM), y: h - TAMANHO - baixo };
-        moveu.current = false;
-      },
-      onPanResponderMove: (e, g) => {
-        if (!moveu.current && !ehArraste(g.dx, g.dy)) return;
-        moveu.current = true;
-        setArrasto(posicaoDoToque(g));
-      },
-      onPanResponderRelease: (e, g) => {
-        if (!moveu.current) {
-          atual.current.onPress();
-          return;
-        }
-        const solto = posicaoDoToque(g);
-        const { width: w, height: h } = atual.current;
-        definirPosicao(
-          encaixar({ x: solto.x, y: solto.y, largura: w, altura: h, tamanho: TAMANHO, topo: TOPO, rodape: RODAPE }),
-        );
-        setArrasto(null);
-      },
+      onPanResponderGrant: comecar,
+      onPanResponderMove: (e, g) => mexer(g),
+      onPanResponderRelease: (e, g) => soltar(g),
       onPanResponderTerminate: () => setArrasto(null),
     }),
   ).current;
 
+  // Web: Pointer Events com captura. O ponteiro fica preso ao botão até soltar, então o gesto
+  // não se perde ao passar sobre botões, listas e folhas, nem quando o foco, a seleção de texto
+  // ou o menu de contexto cancelariam o PanResponder do react-native-web.
+  const noRef = useRef(null);
+  useEffect(() => {
+    const no = noRef.current;
+    if (Platform.OS !== 'web' || !no || !no.addEventListener) return undefined;
+    let ponteiro = null;
+    let origem = { x: 0, y: 0 };
+    const deltas = e => ({ dx: e.clientX - origem.x, dy: e.clientY - origem.y });
+    const aoDescer = e => {
+      if (ponteiro !== null || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      ponteiro = e.pointerId;
+      origem = { x: e.clientX, y: e.clientY };
+      no.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      e.stopPropagation();
+      comecar();
+    };
+    const aoMover = e => {
+      if (e.pointerId === ponteiro) mexer(deltas(e));
+    };
+    const aoSubir = e => {
+      if (e.pointerId !== ponteiro) return;
+      ponteiro = null;
+      soltar(deltas(e));
+    };
+    const aoCancelar = e => {
+      if (e.pointerId !== ponteiro) return;
+      ponteiro = null;
+      setArrasto(null);
+    };
+    no.addEventListener('pointerdown', aoDescer);
+    no.addEventListener('pointermove', aoMover);
+    no.addEventListener('pointerup', aoSubir);
+    no.addEventListener('pointercancel', aoCancelar);
+    return () => {
+      no.removeEventListener('pointerdown', aoDescer);
+      no.removeEventListener('pointermove', aoMover);
+      no.removeEventListener('pointerup', aoSubir);
+      no.removeEventListener('pointercancel', aoCancelar);
+    };
+  }, []);
+
   return (
     <View
       style={[styles.container, { left: arrasto ? arrasto.x : x, top: arrasto ? arrasto.y : y }]}
-      {...responder.panHandlers}
+      ref={noRef}
+      {...(Platform.OS === 'web' ? null : responder.panHandlers)}
       accessible
       accessibilityRole="button"
       accessibilityLabel="Enviar feedback"
@@ -118,7 +170,7 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     zIndex: 50,
-    ...(Platform.OS === 'web' ? { touchAction: 'none', cursor: 'grab' } : {}),
+    ...(Platform.OS === 'web' ? { touchAction: 'none', cursor: 'grab', userSelect: 'none' } : {}),
   },
   circle: {
     backgroundColor: colors.accent.main,
