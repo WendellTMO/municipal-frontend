@@ -21,6 +21,7 @@ import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -129,6 +130,9 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
         return { color: colors.text.hint, bg: colors.neutral[100], icon: IconNames.info };
     }
   };
+
+  // Cancelar presença pede confirmação num diálogo antes de chamar o endpoint.
+  const [cancelarViagem, setCancelarViagem] = useState<ViagemAgendaUI | null>(null);
 
   const handleConfirmarPresenca = async (viagem: ViagemAgendaUI, currentStatus: string) => {
     if (!viagem.id) return;
@@ -276,7 +280,9 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                         status === 'Confirmado' && styles.confirmarButtonActive,
                         isUpdating && styles.confirmarButtonDisabled,
                       ]}
-                      onPress={() => handleConfirmarPresenca(viagem, status)}
+                      onPress={() =>
+                        status === 'Confirmado' ? setCancelarViagem(viagem) : handleConfirmarPresenca(viagem, status)
+                      }
                       disabled={isUpdating}
                       accessibilityRole="button"
                       accessibilityLabel={
@@ -330,6 +336,22 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
           )}
         </View>
       </ScrollView>
+      <DialogoConfirmacao
+        visible={!!cancelarViagem}
+        titulo="Cancelar presença?"
+        resumo="O motorista deixa de contar com você nesta viagem."
+        onCancelar={() => setCancelarViagem(null)}
+        principal={{ texto: 'Manter presença', cor: colors.success.main, onPress: () => setCancelarViagem(null) }}
+        secundario={{
+          texto: 'Sim, cancelar',
+          cor: colors.error.main,
+          carregando: !!updatingPresenca,
+          onPress: async () => {
+            if (cancelarViagem) await handleConfirmarPresenca(cancelarViagem, 'Confirmado');
+            setCancelarViagem(null);
+          },
+        }}
+      />
     </SafeAreaView>
   );
 };

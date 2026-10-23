@@ -81,9 +81,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   confirmarTexto: { ...textStyles.h5, color: colors.primary.main, fontWeight: '800' as const },
+  cancelarTexto: { ...textStyles.h5, color: '#FFFFFF', fontWeight: '800' as const },
   desabilitado: { opacity: 0.6 },
-  cancelar: { alignSelf: 'center', marginTop: spacing.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.base },
-  cancelarTexto: { ...textStyles.bodySmall, color: '#DBEAFE', fontWeight: '700' as const, textDecorationLine: 'underline' },
+  // Botão vermelho sólido, mesma fonte do Confirmar presença e um pouco mais baixo.
+  cancelar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.base,
+    minHeight: 48,
+    borderRadius: 16,
+    backgroundColor: colors.error.main,
+  },
 });
 
 export default PresencaAcoes;
