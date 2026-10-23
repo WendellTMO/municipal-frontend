@@ -23,6 +23,7 @@ import {
 } from '../../components';
 import { dayLabel } from '../../utils/dayLabel';
 import { escolherViagemDeHoje } from '../../utils/viagemAluno';
+import { formatarHora } from '../../utils/formatarHora';
 import { horaCurta } from '../../utils/viagemPainel';
 import AgoraCard from '../../components/AgoraCard';
 import PresencaAcoes from '../../components/PresencaAcoes';
@@ -123,7 +124,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           next
             ? {
                 ...next,
-                horario: (next.horario_inicio ?? '--:--').substring(0, 5),
+                horario: formatarHora(next.horario_inicio),
                 status: next.status_confirmacao ? 'Confirmado' : 'Não confirmado',
               }
             : null,

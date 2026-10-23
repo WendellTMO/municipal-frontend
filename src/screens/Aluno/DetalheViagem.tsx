@@ -25,6 +25,7 @@ import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { usePresencaViagem } from '../../hooks/usePresencaViagem';
 import { aceitaPresenca } from '../../utils/presenca';
 import { formatarSentido } from '../../utils/formatarSentido';
+import { formatarHora } from '../../utils/formatarHora';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -146,7 +147,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const situacaoConfig = getSituacaoConfig(statusViagem);
-  const horario = (viagem.horario_inicio ?? '--:--').substring(0, 5);
+  const horario = formatarHora(viagem.horario_inicio);
 
   const getOrigem = () => {
     if (pontosRota.length > 0)

@@ -18,6 +18,7 @@ import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
+import { formatarHora } from '../../utils/formatarHora';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -98,11 +99,6 @@ const ListaViagens = ({navigation, route}) => {
     });
   };
 
-  const formatTime = (timeString) => {
-    if (!timeString) return '--:--';
-    return timeString.substring(0, 5);
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <SubHeader
@@ -160,7 +156,7 @@ const ListaViagens = ({navigation, route}) => {
                         {viagem.data ? formatDate(viagem.data) : 'Data não disponível'}
                       </Text>
                       <Text style={styles.viagemHorario}>
-                        {viagem.horario_inicio ? formatTime(viagem.horario_inicio) : '--:--'}
+                        {formatarHora(viagem.horario_inicio)}
                       </Text>
                     </View>
                     <View

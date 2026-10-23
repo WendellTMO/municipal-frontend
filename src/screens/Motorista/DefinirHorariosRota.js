@@ -18,6 +18,7 @@ import { formatTime } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import { formatarSentido } from '../../utils/formatarSentido';
+import { formatarHora } from '../../utils/formatarHora';
 
 const DIAS_SEMANA = [
   { id: 'SEG', label: 'Seg' },
@@ -174,7 +175,7 @@ const DefinirHorariosRota = ({ navigation, route }) => {
               horarios.map((horario, index) => (
                 <View key={horario.id || index} style={styles.horarioItem}>
                   <View style={styles.horarioInfo}>
-                    <Text style={styles.horarioTime}>{horario.horario_saida}</Text>
+                    <Text style={styles.horarioTime}>{formatarHora(horario.horario_saida)}</Text>
                     <View style={styles.horarioMeta}>
                       <View style={[
                         styles.sentidoBadge,

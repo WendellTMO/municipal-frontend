@@ -20,6 +20,7 @@ import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import { formatarHora } from '../../utils/formatarHora';
 
 const GESTOR_COLOR = colors.roles.gestor;
 
@@ -111,10 +112,6 @@ const ViagensList = ({ navigation }) => {
     return `${d}/${mo}/${y}`;
   };
 
-  const formatTime = (ts) => {
-    if (!ts) return '--:--';
-    return ts.substring(0, 5);
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -198,7 +195,7 @@ const ViagensList = ({ navigation }) => {
                         <View style={styles.cardMeta}>
                           <Icon name={IconNames.calendarToday} size="xs" color={colors.text.secondary} />
                           <Text style={styles.cardMetaText}>
-                            {formatDate(v.data)} · {formatTime(v.horario_inicio)}
+                            {formatDate(v.data)} · {formatarHora(v.horario_inicio)}
                           </Text>
                           {v.total_alunos != null && (
                             <>
