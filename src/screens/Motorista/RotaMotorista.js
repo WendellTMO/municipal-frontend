@@ -19,10 +19,10 @@ import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import ModalApp from '../../components/ModalApp';
 import Tappable from '../../components/Tappable';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 const DIAS_ORDER = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
 const DIAS_SHORT = { SEG: 'Seg', TER: 'Ter', QUA: 'Qua', QUI: 'Qui', SEX: 'Sex', SAB: 'Sáb', DOM: 'Dom' };
-const SENTIDO_LABEL = { IDA: 'Ida', VOLTA: 'Volta', CIRCULAR: 'Circular' };
 const SENTIDO_COLOR = {
   IDA: colors.info.main,
   VOLTA: colors.warning.main,
@@ -167,7 +167,7 @@ const RotaMotorista = ({ navigation }) => {
           <View style={[styles.sentidoDot, { backgroundColor: SENTIDO_COLOR[h.sentido] || colors.neutral[400] }]} />
           <Text style={styles.horarioTime}>{h.horario_saida}</Text>
           <View style={[styles.sentidoBadge, { backgroundColor: SENTIDO_COLOR[h.sentido] || colors.neutral[300] }]}>
-            <Text style={styles.sentidoBadgeText}>{SENTIDO_LABEL[h.sentido] || h.sentido}</Text>
+            <Text style={styles.sentidoBadgeText}>{formatarSentido(h.sentido)}</Text>
           </View>
           <View style={styles.diasChips}>
             {allDays.map(d => (

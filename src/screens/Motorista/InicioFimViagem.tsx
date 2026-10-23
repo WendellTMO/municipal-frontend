@@ -52,6 +52,7 @@ import { unwrapItems } from '../../types';
 import type { InstituicaoResponse, PontoFlatResponse, TipoOcorrencia } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import ModalApp from '../../components/ModalApp';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -380,7 +381,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.floatingTop} onLayout={(e) => setAlturaTopo(e.nativeEvent.layout.height)}>
           <SubHeader
             titulo="Em andamento"
-            subtitulo={`${(currentViagem.tipo as string) ?? ''} · ${horaCurta(currentViagem.horario_inicio as string)}`}
+            subtitulo={`${formatarSentido(currentViagem.tipo as string)} · ${horaCurta(currentViagem.horario_inicio as string)}`}
             voltarDesabilitado
             direita={
               <View style={styles.timerChip}>
@@ -647,7 +648,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <SubHeader
         titulo="Iniciar Viagem"
-        subtitulo={`${currentViagem.tipo as string} · ${horaCurta(currentViagem.horario_inicio as string)}`}
+        subtitulo={`${formatarSentido(currentViagem.tipo as string)} · ${horaCurta(currentViagem.horario_inicio as string)}`}
         onBack={() => navigation.goBack()}
       />
 

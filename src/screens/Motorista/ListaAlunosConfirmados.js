@@ -13,6 +13,7 @@ import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import { horaCurta } from '../../utils/viagemPainel';
 import { agruparAlunos, instituicaoDoAlunoMotorista } from '../../utils/alunosInstituicao';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 const ListaAlunosConfirmados = ({navigation, route}) => {
   const viagem = route?.params?.viagem || {};
@@ -64,7 +65,7 @@ const ListaAlunosConfirmados = ({navigation, route}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <SubHeader titulo="Alunos Confirmados" subtitulo={`${viagem.tipo} • ${horaCurta(viagem.horario_inicio)}`} onBack={() => navigation.goBack()} />
+      <SubHeader titulo="Alunos Confirmados" subtitulo={`${formatarSentido(viagem.tipo)} • ${horaCurta(viagem.horario_inicio)}`} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>

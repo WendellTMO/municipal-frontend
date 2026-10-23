@@ -17,6 +17,7 @@ import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -153,7 +154,7 @@ const ListaViagens = ({navigation, route}) => {
                   <View style={styles.viagemHeader}>
                     <View style={styles.viagemInfo}>
                       <Text style={styles.viagemTipo}>
-                        {viagem.tipo || 'IDA'} - {viagem.rota_nome || 'Rota'}
+                        {formatarSentido(viagem.tipo || 'IDA')} - {viagem.rota_nome || 'Rota'}
                       </Text>
                       <Text style={styles.viagemData}>
                         {viagem.data ? formatDate(viagem.data) : 'Data não disponível'}

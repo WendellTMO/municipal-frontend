@@ -22,6 +22,7 @@ import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -237,12 +238,12 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                   key={viagem.id}
                   style={styles.viagemCard}
                   accessible
-                  accessibilityLabel={`Viagem ${viagem.tipo ?? ''} às ${formatTime(viagem.horario_inicio)}, ${formatDate(viagem.data)}, ${status}`}>
+                  accessibilityLabel={`Viagem ${formatarSentido(viagem.tipo)} às ${formatTime(viagem.horario_inicio)}, ${formatDate(viagem.data)}, ${status}`}>
                   <View style={styles.viagemHeader}>
                     <View style={styles.viagemInfo}>
                       <View style={styles.viagemTipoContainer}>
                         <View style={styles.tipoBadge}>
-                          <Text style={styles.viagemTipo}>{viagem.tipo}</Text>
+                          <Text style={styles.viagemTipo}>{formatarSentido(viagem.tipo)}</Text>
                         </View>
                         <Text style={styles.viagemHorario}>
                           {formatTime(viagem.horario_inicio)}
