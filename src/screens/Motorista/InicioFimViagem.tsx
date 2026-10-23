@@ -816,11 +816,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               onArrastando={setArrastando}
               renderItem={(g: GrupoConfirmado) => (
                 <View style={styles.instituicaoCard}>
-                  <View style={styles.instituicaoIcone}>
-                    <Icon name={IconNames.school} size="md" color="#FFFFFF" />
-                  </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.instituicaoNome}>{g.nome}</Text>
+                    <Text style={styles.instituicaoNome} numberOfLines={2}>
+                      {g.nome}
+                    </Text>
                     {g.tipo ? <Text style={styles.instituicaoDetalhe}>{g.tipo}</Text> : null}
                   </View>
                   <Text style={styles.instituicaoQtd}>
@@ -976,17 +975,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    padding: spacing.base,
+    paddingVertical: spacing.base,
+    paddingLeft: spacing.base,
   },
   dicaOrdem: { ...textStyles.bodySmall, color: colors.text.secondary },
-  instituicaoIcone: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: colors.solid.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   instituicaoNome: { ...textStyles.h5, color: colors.text.primary },
   instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
   instituicaoQtd: { ...textStyles.h5, color: colors.primary.main },

@@ -3,7 +3,7 @@
  * Os botões ficam fixos embaixo, sempre visíveis; só a lista entre o título e eles rola. Voltar do sistema ou Escape cancelam.
  */
 import React from 'react';
-import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
 import ModalApp from './ModalApp';
 
@@ -54,7 +54,8 @@ const styles = StyleSheet.create({
   conteudo: { flex: 1, padding: spacing.lg },
   titulo: { ...textStyles.h2, color: colors.text.primary, marginTop: spacing.lg, marginBottom: spacing.base },
   // A lista ocupa o espaço entre o título e a barra de botões e rola sozinha.
-  corpo: { flex: 1 },
+  // O Chrome deixa a área rolável focável pelo teclado e desenha o contorno azul nela; os botões mantêm o foco padrão.
+  corpo: { flex: 1, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : null) },
   corpoConteudo: { gap: spacing.md, paddingBottom: spacing.base },
   // Barra fixa embaixo, com fundo sólido: os botões nunca saem da tela, qualquer que seja a lista.
   botoes: {
