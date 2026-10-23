@@ -20,6 +20,10 @@ import type { ViagemAgendaUI } from '../../services/alunoService';
 import { StaticRouteMap } from '../../features/map/index';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
+import DialogoConfirmacao from '../../components/DialogoConfirmacao';
+import { usePresencaViagem } from '../../hooks/usePresencaViagem';
+import { aceitaPresenca } from '../../utils/presenca';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -68,9 +72,14 @@ const CapacityRow: React.FC<{ confirmed: number; total: number }> = ({
 const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
   const { rota, viagem } = route?.params || {};
 
-  const [presencaConfirmada, setPresencaConfirmada] = useState(
-    viagem?.status_confirmacao ?? false,
-  );
+  const {
+    confirmada: presencaConfirmada,
+    setConfirmada: setPresencaConfirmada,
+    salvando: salvandoPresenca,
+    confirmar,
+    cancelar,
+  } = usePresencaViagem(viagem, viagem?.status_confirmacao ?? false);
+  const [cancelarVisivel, setCancelarVisivel] = useState(false);
   const [pontosRota, setPontosRota] = useState<PontoFlatResponse[]>([]);
   const [carregandoPontos, setCarregandoPontos] = useState(true);
   const [reportVisible, setReportVisible] = useState(false);
@@ -150,25 +159,6 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
       return (pontosRota[pontosRota.length - 1] as Record<string, unknown>).apelido as string ||
         (pontosRota[pontosRota.length - 1] as Record<string, unknown>).nome as string || 'Ponto final';
     return (viagem as Record<string, unknown>).destino as string || 'Não informado';
-  };
-
-  const handleConfirmarPresenca = async () => {
-    try {
-      let pontoEmbarqueId = viagem.ponto_embarque_id;
-      if (!pontoEmbarqueId && pontosRota.length > 0) {
-        pontoEmbarqueId = (pontosRota[0] as Record<string, unknown>).id as string;
-      }
-      if (!pontoEmbarqueId) {
-        Alert.alert('Erro', 'Não foi possível encontrar um ponto de embarque.');
-        return;
-      }
-      setPresencaConfirmada(true);
-      await alunoService.alterarPresencaViagem(viagem.id!, true, pontoEmbarqueId);
-      Alert.alert('Sucesso', 'Presença confirmada com sucesso!');
-    } catch (error: unknown) {
-      setPresencaConfirmada(false);
-      Alert.alert('Erro', (error as Error).message || 'Não foi possível confirmar a presença.');
-    }
   };
 
   return (
@@ -260,10 +250,21 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
               </Text>
             </View>
 
-            {emAndamento && !presencaConfirmada && (
+            {aceitaPresenca(statusViagem) && presencaConfirmada && (
+              <Tappable
+                style={styles.cancelarPresenca}
+                onPress={() => setCancelarVisivel(true)}
+                disabled={salvandoPresenca}
+                accessibilityLabel="Cancelar presença nesta viagem">
+                <Text style={styles.cancelarPresencaTexto}>Cancelar presença</Text>
+              </Tappable>
+            )}
+
+            {aceitaPresenca(statusViagem) && !presencaConfirmada && (
               <TouchableOpacity
                 style={styles.confirmarButton}
-                onPress={handleConfirmarPresenca}
+                onPress={confirmar}
+                disabled={salvandoPresenca}
                 accessibilityRole="button"
                 accessibilityLabel="Confirmar presença nesta viagem">
                 <Icon name={IconNames.checkCircle} size="md" color={colors.primary.contrast} />
@@ -354,6 +355,23 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <DialogoConfirmacao
+        visible={cancelarVisivel}
+        titulo="Cancelar presença?"
+        resumo="O motorista deixa de contar com você nesta viagem."
+        onCancelar={() => setCancelarVisivel(false)}
+        principal={{ texto: 'Manter presença', cor: colors.success.main, onPress: () => setCancelarVisivel(false) }}
+        secundario={{
+          texto: 'Sim, cancelar',
+          cor: colors.error.main,
+          carregando: salvandoPresenca,
+          onPress: async () => {
+            await cancelar();
+            setCancelarVisivel(false);
+          },
+        }}
+      />
 
       <ReportSheet
         visible={reportVisible}
@@ -507,6 +525,8 @@ const styles = StyleSheet.create({
   },
   presencaConfirmada: { backgroundColor: colors.success.light },
   presencaNaoConfirmada: { backgroundColor: colors.warning.light },
+  cancelarPresenca: { alignSelf: 'center', marginTop: spacing.md, padding: spacing.sm },
+  cancelarPresencaTexto: { ...textStyles.bodySmall, color: colors.error.main, fontWeight: '700' as const },
   presencaText: { ...textStyles.h5 },
   confirmarButton: {
     flexDirection: 'row',

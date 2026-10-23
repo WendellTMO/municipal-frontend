@@ -15,6 +15,7 @@ import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme'
 import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
 import { unwrapItems } from '../../types';
+import { escolherPontoEmbarque, MSG_SEM_PONTO } from '../../utils/presenca';
 import type { PontoFlatResponse } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
@@ -135,21 +136,18 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
       setUpdatingPresenca(viagem.id);
       const novoStatus = currentStatus !== 'Confirmado';
 
-      let pontoEmbarqueId = viagem.ponto_embarque_id;
-      if (novoStatus && !pontoEmbarqueId && viagem.rota_id) {
+      let pontos: PontoFlatResponse[] = [];
+      if (novoStatus && !viagem.ponto_embarque_id && viagem.rota_id) {
         try {
-          const pontos = await alunoService.listarPontosRota(viagem.rota_id).then(unwrapItems);
-          if (pontos && pontos.length > 0) {
-            pontoEmbarqueId = ((pontos as PontoFlatResponse[])[0] as Record<string, unknown>).id as string;
-          }
+          pontos = (await alunoService.listarPontosRota(viagem.rota_id).then(unwrapItems)) as PontoFlatResponse[];
         } catch (e: unknown) {
           toast.error(`Erro ao buscar pontos: ${(e as Error).message || 'erro desconhecido'}`);
           return;
         }
       }
-
+      const pontoEmbarqueId = escolherPontoEmbarque(viagem, pontos);
       if (novoStatus && !pontoEmbarqueId) {
-        toast.error('Nenhum ponto de embarque disponível.');
+        toast.error(MSG_SEM_PONTO);
         return;
       }
 
