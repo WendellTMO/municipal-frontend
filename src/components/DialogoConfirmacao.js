@@ -3,11 +3,12 @@
  * fundo só cancelam, nunca confirmam. Os dois botões ficam separados por um espaço.
  */
 import React from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
+import ModalApp from './ModalApp';
 
 const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, secundario }) => (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancelar} accessibilityViewIsModal>
+  <ModalApp visible={visible} transparent animationType="fade" onRequestClose={onCancelar} accessibilityViewIsModal>
     <View style={styles.fundo}>
       <TouchableOpacity
         style={StyleSheet.absoluteFillObject}
@@ -42,7 +43,7 @@ const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, se
         </TouchableOpacity>
       </View>
     </View>
-  </Modal>
+  </ModalApp>
 );
 
 const styles = StyleSheet.create({

@@ -20,6 +20,11 @@ test('campo instituicao do ponto tem prioridade', () => {
   });
 });
 
+test('campo instituicao do ponto como objeto do backend', () => {
+  const ponto = { latitude: 0, longitude: 0, instituicao: { id: 'i', nome: 'UFCG', tipo: 'Universidade Pública' } };
+  expect(instituicaoDaParada(ponto, [])).toEqual({ nome: 'UFCG', tipo: 'Universidade Pública', endereco: null });
+});
+
 test('estados das paradas seguem o número de concluídas', () => {
   const pontos = [{ latitude: 1, longitude: 1 }, { latitude: 2, longitude: 2 }, { latitude: 3, longitude: 3 }];
   const estados = montarParadas(pontos, 1, []).map(p => p.estado);

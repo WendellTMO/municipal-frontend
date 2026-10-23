@@ -3,12 +3,13 @@
  * linha de perfil e sino com contador. O avatar abre o menu da conta.
  */
 import React, { useState } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
 import { useAuth } from '../contexts/AuthContext';
 import { confirmarSaida } from './SairDaConta';
 import { saudacao, primeiroNome, iniciais, linhaPerfil } from '../utils/saudacao';
+import ModalApp from './ModalApp';
 
 const PainelHeader = ({
   perfil,
@@ -70,7 +71,7 @@ const PainelHeader = ({
         ) : null}
       </TouchableOpacity>
 
-      <Modal
+      <ModalApp
         visible={menuVisivel}
         transparent
         animationType="fade"
@@ -109,7 +110,7 @@ const PainelHeader = ({
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
-      </Modal>
+      </ModalApp>
     </View>
   );
 };

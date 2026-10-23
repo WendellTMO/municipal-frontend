@@ -3,16 +3,17 @@
  * próximas vezes? Só aparece quando o aparelho tem biometria (nunca na web).
  */
 import React from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
 import { useAuth } from '../contexts/AuthContext';
+import ModalApp from './ModalApp';
 
 const BiometriaOferta = () => {
   const { biometria } = useAuth();
 
   return (
-    <Modal
+    <ModalApp
       visible={biometria.oferta}
       transparent
       animationType="fade"
@@ -42,7 +43,7 @@ const BiometriaOferta = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </Modal>
+    </ModalApp>
   );
 };
 

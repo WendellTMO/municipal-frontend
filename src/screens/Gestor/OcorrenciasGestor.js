@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   RefreshControl,
   SafeAreaView,
   ScrollView,
@@ -19,6 +18,7 @@ import { confirmAction } from '../../utils/confirm';
 import { getErrorMessageFromError } from '../../utils/errors';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import ModalApp from '../../components/ModalApp';
 
 const TIPOS = {
   ATRASO: 'Atraso',
@@ -168,7 +168,7 @@ const OcorrenciasGestor = ({ navigation }) => {
         <SairDaConta />
       </ScrollView>
 
-      <Modal visible={!!detalhe} transparent animationType="slide" onRequestClose={() => setDetalhe(null)}>
+      <ModalApp visible={!!detalhe} transparent animationType="slide" onRequestClose={() => setDetalhe(null)}>
         <View style={styles.overlay}>
           <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setDetalhe(null)} accessibilityLabel="Fechar" />
           {detalhe ? (
@@ -201,7 +201,7 @@ const OcorrenciasGestor = ({ navigation }) => {
             </View>
           ) : null}
         </View>
-      </Modal>
+      </ModalApp>
     </SafeAreaView>
   );
 };

@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -23,6 +22,7 @@ import { unwrapItems } from '../types';
 import { getErrorMessageFromError } from '../utils/errors';
 import { isoLocal } from '../utils/saudacao';
 import { horaCurta } from '../utils/viagemPainel';
+import ModalApp from './ModalApp';
 
 export const TITULO_MAX = 120;
 export const MENSAGEM_MAX = 300;
@@ -111,7 +111,7 @@ const EnviarAvisoSheet = ({ visible, onClose, onSent }) => {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <ModalApp visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -230,7 +230,7 @@ const EnviarAvisoSheet = ({ visible, onClose, onSent }) => {
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </ModalApp>
   );
 };
 

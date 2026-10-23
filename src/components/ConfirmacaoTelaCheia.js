@@ -3,11 +3,12 @@
  * Os botões ficam fixos embaixo, sempre visíveis; só a lista entre o título e eles rola. Voltar do sistema ou Escape cancelam.
  */
 import React from 'react';
-import { ActivityIndicator, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
+import ModalApp from './ModalApp';
 
 const ConfirmacaoTelaCheia = ({ visible, titulo, onCancelar, principal, secundario, children }) => (
-  <Modal visible={visible} animationType="slide" onRequestClose={onCancelar} accessibilityViewIsModal>
+  <ModalApp visible={visible} animationType="slide" onRequestClose={onCancelar} accessibilityViewIsModal>
     <SafeAreaView style={styles.container}>
       <View style={styles.conteudo}>
       <Text style={styles.titulo} accessibilityRole="header">
@@ -45,7 +46,7 @@ const ConfirmacaoTelaCheia = ({ visible, titulo, onCancelar, principal, secundar
       </View>
       </View>
     </SafeAreaView>
-  </Modal>
+  </ModalApp>
 );
 
 const styles = StyleSheet.create({

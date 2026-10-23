@@ -8,8 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
-  Modal,
-} from 'react-native';
+  } from 'react-native';
 import { motoristaService } from '../../services/motoristaService';
 import { gestorService } from '../../services/gestorService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,6 +18,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import ModalApp from '../../components/ModalApp';
 
 const DIAS_ORDER = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
 const DIAS_SHORT = { SEG: 'Seg', TER: 'Ter', QUA: 'Qua', QUI: 'Qui', SEX: 'Sex', SAB: 'Sáb', DOM: 'Dom' };
@@ -269,7 +269,7 @@ const RotaMotorista = ({ navigation }) => {
 
   // ── Assignment Modal ──────────────────────────────────────────────────────
   const renderModal = () => (
-    <Modal
+    <ModalApp
       visible={!!modalRota}
       transparent
       animationType="slide"
@@ -352,7 +352,7 @@ const RotaMotorista = ({ navigation }) => {
           </View>
         </View>
       </View>
-    </Modal>
+    </ModalApp>
   );
 
   return (

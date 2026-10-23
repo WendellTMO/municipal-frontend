@@ -81,3 +81,8 @@ projeto1/
 - `npm start` - Inicia o Metro Bundler (para mobile)
 - `npm run android` - Executa no Android
 - `npm run ios` - Executa no iOS
+
+## Botão de feedback e aviso beta
+
+Ligados por padrão. Para retirar na versão final, defina `FEEDBACK_ENABLED=false` no `.env` (web e nativo) e gere o build de novo.
+Com `false` somem o botão amarelo (!), o aviso beta e qualquer chamada ao endpoint de feedback (flag única em `src/config/feedback.ts`).

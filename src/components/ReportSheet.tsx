@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import { borderRadius, colors, shadows, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
 import type { TipoOcorrencia } from '../types';
 import ocorrenciaService from '../services/ocorrenciaService';
+import ModalApp from './ModalApp';
 
 interface ReportSheetProps {
   visible: boolean;
@@ -93,7 +93,7 @@ const ReportSheet: React.FC<ReportSheetProps> = ({
   };
 
   return (
-    <Modal
+    <ModalApp
       visible={visible}
       transparent
       animationType="slide"
@@ -205,7 +205,7 @@ const ReportSheet: React.FC<ReportSheetProps> = ({
           )}
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </ModalApp>
   );
 };
 
