@@ -46,3 +46,13 @@ export const encaixar = ({ x, y, largura, altura, tamanho, topo, rodape }) => ({
   lado: ladoMaisProximo(x + tamanho / 2, largura),
   baixo: limitarBaixo(altura - tamanho - y, altura, tamanho, topo, rodape),
 });
+
+// Ponto (x, y) de tela do botão durante o arraste, limitado à janela e à faixa vertical permitida.
+export const limitarPonto = ({ x, y, largura, altura, tamanho, topo, rodape }) => {
+  const yMin = altura - tamanho - limitarBaixo(altura, altura, tamanho, topo, rodape);
+  const yMax = altura - tamanho - rodape;
+  return {
+    x: limitar(x, 0, largura - tamanho),
+    y: limitar(y, yMin, yMax),
+  };
+};
