@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import type * as LeafletNS from 'leaflet';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
 import { destruirMapa } from '../utils/leafletSeguro';
+import { useTrajetoRuas } from '../hooks/useTrajetoRuas';
 
 type LeafletModule = typeof LeafletNS;
 type LeafletMap = LeafletNS.Map;
@@ -80,6 +81,14 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
   const [mapReady, setMapReady] = useState(false);
 
   const points = useMemo(() => preparePoints(pontosRota ?? []), [pontosRota]);
+  const paradas = useMemo(() => {
+    const lista: { latitude: number; longitude: number }[] = [];
+    for (const p of points) {
+      lista.push({ latitude: p.lat, longitude: p.lng });
+    }
+    return lista;
+  }, [points]);
+  const trajeto = useTrajetoRuas(paradas);
 
   // ─── Map initialisation ───────────────────────────────────────────────────
 
@@ -146,23 +155,34 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
     });
 
     if (latLngs.length >= 2) {
-      layers.push(
-        L.polyline(latLngs, {
-          color: '#4285F4',
-          weight: 4,
-          opacity: 0.8,
-          dashArray: '8, 4',
-        }).addTo(map),
-      );
-      map.fitBounds(L.latLngBounds(latLngs), { padding: [40, 40] });
+      // Trajeto pelas ruas quando o OSRM respondeu; sem ele, a linha reta tracejada.
+      const ruas: LeafletNS.LatLng[] = [];
+      for (const c of trajeto) {
+        ruas.push(L.latLng(c.latitude, c.longitude));
+      }
+      if (ruas.length >= 2) {
+        layers.push(L.polyline(ruas, { color: '#4285F4', weight: 5, opacity: 0.85 }).addTo(map));
+      } else {
+        layers.push(
+          L.polyline(latLngs, {
+            color: '#4285F4',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '8, 4',
+          }).addTo(map),
+        );
+      }
+      map.fitBounds(L.latLngBounds(latLngs.concat(ruas)), { padding: [40, 40] });
     } else if (latLngs.length === 1) {
       map.setView(latLngs[0], 15);
     }
 
     return () => {
+      // Mapa ja destruido pelo desmonte: mexer nele quebra com _leaflet_pos.
+      if (mapInstance.current !== map) return;
       layers.forEach((layer) => map.removeLayer(layer));
     };
-  }, [mapReady, points]);
+  }, [mapReady, points, trajeto]);
 
   return <div ref={mapRef} style={styles.container as React.CSSProperties} />;
 }
