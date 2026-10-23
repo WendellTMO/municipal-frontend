@@ -100,7 +100,8 @@ const DashboardGestor = ({ navigation }) => {
   // Telas internas ficam dentro de uma aba no nativo e soltas no navegador do web.
   const abrir = (aba, tela, params) => {
     if (Platform.OS === 'web') navigation.navigate(tela, params);
-    else navigation.navigate(aba, { screen: tela, params });
+    // initial: false mantém a lista da aba embaixo, então voltar da criação cai nela.
+    else navigation.navigate(aba, { screen: tela, params, initial: false });
   };
 
   const itensMais = [
@@ -161,13 +162,13 @@ const DashboardGestor = ({ navigation }) => {
 
           <View style={styles.qaGrid} accessibilityRole="toolbar">
             <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.add} label="Viagem" accessibilityLabel="Nova viagem" color={colors.solid.blue} onPress={() => irParaAba('ViagensTab')} />
+              <ActionTile icon={IconNames.add} label="Viagem" accessibilityLabel="Nova viagem" color={colors.solid.blue} onPress={() => abrir('ViagensTab', 'CriarViagem')} />
             </View>
             <View style={styles.qaCell}>
               <ActionTile icon={IconNames.campaign} label="Aviso" accessibilityLabel="Enviar aviso" color={colors.solid.amber} onPress={() => setAvisoVisivel(true)} />
             </View>
             <View style={styles.qaCell}>
-              <ActionTile icon={IconNames.route} label="Rota" accessibilityLabel="Nova rota" color={colors.solid.green} onPress={() => irParaAba('RotasTab')} />
+              <ActionTile icon={IconNames.route} label="Rota" accessibilityLabel="Nova rota" color={colors.solid.green} onPress={() => abrir('RotasTab', 'CriarRota')} />
             </View>
             <View style={styles.qaCell}>
               <ActionTile icon={IconNames.moreHoriz} label="Mais" accessibilityLabel="Mais ações" color={colors.neutral[600]} onPress={() => setMaisVisivel(true)} />
