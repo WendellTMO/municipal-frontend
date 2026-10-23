@@ -56,7 +56,8 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
-  linha: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  // minHeight fixa a altura do cabeçalho em 113 px com ou sem subtítulo.
+  linha: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 47 },
   voltar: {
     width: 46,
     height: 46,

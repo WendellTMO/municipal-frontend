@@ -12,6 +12,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
+import SubHeader from '../../components/SubHeader';
 import { motoristaService } from '../../services/motoristaService';
 import { alunoService } from '../../services';
 import { LocationMap } from '../../features/map/index';
@@ -238,20 +239,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   if (!rota || !viagem) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              accessibilityRole="button"
-              accessibilityLabel="Voltar">
-              <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-            </TouchableOpacity>
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.headerTitle}>Localização do Ônibus</Text>
-            </View>
-          </View>
-        </View>
+        <SubHeader titulo="Localização" onBack={() => navigation.goBack()} />
         <View style={styles.emptyContent}>
           <Icon name={IconNames.warning} size="xxl" color={colors.warning.main} />
           <Text style={styles.emptyText}>Dados da rota não disponíveis</Text>
@@ -319,28 +307,9 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
         <Icon name={IconNames.myLocation} size="lg" color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* Header */}
-      <View
-        style={styles.header}
-        onLayout={(e) => setAlturaCabecalho(e.nativeEvent.layout.height)}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar">
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle} accessibilityRole="header">
-              Localização
-            </Text>
-            <Text style={styles.headerSubtitle}>{rota.nome as string}</Text>
-          </View>
-          <View style={styles.headerIcon}>
-            <Icon name={IconNames.bus} size="lg" color={colors.primary.contrast} />
-          </View>
-        </View>
+      {/* Cabeçalho no padrão do app (SubHeader), flutuando sobre o mapa */}
+      <View style={styles.cabecalhoFlutuante} onLayout={(e) => setAlturaCabecalho(e.nativeEvent.layout.height)}>
+        <SubHeader titulo="Localização" subtitulo={rota.nome as string} onBack={() => navigation.goBack()} />
       </View>
 
       {/* Info Panel */}
@@ -450,6 +419,7 @@ const styles = StyleSheet.create({
   // display:block e o flex fica inerte, deixando a tela sem altura.
   container: { flex: 1, height: '100%', backgroundColor: colors.background.default },
 
+  cabecalhoFlutuante: { zIndex: 100, elevation: 10 },
   header: {
     backgroundColor: colors.primary.dark,
     paddingHorizontal: spacing.base,
