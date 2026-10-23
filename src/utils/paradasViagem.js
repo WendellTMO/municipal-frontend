@@ -9,9 +9,9 @@ export const instituicaoDaParada = (ponto, instituicoes) => {
   // O backend manda instituicao como texto (antigo) ou como objeto { id, nome, tipo }.
   const doPonto = ponto.instituicao;
   if (doPonto && typeof doPonto === 'object' && doPonto.nome) {
-    return { nome: doPonto.nome, tipo: doPonto.tipo || null, endereco: doPonto.endereco || null };
+    return { id: doPonto.id || null, nome: doPonto.nome, tipo: doPonto.tipo || null, endereco: doPonto.endereco || null };
   }
-  if (doPonto && typeof doPonto === 'string') return { nome: doPonto, tipo: null, endereco: null };
+  if (doPonto && typeof doPonto === 'string') return { id: null, nome: doPonto, tipo: null, endereco: null };
   let melhor = null;
   let menor = RAIO_INSTITUICAO_M;
   for (const inst of instituicoes) {
@@ -22,7 +22,7 @@ export const instituicaoDaParada = (ponto, instituicoes) => {
     );
     if (metros <= menor) {
       menor = metros;
-      melhor = { nome: inst.nome, tipo: inst.tipo || null, endereco: inst.endereco || null };
+      melhor = { id: inst.id || null, nome: inst.nome, tipo: inst.tipo || null, endereco: inst.endereco || null };
     }
   }
   return melhor;
@@ -58,7 +58,9 @@ export const agruparConfirmadosPorInstituicao = alunos => {
     let nome = SEM_INSTITUICAO;
     let tipo = null;
     let semInstituicao = true;
+    let id = null;
     if (aluno.instituicao && aluno.instituicao.nome) {
+      id = aluno.instituicao.id || null;
       nome = aluno.instituicao.nome;
       tipo = aluno.instituicao.tipo || null;
       semInstituicao = false;
@@ -66,7 +68,7 @@ export const agruparConfirmadosPorInstituicao = alunos => {
       nome = aluno.ponto_destino;
       semInstituicao = false;
     }
-    if (!grupos.has(nome)) grupos.set(nome, { nome, tipo, quantidade: 0, semInstituicao });
+    if (!grupos.has(nome)) grupos.set(nome, { id, nome, tipo, quantidade: 0, semInstituicao });
     grupos.get(nome).quantidade += 1;
   }
   const lista = Array.from(grupos.values());

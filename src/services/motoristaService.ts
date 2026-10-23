@@ -12,6 +12,8 @@ interface EnviarLocalizacaoResponse {
   distancia_metros: number;
 }
 
+export type OrdemInstituicao = { instituicao_id: string; nome: string; tipo?: string | null; ordem: number };
+
 export const motoristaService = {
   /**
    * List routes assigned to the driver
@@ -104,6 +106,26 @@ export const motoristaService = {
    */
   async listarInstituicoes(): Promise<InstituicaoListResponse> {
     const response = await api.get<InstituicaoListResponse>('/instituicoes/');
+    return response.data;
+  },
+
+  /**
+   * Ordem salva das instituições de ensino da rota (só as que já foram ordenadas).
+   * Backend: GET /v1/rotas/{id}/instituicoes/ordem
+   */
+  async obterOrdemInstituicoes(rotaId: string): Promise<{ items: OrdemInstituicao[]; total: number }> {
+    const response = await api.get<{ items: OrdemInstituicao[]; total: number }>(`/rotas/${rotaId}/instituicoes/ordem`);
+    return response.data;
+  },
+
+  /**
+   * Regrava a ordem inteira das instituições da rota.
+   * Backend: PUT /v1/rotas/{id}/instituicoes/ordem
+   */
+  async salvarOrdemInstituicoes(rotaId: string, instituicaoIds: string[]): Promise<{ items: OrdemInstituicao[]; total: number }> {
+    const response = await api.put<{ items: OrdemInstituicao[]; total: number }>(`/rotas/${rotaId}/instituicoes/ordem`, {
+      instituicao_ids: instituicaoIds,
+    });
     return response.data;
   },
 

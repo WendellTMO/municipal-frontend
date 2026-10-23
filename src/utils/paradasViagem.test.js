@@ -5,7 +5,7 @@ const uepb = { nome: 'UEPB', tipo: 'Universidade Pública', latitude: -7.2326, l
 
 test('parada na coordenada da instituição vira instituição', () => {
   const ponto = { latitude: -7.21676, longitude: -35.9082 };
-  expect(instituicaoDaParada(ponto, [uepb, ufcg])).toEqual({ nome: 'UFCG', tipo: 'Universidade Pública', endereco: null });
+  expect(instituicaoDaParada(ponto, [uepb, ufcg])).toEqual({ id: null, nome: 'UFCG', tipo: 'Universidade Pública', endereco: null });
 });
 
 test('parada longe de qualquer instituição não é instituição', () => {
@@ -14,6 +14,7 @@ test('parada longe de qualquer instituição não é instituição', () => {
 
 test('campo instituicao do ponto tem prioridade', () => {
   expect(instituicaoDaParada({ latitude: 0, longitude: 0, instituicao: 'Escola X' }, [])).toEqual({
+    id: null,
     nome: 'Escola X',
     tipo: null,
     endereco: null,
@@ -22,7 +23,7 @@ test('campo instituicao do ponto tem prioridade', () => {
 
 test('campo instituicao do ponto como objeto do backend', () => {
   const ponto = { latitude: 0, longitude: 0, instituicao: { id: 'i', nome: 'UFCG', tipo: 'Universidade Pública' } };
-  expect(instituicaoDaParada(ponto, [])).toEqual({ nome: 'UFCG', tipo: 'Universidade Pública', endereco: null });
+  expect(instituicaoDaParada(ponto, [])).toEqual({ id: 'i', nome: 'UFCG', tipo: 'Universidade Pública', endereco: null });
 });
 
 test('estados das paradas seguem o número de concluídas', () => {
