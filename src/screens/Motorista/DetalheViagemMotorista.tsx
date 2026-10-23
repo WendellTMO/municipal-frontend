@@ -36,6 +36,7 @@ import type { PontoFlatResponse } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import { horaCurta } from '../../utils/viagemPainel';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -98,7 +99,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
 
   return (
     <SafeAreaView style={styles.container}>
-      <SubHeader titulo="Detalhes da Viagem" subtitulo={`${viagem.tipo as string} · ${horaCurta(viagem.horario_inicio as string)}`} onBack={() => navigation.goBack()} />
+      <SubHeader titulo="Detalhes da Viagem" subtitulo={`${formatarSentido(viagem.tipo as string)} · ${horaCurta(viagem.horario_inicio as string)}`} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -107,7 +108,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
           <View style={styles.card}>
             <View style={styles.summaryHeader}>
               <View>
-                <Text style={styles.viagemTipo}>{viagem.tipo as string}</Text>
+                <Text style={styles.viagemTipo}>{formatarSentido(viagem.tipo as string)}</Text>
                 <Text style={styles.viagemHorario}>{horaCurta(viagem.horario_inicio as string)}</Text>
               </View>
               <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>

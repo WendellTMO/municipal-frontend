@@ -18,12 +18,12 @@ import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 const isWeb = Platform.OS === 'web';
 
 const DIAS_ORDER = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
 const DIAS_SHORT = { SEG: 'Seg', TER: 'Ter', QUA: 'Qua', QUI: 'Qui', SEX: 'Sex', SAB: 'Sáb', DOM: 'Dom' };
-const SENTIDO_LABEL = { IDA: 'Ida', VOLTA: 'Volta', CIRCULAR: 'Circular' };
 const SENTIDO_COLOR = {
   IDA: colors.info.main,
   VOLTA: colors.warning.main,
@@ -248,7 +248,7 @@ const CriarViagem = ({ navigation, route }) => {
                         <View style={styles.horarioMeta}>
                           <View style={[styles.sentidoTag, { backgroundColor: sentidoColor }]}>
                             <Text style={styles.sentidoTagText}>
-                              {SENTIDO_LABEL[horario.sentido] || horario.sentido}
+                              {formatarSentido(horario.sentido)}
                             </Text>
                           </View>
                           <Text style={[styles.diasLabel, selected && styles.diasLabelSelected]}>

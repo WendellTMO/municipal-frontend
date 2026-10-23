@@ -17,6 +17,7 @@ import { unwrapItems } from '../../types';
 import { formatTime } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 const DIAS_SEMANA = [
   { id: 'SEG', label: 'Seg' },
@@ -181,7 +182,7 @@ const DefinirHorariosRota = ({ navigation, route }) => {
                         horario.sentido === 'VOLTA' && styles.sentidoVolta,
                         horario.sentido === 'CIRCULAR' && styles.sentidoCircular,
                       ]}>
-                        <Text style={styles.sentidoText}>{horario.sentido}</Text>
+                        <Text style={styles.sentidoText}>{formatarSentido(horario.sentido)}</Text>
                       </View>
                       <Text style={styles.diasText}>
                         {formatDias(horario.dias?.map(d => d.dia || d))}

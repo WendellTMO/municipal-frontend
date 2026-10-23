@@ -18,6 +18,7 @@ import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import Tappable from '../../components/Tappable';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
@@ -190,7 +191,7 @@ const DashboardMotorista = ({navigation}) => {
               proximaViagem.status === 'Em andamento' ? IconNames.route : IconNames.schedule
             }
             title={`${proximaViagem.origem || 'Origem'} → ${proximaViagem.destino || 'Destino'}`}
-            subtitle={proximaViagem.tipo}
+            subtitle={formatarSentido(proximaViagem.tipo)}
             accessibilityLabel={`Ver detalhes da próxima viagem, ${dayLabel(proximaViagem.data)} às ${proximaViagem.horario}, ${proximaViagem.origem || 'origem'} para ${proximaViagem.destino || 'destino'}, ${proximaViagem.status}`}
             onPress={() =>
               navigation.navigate('DetalheViagemMotorista', {

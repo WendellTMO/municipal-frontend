@@ -24,6 +24,7 @@ import Tappable from '../../components/Tappable';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { usePresencaViagem } from '../../hooks/usePresencaViagem';
 import { aceitaPresenca } from '../../utils/presenca';
+import { formatarSentido } from '../../utils/formatarSentido';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -165,7 +166,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <SubHeader
         titulo="Detalhes da Viagem"
-        subtitulo={`${viagem.tipo} • ${horario}`}
+        subtitulo={`${formatarSentido(viagem.tipo)} • ${horario}`}
         onBack={() => navigation.goBack()}
         direita={
           <TouchableOpacity
@@ -186,7 +187,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.viagemHeader}>
               <View>
                 <View style={styles.tipoBadge}>
-                  <Text style={styles.viagemTipo}>{viagem.tipo}</Text>
+                  <Text style={styles.viagemTipo}>{formatarSentido(viagem.tipo)}</Text>
                 </View>
                 <Text style={styles.viagemHorario}>{horario}</Text>
               </View>
