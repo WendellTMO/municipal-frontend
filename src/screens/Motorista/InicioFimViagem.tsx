@@ -326,13 +326,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   if (!viagemParam) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}
-            accessibilityRole="button" accessibilityLabel="Voltar">
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Iniciar Viagem</Text>
-        </View>
+        <SubHeader titulo="Iniciar Viagem" onBack={() => navigation.goBack()} />
         <View style={styles.centered}>
           <Icon name={IconNames.warning} size="xxl" color={colors.warning.main} />
           <Text style={styles.emptyText}>Dados da viagem não disponíveis</Text>
@@ -344,13 +338,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   if (loadingStatus) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}
-            accessibilityRole="button" accessibilityLabel="Voltar">
-            <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Carregando…</Text>
-        </View>
+        <SubHeader titulo="Carregando…" onBack={() => navigation.goBack()} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.primary.dark} />
         </View>
@@ -657,24 +645,11 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={[styles.header, styles.headerPre]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar">
-          <Icon name={IconNames.back} size="md" color={colors.primary.contrast} />
-        </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: spacing.md }}>
-          <Text style={styles.title} accessibilityRole="header">Iniciar Viagem</Text>
-          <Text style={styles.headerSubtitle}>
-            {currentViagem.tipo as string} · {horaCurta(currentViagem.horario_inicio as string)}
-          </Text>
-        </View>
-        <View style={styles.headerIcon}>
-          <Icon name={IconNames.schedule} size="lg" color={colors.primary.contrast} />
-        </View>
-      </View>
+      <SubHeader
+        titulo="Iniciar Viagem"
+        subtitulo={`${currentViagem.tipo as string} · ${horaCurta(currentViagem.horario_inicio as string)}`}
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView contentContainerStyle={withFabSpace(styles.preContent)} showsVerticalScrollIndicator={false}>
         {/* Route summary card */}
