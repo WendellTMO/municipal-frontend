@@ -25,6 +25,8 @@ import { dayLabel } from '../../utils/dayLabel';
 import { escolherViagemDeHoje } from '../../utils/viagemAluno';
 import { horaCurta } from '../../utils/viagemPainel';
 import AgoraCard from '../../components/AgoraCard';
+import PresencaAcoes from '../../components/PresencaAcoes';
+import { aceitaPresenca } from '../../utils/presenca';
 import MiniMapaOnibus from '../../components/MiniMapaOnibus';
 import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
@@ -360,8 +362,20 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             }
             title={proximaViagem.rota_nome ?? 'Rota'}
             accessibilityLabel={proximaViagemLabel}
-            onPress={abrirDetalheViagem}
-          />
+            onPress={abrirDetalheViagem}>
+            {aceitaPresenca(proximaViagem.status_viagem) ? (
+              <PresencaAcoes
+                key={proximaViagem.id}
+                viagem={proximaViagem}
+                confirmadaInicial={!!proximaViagem.status_confirmacao}
+                onMudou={(c) =>
+                  setProximaViagem((prev) =>
+                    prev ? { ...prev, status_confirmacao: c, status: c ? 'Confirmado' : 'Não confirmado' } : prev,
+                  )
+                }
+              />
+            ) : null}
+          </TripHeroCard>
         )}
 
         {/* Quick Actions */}
