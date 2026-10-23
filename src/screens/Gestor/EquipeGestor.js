@@ -7,6 +7,7 @@ import {
   RefreshControl,
   SafeAreaView,
   ScrollView,
+  Switch,
   StyleSheet,
   Text,
   TextInput,
@@ -21,6 +22,7 @@ import { useToast } from '../../components/Toast';
 import { formatCpf, onlyDigits } from '../../utils/masks';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { api } from '../../api/client';
+import { agruparAlunos, filtrarPorInstituicao, instituicaoDoAlunoGestor } from '../../utils/alunosInstituicao';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
@@ -65,6 +67,9 @@ const EquipeGestor = ({ navigation }) => {
   const toast = useToast();
   const [segmento, setSegmento] = useState(SEGMENT.MOTORISTAS);
   const [busca, setBusca] = useState('');
+  const [agrupar, setAgrupar] = useState(false);
+  const [filtroInst, setFiltroInst] = useState(null);
+  const [recolhidas, setRecolhidas] = useState({});
   const [refreshing, setRefreshing] = useState(false);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -115,10 +120,15 @@ const EquipeGestor = ({ navigation }) => {
 
   const alunosFiltered = useMemo(() => {
     const q = busca.toLowerCase();
-    return (alunos ?? []).filter(
+    const porBusca = (alunos ?? []).filter(
       a => a.nome?.toLowerCase().includes(q) || a.email?.toLowerCase().includes(q),
     );
-  }, [alunos, busca]);
+    return filtrarPorInstituicao(porBusca, filtroInst, instituicaoDoAlunoGestor);
+  }, [alunos, busca, filtroInst]);
+
+  // Chips de filtro rápido e seções do agrupamento por instituição.
+  const secoesTodas = useMemo(() => agruparAlunos(alunos ?? [], instituicaoDoAlunoGestor), [alunos]);
+  const secoes = useMemo(() => agruparAlunos(alunosFiltered, instituicaoDoAlunoGestor), [alunosFiltered]);
 
   const pendingApprovalCount = useMemo(
     () => (alunos ?? []).filter(a => a.status === 'PENDING_APPROVAL').length,
@@ -197,6 +207,47 @@ const EquipeGestor = ({ navigation }) => {
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
+  const renderAluno = a => (
+      <View key={a.id}>
+        <PessoaCard
+          nome={a.nome}
+          detalhe={a.email}
+          color={a.status === 'PENDING_APPROVAL' ? colors.warning.main : colors.success.main}
+          statusLabel={a.status === 'PENDING_APPROVAL' ? 'Aguardando aprovação' : undefined}
+          guardianConsentedAt={a.guardian_consented_at}
+          isMinor={a.is_minor}
+          onViewDetail={() => navigation?.navigate?.('DetalheAlunoGestor', { alunoId: a.id })}
+        />
+        {a.status === 'PENDING_APPROVAL' && (
+          <View style={styles.alunoActions}>
+            <Tappable navega
+              style={styles.detailBtn}
+              onPress={() => navigation?.navigate?.('DetalheAlunoGestor', { alunoId: a.id })}
+              accessibilityRole="button"
+              accessibilityLabel={`Ver detalhes de ${a.nome}`}>
+              <Icon name="info-outline" size="sm" color={GESTOR_COLOR} />
+              <Text style={styles.detailBtnText}>Ver detalhes</Text>
+            </Tappable>
+            <Tappable
+              style={[styles.aprovarBtn, aprovandoId === a.id && styles.formBtnDisabled]}
+              onPress={() => handleAprovar(a.id)}
+              disabled={aprovandoId === a.id}
+              accessibilityRole="button"
+              accessibilityLabel={`Aprovar cadastro de ${a.nome}`}>
+              {aprovandoId === a.id ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Icon name={IconNames.checkCircle} size="sm" color="#FFFFFF" />
+                  <Text style={styles.aprovarBtnText}>Aprovar cadastro</Text>
+                </>
+              )}
+            </Tappable>
+          </View>
+        )}
+      </View>
+  );
+
   const isLoading = segmento === SEGMENT.MOTORISTAS ? loadingM : loadingA;
   const isError = segmento === SEGMENT.MOTORISTAS ? errorM : errorA;
   const errMsg = segmento === SEGMENT.MOTORISTAS ? errM?.message : errA?.message;
@@ -267,6 +318,39 @@ const EquipeGestor = ({ navigation }) => {
               </Tappable>
             )}
           </View>
+
+          {segmento === SEGMENT.ALUNOS && (
+            <View>
+              <View style={styles.agruparRow}>
+                <Text style={styles.agruparTexto}>Agrupar por instituição</Text>
+                <Switch
+                  value={agrupar}
+                  onValueChange={setAgrupar}
+                  trackColor={{ false: colors.border.light, true: GESTOR_COLOR }}
+                  thumbColor={colors.background.paper}
+                  accessibilityRole="switch"
+                  accessibilityLabel="Agrupar por instituição"
+                />
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsInst}>
+                {[{ chave: null, nome: 'Todas', quantidade: (alunos ?? []).length }]
+                  .concat(secoesTodas.map(sec => ({ chave: sec.chave === null ? '__sem__' : sec.chave, nome: sec.nome, quantidade: sec.alunos.length })))
+                  .map(c => (
+                    <Tappable
+                      key={String(c.chave)}
+                      style={[styles.chipInst, filtroInst === c.chave && styles.chipInstAtivo]}
+                      onPress={() => setFiltroInst(c.chave)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: filtroInst === c.chave }}
+                      accessibilityLabel={`Filtrar por ${c.nome}, ${c.quantidade} alunos`}>
+                      <Text style={[styles.chipInstTexto, filtroInst === c.chave && styles.chipInstTextoAtivo]} numberOfLines={1}>
+                        {c.nome} · {c.quantidade}
+                      </Text>
+                    </Tappable>
+                  ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
 
         {/* Create form */}
@@ -350,46 +434,24 @@ const EquipeGestor = ({ navigation }) => {
                   ))
                 : alunosFiltered.length === 0
                   ? <EmptyState label="alunos" busca={busca} />
-                  : alunosFiltered.map(a => (
-                    <View key={a.id}>
-                      <PessoaCard
-                        nome={a.nome}
-                        detalhe={a.email}
-                        color={a.status === 'PENDING_APPROVAL' ? colors.warning.main : colors.success.main}
-                        statusLabel={a.status === 'PENDING_APPROVAL' ? 'Aguardando aprovação' : undefined}
-                        guardianConsentedAt={a.guardian_consented_at}
-                        isMinor={a.is_minor}
-                        onViewDetail={() => navigation?.navigate?.('DetalheAlunoGestor', { alunoId: a.id })}
-                      />
-                      {a.status === 'PENDING_APPROVAL' && (
-                        <View style={styles.alunoActions}>
-                          <Tappable navega
-                            style={styles.detailBtn}
-                            onPress={() => navigation?.navigate?.('DetalheAlunoGestor', { alunoId: a.id })}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Ver detalhes de ${a.nome}`}>
-                            <Icon name="info-outline" size="sm" color={GESTOR_COLOR} />
-                            <Text style={styles.detailBtnText}>Ver detalhes</Text>
-                          </Tappable>
-                          <Tappable
-                            style={[styles.aprovarBtn, aprovandoId === a.id && styles.formBtnDisabled]}
-                            onPress={() => handleAprovar(a.id)}
-                            disabled={aprovandoId === a.id}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Aprovar cadastro de ${a.nome}`}>
-                            {aprovandoId === a.id ? (
-                              <ActivityIndicator size="small" color="#FFFFFF" />
-                            ) : (
-                              <>
-                                <Icon name={IconNames.checkCircle} size="sm" color="#FFFFFF" />
-                                <Text style={styles.aprovarBtnText}>Aprovar cadastro</Text>
-                              </>
-                            )}
-                          </Tappable>
-                        </View>
-                      )}
-                    </View>
-                  ))
+                  : agrupar
+                    ? secoes.map(sec => (
+                      <View key={String(sec.chave)} style={styles.secaoInst}>
+                        <Tappable
+                          style={styles.secaoCabecalho}
+                          onPress={() => setRecolhidas(r => ({ ...r, [sec.chave]: !r[sec.chave] }))}
+                          accessibilityRole="button"
+                          accessibilityState={{ expanded: !recolhidas[sec.chave] }}
+                          accessibilityLabel={`${sec.nome}, ${sec.alunos.length} alunos`}>
+                          <Icon name={IconNames.school} size="md" color={GESTOR_COLOR} />
+                          <Text style={styles.secaoNome} numberOfLines={2}>{sec.nome}</Text>
+                          <Text style={styles.secaoQtd}>{sec.alunos.length}</Text>
+                          <Icon name={recolhidas[sec.chave] ? IconNames.expandMore : IconNames.expandLess} size="md" color={colors.text.secondary} />
+                        </Tappable>
+                        {!recolhidas[sec.chave] && sec.alunos.map(renderAluno)}
+                      </View>
+                    ))
+                    : alunosFiltered.map(renderAluno)
               }
             </View>
             <SairDaConta />
@@ -533,6 +595,34 @@ const emptyStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
+  agruparRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 },
+  agruparTexto: { fontSize: 14, fontWeight: '600', color: colors.text.primary },
+  chipsInst: { gap: 8, paddingVertical: 8 },
+  chipInst: {
+    maxWidth: 220,
+    paddingHorizontal: 14,
+    height: 36,
+    justifyContent: 'center',
+    borderRadius: 18,
+    backgroundColor: colors.neutral[100],
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  chipInstAtivo: { backgroundColor: GESTOR_COLOR, borderColor: GESTOR_COLOR },
+  chipInstTexto: { fontSize: 13, fontWeight: '600', color: colors.text.primary },
+  chipInstTextoAtivo: { color: '#FFFFFF' },
+  secaoInst: { marginBottom: 12 },
+  secaoCabecalho: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.background.paper,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 8,
+  },
+  secaoNome: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.text.primary },
+  secaoQtd: { fontSize: 15, fontWeight: '800', color: GESTOR_COLOR },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,

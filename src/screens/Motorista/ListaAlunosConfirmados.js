@@ -12,6 +12,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import { horaCurta } from '../../utils/viagemPainel';
+import { agruparAlunos, instituicaoDoAlunoMotorista } from '../../utils/alunosInstituicao';
 
 const ListaAlunosConfirmados = ({navigation, route}) => {
   const viagem = route?.params?.viagem || {};
@@ -25,9 +26,41 @@ const ListaAlunosConfirmados = ({navigation, route}) => {
       nome: a.nome || 'Aluno',
       pontoEmbarque: a.ponto_embarque || 'Não informado',
       pontoDestino: a.ponto_destino || 'Não informado',
+      instituicao: a.instituicao,
     }));
+
+  // Agrupados pela instituição de ensino (alunos[].instituicao do backend).
+  const secoes = agruparAlunos(alunosConfirmados, instituicaoDoAlunoMotorista);
   
   const totalAlunos = viagem.total_alunos || viagem.alunos?.length || 0;
+
+  const renderAluno = (aluno) => (
+          <View key={aluno.id} style={styles.alunoCard}>
+            <View style={styles.alunoHeader}>
+              <View style={styles.alunoAvatar}>
+                <Text style={styles.alunoInicial}>
+                  {aluno.nome?.charAt(0) || '?'}
+                </Text>
+              </View>
+              <View style={styles.alunoInfo}>
+                <Text style={styles.alunoNome}>{aluno.nome}</Text>
+                <View style={styles.pontoContainer}>
+                  <Icon name={IconNames.location} size="sm" color={colors.text.secondary} />
+                  <Text style={styles.pontoEmbarque}>{aluno.pontoEmbarque}</Text>
+                </View>
+                {aluno.pontoDestino && aluno.pontoDestino !== 'Não informado' && (
+                  <View style={styles.pontoContainer}>
+                    <Icon name={IconNames.flag} size="sm" color={colors.text.hint} />
+                    <Text style={styles.pontoDestino}>{aluno.pontoDestino}</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.confirmadoIcon}>
+                <Icon name={IconNames.checkCircle} size="md" color={colors.text.inverse} />
+              </View>
+            </View>
+          </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -41,31 +74,19 @@ const ListaAlunosConfirmados = ({navigation, route}) => {
             </Text>
           </View>
 
-          {alunosConfirmados.map((aluno) => (
-            <View key={aluno.id} style={styles.alunoCard}>
-              <View style={styles.alunoHeader}>
-                <View style={styles.alunoAvatar}>
-                  <Text style={styles.alunoInicial}>
-                    {aluno.nome?.charAt(0) || '?'}
-                  </Text>
+          {secoes.map((sec) => (
+            <View key={String(sec.chave)}>
+              <View style={styles.secaoCabecalho} accessibilityRole="header">
+                <Icon name={IconNames.school} size="md" color={colors.primary.main} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.secaoNome}>{sec.nome}</Text>
+                  {sec.tipo ? <Text style={styles.secaoTipo}>{sec.tipo}</Text> : null}
                 </View>
-                <View style={styles.alunoInfo}>
-                  <Text style={styles.alunoNome}>{aluno.nome}</Text>
-                  <View style={styles.pontoContainer}>
-                    <Icon name={IconNames.location} size="sm" color={colors.text.secondary} />
-                    <Text style={styles.pontoEmbarque}>{aluno.pontoEmbarque}</Text>
-                  </View>
-                  {aluno.pontoDestino && aluno.pontoDestino !== 'Não informado' && (
-                    <View style={styles.pontoContainer}>
-                      <Icon name={IconNames.flag} size="sm" color={colors.text.hint} />
-                      <Text style={styles.pontoDestino}>{aluno.pontoDestino}</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.confirmadoIcon}>
-                  <Icon name={IconNames.checkCircle} size="md" color={colors.text.inverse} />
-                </View>
+                <Text style={styles.secaoQtd}>
+                  {sec.alunos.length} {sec.alunos.length === 1 ? 'aluno' : 'alunos'}
+                </Text>
               </View>
+              {sec.alunos.map(renderAluno)}
             </View>
           ))}
 
@@ -83,6 +104,16 @@ const ListaAlunosConfirmados = ({navigation, route}) => {
 };
 
 const styles = StyleSheet.create({
+  secaoCabecalho: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.base,
+    marginBottom: spacing.sm,
+  },
+  secaoNome: { ...textStyles.h5, color: colors.text.primary },
+  secaoTipo: { ...textStyles.caption, color: colors.text.secondary },
+  secaoQtd: { ...textStyles.h5, color: colors.primary.main },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
