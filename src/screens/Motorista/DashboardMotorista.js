@@ -19,6 +19,7 @@ import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
+import { formatarHora } from '../../utils/formatarHora';
 
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
@@ -109,14 +110,7 @@ const DashboardMotorista = ({navigation}) => {
               // Silent fail - use default values
             }
             
-            let horarioFormatado = '--:--';
-            if (proxima.horario_inicio) {
-              if (proxima.horario_inicio.includes('T')) {
-                horarioFormatado = proxima.horario_inicio.substring(11, 16);
-              } else if (proxima.horario_inicio.includes(':')) {
-                horarioFormatado = proxima.horario_inicio.substring(0, 5);
-              }
-            }
+            const horarioFormatado = formatarHora(proxima.horario_inicio);
             
             // Map backend status to display status
             const statusMap = {

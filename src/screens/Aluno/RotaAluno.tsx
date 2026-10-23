@@ -23,6 +23,7 @@ import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { formatarSentido } from '../../utils/formatarSentido';
+import { formatarHora } from '../../utils/formatarHora';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -185,8 +186,6 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
     return isConfirmed ? 'Confirmado' : 'Não confirmado';
   };
 
-  const formatTime = (t?: string) =>
-    t ? (t.includes('T') ? t.substring(11, 16) : t.substring(0, 5)) : '--:--';
   const formatDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString('pt-BR') : '';
 
@@ -238,7 +237,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                   key={viagem.id}
                   style={styles.viagemCard}
                   accessible
-                  accessibilityLabel={`Viagem ${formatarSentido(viagem.tipo)} às ${formatTime(viagem.horario_inicio)}, ${formatDate(viagem.data)}, ${status}`}>
+                  accessibilityLabel={`Viagem ${formatarSentido(viagem.tipo)} às ${formatarHora(viagem.horario_inicio)}, ${formatDate(viagem.data)}, ${status}`}>
                   <View style={styles.viagemHeader}>
                     <View style={styles.viagemInfo}>
                       <View style={styles.viagemTipoContainer}>
@@ -246,7 +245,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                           <Text style={styles.viagemTipo}>{formatarSentido(viagem.tipo)}</Text>
                         </View>
                         <Text style={styles.viagemHorario}>
-                          {formatTime(viagem.horario_inicio)}
+                          {formatarHora(viagem.horario_inicio)}
                         </Text>
                       </View>
                       <View style={styles.dateRow}>

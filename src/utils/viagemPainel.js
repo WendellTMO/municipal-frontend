@@ -1,3 +1,5 @@
+import { formatarHora } from './formatarHora';
+
 // Situação de uma viagem na lista "Hoje" do painel do gestor.
 const SEM_MOTORISTA = ['', 'Sem Motorista'];
 const SEM_VEICULO = ['', 'Sem Veículo'];
@@ -29,12 +31,7 @@ export const situacaoViagem = viagem => {
   return { selo: '', tom: 'cinza', aviso: null };
 };
 
-// "07:30:00" ou "2026-10-22T07:30:00" -> "07:30"
-export const horaCurta = valor => {
-  const texto = String(valor || '');
-  if (texto.includes('T')) return texto.substring(11, 16);
-  return texto.substring(0, 5) || '--:--';
-};
+export const horaCurta = formatarHora;
 
 export const ordenarPorHorario = viagens =>
   [...viagens].sort((a, b) => horaCurta(a.horario_inicio).localeCompare(horaCurta(b.horario_inicio)));

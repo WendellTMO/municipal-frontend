@@ -20,6 +20,7 @@ import SubHeader from '../../components/SubHeader';
 import ModalApp from '../../components/ModalApp';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
+import { formatarHora } from '../../utils/formatarHora';
 
 const DIAS_ORDER = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
 const DIAS_SHORT = { SEG: 'Seg', TER: 'Ter', QUA: 'Qua', QUI: 'Qui', SEX: 'Sex', SAB: 'Sáb', DOM: 'Dom' };
@@ -165,7 +166,7 @@ const RotaMotorista = ({ navigation }) => {
       return (
         <View key={h.id || i} style={styles.horarioRow}>
           <View style={[styles.sentidoDot, { backgroundColor: SENTIDO_COLOR[h.sentido] || colors.neutral[400] }]} />
-          <Text style={styles.horarioTime}>{h.horario_saida}</Text>
+          <Text style={styles.horarioTime}>{formatarHora(h.horario_saida)}</Text>
           <View style={[styles.sentidoBadge, { backgroundColor: SENTIDO_COLOR[h.sentido] || colors.neutral[300] }]}>
             <Text style={styles.sentidoBadgeText}>{formatarSentido(h.sentido)}</Text>
           </View>

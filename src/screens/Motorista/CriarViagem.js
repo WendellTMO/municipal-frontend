@@ -19,6 +19,7 @@ import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import { formatarSentido } from '../../utils/formatarSentido';
+import { formatarHora } from '../../utils/formatarHora';
 
 const isWeb = Platform.OS === 'web';
 
@@ -243,7 +244,7 @@ const CriarViagem = ({ navigation, route }) => {
                       onPress={() => setHorarioSelecionado(selected ? null : horario.id)}>
                       <View style={styles.horarioItemLeft}>
                         <Text style={[styles.horarioTime, selected && styles.horarioTimeSelected]}>
-                          {horario.horario_saida}
+                          {formatarHora(horario.horario_saida)}
                         </Text>
                         <View style={styles.horarioMeta}>
                           <View style={[styles.sentidoTag, { backgroundColor: sentidoColor }]}>
