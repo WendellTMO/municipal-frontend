@@ -45,13 +45,18 @@ import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { agruparConfirmadosPorInstituicao, montarParadas } from '../../utils/paradasViagem';
 import { horaCurta } from '../../utils/viagemPainel';
+import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
+import ListaReordenavel from '../../components/ListaReordenavel';
 import { motoristaService } from '../../services/motoristaService';
 import { createNotificacao } from '../../services/notificacaoService';
 import { useToast } from '../../components/Toast';
 import { unwrapItems } from '../../types';
+import type { OrdemInstituicao } from '../../services/motoristaService';
 import type { InstituicaoResponse, PontoFlatResponse, TipoOcorrencia } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import ModalApp from '../../components/ModalApp';
+
+type GrupoConfirmado = { id: string | null; nome: string; tipo: string | null; quantidade: number; semInstituicao: boolean };
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -99,6 +104,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   useFeedbackPadrao(viagemIniciada ? 'topo' : null);
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
   const [iniciarVisivel, setIniciarVisivel] = useState(false);
+  const [ordemSalva, setOrdemSalva] = useState<OrdemInstituicao[]>([]);
+  const [gruposOrdenados, setGruposOrdenados] = useState<GrupoConfirmado[]>([]);
+  const [gruposIniciais, setGruposIniciais] = useState<GrupoConfirmado[]>([]);
+  const [arrastando, setArrastando] = useState(false);
   const [avisoTexto, setAvisoTexto] = useState('');
   const [tipoProblema, setTipoProblema] = useState<TipoOcorrencia | null>(null);
   const [posMotorista, setPosMotorista] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -142,6 +151,16 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           const pontosResp = await motoristaService.listarPontosRota(rid);
           const items = unwrapItems(pontosResp) as PontoFlatResponse[];
           setPontosRota(items);
+        }
+
+        // Ordem salva das instituições da rota. Opcional: sem ela vale a ordem do dia.
+        if (rid) {
+          try {
+            const ordem = await motoristaService.obterOrdemInstituicoes(rid);
+            setOrdemSalva(ordem.items ?? []);
+          } catch {
+            setOrdemSalva([]);
+          }
         }
 
         // Instituições de ensino, para marcar as paradas que são escolas. Opcional.
@@ -202,7 +221,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   }, [viagemIniciada]);
 
   // Paradas válidas (com coordenadas), com estado e instituição de ensino.
-  const pontosValidos = normalizeRoutePoints(pontosRota);
+  const pontosOrdenados = reordenarPontosPorInstituicao(pontosRota, instituicoes, ordemSalva);
+  const pontosValidos = normalizeRoutePoints(pontosOrdenados);
   const paradas = montarParadas(pontosValidos, concluidas, instituicoes);
   const proxima = paradas.find((p) => p.estado === 'proxima') ?? null;
   const gruposConfirmados = agruparConfirmadosPorInstituicao(
@@ -257,11 +277,33 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   };
 
   // Só o botão da tela de instituições chama o endpoint de iniciar.
+  const abrirIniciar = () => {
+    const ordenados = mesclarOrdem(gruposConfirmados, ordemSalva) as GrupoConfirmado[];
+    setGruposOrdenados(ordenados);
+    setGruposIniciais(ordenados);
+    setIniciarVisivel(true);
+  };
+
+  // A falha ao salvar a ordem não impede o início da viagem.
+  const salvarOrdemSeMudou = async () => {
+    if (!rotaId || !ordemMudou(gruposIniciais, gruposOrdenados)) return;
+    try {
+      const resposta = await motoristaService.salvarOrdemInstituicoes(
+        rotaId,
+        montarListaPut(gruposOrdenados, ordemSalva),
+      );
+      setOrdemSalva(resposta.items ?? []);
+    } catch {
+      toast.warning('Não foi possível salvar a ordem das instituições. A viagem inicia mesmo assim.');
+    }
+  };
+
   const handleIniciarViagem = async () => {
     if (!viagemId) return;
     setIniciarVisivel(false);
     try {
       setLoading(true);
+      await salvarOrdemSeMudou();
       await motoristaService.iniciarViagem(viagemId);
       setViagemIniciada(true);
       setTempoDecorrido(0);
@@ -354,7 +396,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         {/* Mesmo mapa da tela do aluno: paradas numeradas, próxima destacada, ônibus */}
         <View style={StyleSheet.absoluteFillObject}>
           <LocationMap
-            pontosRota={pontosRota}
+            pontosRota={pontosOrdenados}
             posicaoOnibus={posMotorista}
             proximaParadaId={proxima ? (proxima.ponto.id as string) : null}
             rotaCoordenadas={trajeto}
@@ -696,7 +738,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         {pontosRota.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Rota</Text>
-            <StaticRouteMap pontosRota={pontosRota} />
+            <StaticRouteMap pontosRota={pontosOrdenados} />
           </View>
         )}
 
@@ -704,7 +746,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         {pontosRota.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Paradas ({pontosRota.length})</Text>
-            {pontosRota.map((ponto, index) => (
+            {pontosOrdenados.map((ponto, index) => (
               <View key={ponto.id ?? index} style={styles.stopItem}>
                 <View
                   style={[
@@ -731,7 +773,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           {/* Iniciar button */}
           <TouchableOpacity
             style={[styles.iniciarButton, loading && styles.buttonDisabled]}
-            onPress={() => setIniciarVisivel(true)}
+            onPress={abrirIniciar}
             disabled={loading}
             accessibilityRole="button"
             accessibilityLabel="Iniciar viagem"
@@ -751,6 +793,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         visible={iniciarVisivel}
         titulo="Instituições de ensino com alunos confirmados"
         onCancelar={() => setIniciarVisivel(false)}
+        rolagem={!arrastando}
         principal={{ texto: 'Iniciar viagem', cor: colors.success.main, onPress: handleIniciarViagem }}
         secundario={{
           texto: 'Voltar',
@@ -758,23 +801,34 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           corTexto: colors.text.primary,
           onPress: () => setIniciarVisivel(false),
         }}>
-        {gruposConfirmados.length === 0 ? (
+        {gruposOrdenados.length === 0 ? (
           <Text style={styles.semInstituicao}>Nenhum aluno confirmou ainda</Text>
         ) : (
-          gruposConfirmados.map((g) => (
-            <View key={g.nome} style={styles.instituicaoCard}>
-              <View style={styles.instituicaoIcone}>
-                <Icon name={IconNames.school} size="md" color="#FFFFFF" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.instituicaoNome}>{g.nome}</Text>
-                {g.tipo ? <Text style={styles.instituicaoDetalhe}>{g.tipo}</Text> : null}
-              </View>
-              <Text style={styles.instituicaoQtd}>
-                {g.quantidade} {g.quantidade === 1 ? 'aluno' : 'alunos'}
-              </Text>
-            </View>
-          ))
+          <>
+            {gruposOrdenados.length > 1 ? (
+              <Text style={styles.dicaOrdem}>Segure e arraste para mudar a ordem</Text>
+            ) : null}
+            <ListaReordenavel
+              itens={gruposOrdenados}
+              chaveDe={(g: GrupoConfirmado) => g.nome}
+              onMudar={(lista: GrupoConfirmado[]) => setGruposOrdenados(lista)}
+              onArrastando={setArrastando}
+              renderItem={(g: GrupoConfirmado) => (
+                <View style={styles.instituicaoCard}>
+                  <View style={styles.instituicaoIcone}>
+                    <Icon name={IconNames.school} size="md" color="#FFFFFF" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.instituicaoNome}>{g.nome}</Text>
+                    {g.tipo ? <Text style={styles.instituicaoDetalhe}>{g.tipo}</Text> : null}
+                  </View>
+                  <Text style={styles.instituicaoQtd}>
+                    {g.quantidade} {g.quantidade === 1 ? 'aluno' : 'alunos'}
+                  </Text>
+                </View>
+              )}
+            />
+          </>
         )}
       </ConfirmacaoTelaCheia>
 
@@ -917,13 +971,13 @@ const styles = StyleSheet.create({
   chegueiTexto: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' as const },
   semInstituicao: { ...textStyles.body, color: colors.text.secondary },
   instituicaoCard: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.background.paper,
-    borderRadius: 18,
     padding: spacing.base,
   },
+  dicaOrdem: { ...textStyles.bodySmall, color: colors.text.secondary },
   instituicaoIcone: {
     width: 48,
     height: 48,

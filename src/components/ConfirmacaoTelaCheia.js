@@ -7,14 +7,14 @@ import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, Touchabl
 import { colors, spacing, textStyles } from '../theme';
 import ModalApp from './ModalApp';
 
-const ConfirmacaoTelaCheia = ({ visible, titulo, onCancelar, principal, secundario, children }) => (
+const ConfirmacaoTelaCheia = ({ visible, titulo, onCancelar, principal, secundario, rolagem = true, children }) => (
   <ModalApp visible={visible} animationType="slide" onRequestClose={onCancelar} accessibilityViewIsModal>
     <SafeAreaView style={styles.container}>
       <View style={styles.conteudo}>
       <Text style={styles.titulo} accessibilityRole="header">
         {titulo}
       </Text>
-      <ScrollView style={styles.corpo} contentContainerStyle={styles.corpoConteudo}>
+      <ScrollView style={styles.corpo} scrollEnabled={rolagem} contentContainerStyle={styles.corpoConteudo}>
         {children}
       </ScrollView>
       <View style={styles.botoes}>
