@@ -6,7 +6,12 @@ import { distanceInMeters } from '../features/map/utils/geo';
 const RAIO_INSTITUICAO_M = 150;
 
 export const instituicaoDaParada = (ponto, instituicoes) => {
-  if (ponto.instituicao) return { nome: ponto.instituicao, tipo: null, endereco: null };
+  // O backend manda instituicao como texto (antigo) ou como objeto { id, nome, tipo }.
+  const doPonto = ponto.instituicao;
+  if (doPonto && typeof doPonto === 'object' && doPonto.nome) {
+    return { nome: doPonto.nome, tipo: doPonto.tipo || null, endereco: doPonto.endereco || null };
+  }
+  if (doPonto && typeof doPonto === 'string') return { nome: doPonto, tipo: null, endereco: null };
   let melhor = null;
   let menor = RAIO_INSTITUICAO_M;
   for (const inst of instituicoes) {

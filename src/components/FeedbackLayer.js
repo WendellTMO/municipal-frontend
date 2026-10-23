@@ -3,20 +3,14 @@
  * por App.tsx só com usuário logado.
  */
 import React, { useEffect, useState } from 'react';
-import FeedbackButton from './FeedbackButton';
-import FeedbackSheet from './FeedbackSheet';
+import FeedbackAcesso from './FeedbackAcesso';
 import BetaNoticeModal from './BetaNoticeModal';
-import { useToast } from './Toast';
 import { useAuth } from '../contexts/AuthContext';
 import { Storage } from '../utils/storage';
 import { betaNoticeKey, shouldShowBetaNotice } from '../utils/feedback';
-import { getCurrentRouteName } from '../navigation/currentRoute';
 
 const FeedbackLayer = () => {
   const { user } = useAuth();
-  const toast = useToast();
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const [tela, setTela] = useState(null);
   const [noticeVisible, setNoticeVisible] = useState(false);
 
   const userId = user?.id;
@@ -48,25 +42,9 @@ const FeedbackLayer = () => {
     }
   };
 
-  const abrirSheet = () => {
-    setTela(getCurrentRouteName());
-    setSheetVisible(true);
-  };
-
-  const handleEnviado = () => {
-    setSheetVisible(false);
-    toast.success('Obrigado! Seu relato foi enviado.');
-  };
-
   return (
     <>
-      <FeedbackButton onPress={abrirSheet} />
-      <FeedbackSheet
-        visible={sheetVisible}
-        onClose={() => setSheetVisible(false)}
-        tela={tela}
-        onSent={handleEnviado}
-      />
+      <FeedbackAcesso />
       <BetaNoticeModal visible={noticeVisible} onConfirm={handleConfirmarAviso} />
     </>
   );

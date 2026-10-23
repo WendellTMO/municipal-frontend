@@ -15,7 +15,6 @@ import {
   BackHandler,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -52,6 +51,7 @@ import { useToast } from '../../components/Toast';
 import { unwrapItems } from '../../types';
 import type { InstituicaoResponse, PontoFlatResponse, TipoOcorrencia } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import ModalApp from '../../components/ModalApp';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -552,7 +552,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         />
 
         {/* Broadcast Modal */}
-        <Modal
+        <ModalApp
           visible={broadcastVisible}
           transparent
           animationType="slide"
@@ -641,7 +641,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               </ScrollView>
             </View>
           </KeyboardAvoidingView>
-        </Modal>
+        </ModalApp>
 
         <ReportSheet
           visible={reportVisible}
@@ -804,7 +804,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       </ConfirmacaoTelaCheia>
 
       {/* Broadcast Modal */}
-      <Modal
+      <ModalApp
         visible={broadcastVisible}
         transparent
         animationType="slide"
@@ -846,7 +846,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             ))}
           </View>
         </View>
-      </Modal>
+      </ModalApp>
 
       <ReportSheet
         visible={reportVisible}

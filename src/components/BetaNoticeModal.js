@@ -2,12 +2,13 @@
  * Aviso exibido uma vez por usuário em cada aparelho, logo após o primeiro login.
  */
 import React from 'react';
-import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing } from '../theme';
 import { FeedbackBadge } from './FeedbackButton';
+import ModalApp from './ModalApp';
 
 const BetaNoticeModal = ({ visible, onConfirm }) => (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onConfirm}>
+  <ModalApp visible={visible} transparent animationType="fade" onRequestClose={onConfirm}>
     <View style={styles.overlay}>
       <View style={styles.card}>
         <Image source={require('../../assets/icone-app.png')} style={styles.icone} />
@@ -34,7 +35,7 @@ const BetaNoticeModal = ({ visible, onConfirm }) => (
         </TouchableOpacity>
       </View>
     </View>
-  </Modal>
+  </ModalApp>
 );
 
 const styles = StyleSheet.create({
