@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useTrajetoRuas } from '../hooks/useTrajetoRuas';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
 
 interface RoutePoint {
@@ -16,14 +17,19 @@ interface StaticRouteMapProps {
   pontosRota: RoutePoint[];
 }
 
-function buildStaticRouteHtml(points: RoutePoint[]): string {
-  const validPoints = [...points]
+function pontosValidos(points: RoutePoint[]): RoutePoint[] {
+  return [...points]
     .filter(p => {
       const lat = Number(p.latitude);
       const lng = Number(p.longitude);
       return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
     })
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+}
+
+function buildStaticRouteHtml(points: RoutePoint[], trajeto: { latitude: number; longitude: number }[]): string {
+  const validPoints = pontosValidos(points);
+  const ruasJson = JSON.stringify(trajeto.map(c => [c.latitude, c.longitude]));
 
   const pointsJson = JSON.stringify(
     validPoints.map((p, i) => ({
@@ -57,6 +63,7 @@ function buildStaticRouteHtml(points: RoutePoint[]): string {
       if (typeof L === 'undefined') return;
 
       var points = ${pointsJson};
+      var ruas = ${ruasJson};
       var map = L.map('map', { zoomControl: true }).setView([-15.78, -47.93], 5);
 
       L.tileLayer('${TILE_URL}', {
@@ -102,13 +109,17 @@ function buildStaticRouteHtml(points: RoutePoint[]): string {
       });
 
       if (latLngs.length >= 2) {
-        L.polyline(latLngs, {
-          color: '#4285F4',
-          weight: 4,
-          opacity: 0.8,
-          dashArray: '8, 4',
-        }).addTo(map);
-        map.fitBounds(L.latLngBounds(latLngs), { padding: [40, 40] });
+        if (ruas.length >= 2) {
+          L.polyline(ruas, { color: '#4285F4', weight: 5, opacity: 0.85 }).addTo(map);
+        } else {
+          L.polyline(latLngs, {
+            color: '#4285F4',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '8, 4',
+          }).addTo(map);
+        }
+        map.fitBounds(L.latLngBounds(latLngs.concat(ruas)), { padding: [40, 40] });
       } else if (latLngs.length === 1) {
         map.setView(latLngs[0], 15);
       }
@@ -127,15 +138,25 @@ function buildStaticRouteHtml(points: RoutePoint[]): string {
 export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
   const [loading, setLoading] = useState(true);
 
+  const paradas = useMemo(() => {
+    const lista: { latitude: number; longitude: number }[] = [];
+    for (const p of pontosValidos(pontosRota || [])) {
+      lista.push({ latitude: Number(p.latitude), longitude: Number(p.longitude) });
+    }
+    return lista;
+  }, [pontosRota]);
+  const trajeto = useTrajetoRuas(paradas);
+
+  // A chave muda quando o trajeto chega, e o WebView recarrega ja com a rota pelas ruas.
   const { html, webViewKey } = useMemo(() => {
     const keyParts = (pontosRota || []).map(
       p => `${p.id}-${p.latitude}-${p.longitude}-${p.ordem}`,
     );
     return {
-      html: buildStaticRouteHtml(pontosRota || []),
-      webViewKey: keyParts.join('|'),
+      html: buildStaticRouteHtml(pontosRota || [], trajeto),
+      webViewKey: keyParts.join('|') + '#' + trajeto.length,
     };
-  }, [pontosRota]);
+  }, [pontosRota, trajeto]);
 
   return (
     <View style={styles.container}>
