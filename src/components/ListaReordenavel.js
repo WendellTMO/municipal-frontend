@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.paper,
     borderRadius: 18,
     paddingRight: spacing.xs,
-    ...(Platform.OS === 'web' ? { userSelect: 'none', cursor: 'grab' } : null),
+    ...(Platform.OS === 'web' ? { userSelect: 'none', cursor: 'grab', outlineStyle: 'none' } : null),
   },
   linhaSolta: {
     zIndex: 10,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' ? { touchAction: 'none', cursor: 'grab' } : null),
+    ...(Platform.OS === 'web' ? { touchAction: 'none', cursor: 'grab', outlineStyle: 'none' } : null),
   },
 });
 
