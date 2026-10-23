@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,6 +19,7 @@ import type { PontoFlatResponse } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -272,7 +272,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                   />
 
                   {podeConfirmar(viagem) && (
-                    <TouchableOpacity
+                    <Tappable
                       style={[
                         styles.confirmarButton,
                         status === 'Confirmado' && styles.confirmarButtonActive,
@@ -300,10 +300,10 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                           </Text>
                         </>
                       )}
-                    </TouchableOpacity>
+                    </Tappable>
                   )}
 
-                  <TouchableOpacity
+                  <Tappable navega
                     style={styles.detalhesButton}
                     onPress={() =>
                       navigation.navigate('DetalheViagem', {
@@ -316,7 +316,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                     accessibilityHint="Abre a tela de detalhes">
                     <Text style={styles.detalhesButtonText}>Ver Detalhes</Text>
                     <Icon name={IconNames.chevronRight} size="md" color={colors.primary.main} />
-                  </TouchableOpacity>
+                  </Tappable>
                 </View>
               );
             })

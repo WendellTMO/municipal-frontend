@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   ScrollView,
@@ -19,6 +18,7 @@ import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import ModalApp from '../../components/ModalApp';
+import Tappable from '../../components/Tappable';
 
 const DIAS_ORDER = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
 const DIAS_SHORT = { SEG: 'Seg', TER: 'Ter', QUA: 'Qua', QUI: 'Qui', SEX: 'Sex', SAB: 'Sáb', DOM: 'Dom' };
@@ -194,9 +194,9 @@ const RotaMotorista = ({ navigation }) => {
             <Text style={styles.rotaNome} numberOfLines={2}>{rota.nome}</Text>
           </View>
           {isGestor && (
-            <TouchableOpacity style={styles.editButton} onPress={() => openModal(rota)}>
+            <Tappable style={styles.editButton} onPress={() => openModal(rota)}>
               <Icon name={IconNames.edit} size="sm" color={colors.primary.dark} />
-            </TouchableOpacity>
+            </Tappable>
           )}
         </View>
 
@@ -231,35 +231,35 @@ const RotaMotorista = ({ navigation }) => {
 
         {/* Actions */}
         <View style={styles.actionsRow}>
-          <TouchableOpacity
+          <Tappable navega
             style={styles.actionBtn}
             onPress={() => navigation.navigate('ListaViagens', { rota })}>
             <Icon name={IconNames.schedule} size="sm" color={colors.text.inverse} />
             <Text style={styles.actionBtnText}>Viagens</Text>
-          </TouchableOpacity>
+          </Tappable>
 
           {isGestor && (
             <>
-              <TouchableOpacity
+              <Tappable navega
                 style={[styles.actionBtn, styles.actionBtnSecondary]}
                 onPress={() => navigation.navigate('DefinirPontosRota', { rota, isNovaRota: false })}>
                 <Icon name={IconNames.location} size="sm" color={colors.text.inverse} />
                 <Text style={styles.actionBtnText}>Pontos</Text>
-              </TouchableOpacity>
+              </Tappable>
 
-              <TouchableOpacity
+              <Tappable navega
                 style={[styles.actionBtn, styles.actionBtnTertiary]}
                 onPress={() => navigation.navigate('DefinirHorariosRota', { rota, isNovaRota: false })}>
                 <Icon name={IconNames.schedule} size="sm" color={colors.text.inverse} />
                 <Text style={styles.actionBtnText}>Horários</Text>
-              </TouchableOpacity>
+              </Tappable>
 
-              <TouchableOpacity
+              <Tappable navega
                 style={[styles.actionBtn, styles.actionBtnSuccess]}
                 onPress={() => navigation.navigate('CriarViagem', { rota })}>
                 <Icon name={IconNames.add} size="sm" color={colors.text.inverse} />
                 <Text style={styles.actionBtnText}>Nova Viagem</Text>
-              </TouchableOpacity>
+              </Tappable>
             </>
           )}
         </View>
@@ -283,16 +283,16 @@ const RotaMotorista = ({ navigation }) => {
           <ScrollView style={modalStyles.scroll} keyboardShouldPersistTaps="handled">
             {/* Motorista picker */}
             <Text style={modalStyles.sectionLabel}>Motorista Responsável</Text>
-            <TouchableOpacity
+            <Tappable
               style={[modalStyles.optionItem, modalMotorista === null && modalStyles.optionItemSelected]}
               onPress={() => setModalMotorista(null)}>
               <Text style={[modalStyles.optionText, modalMotorista === null && modalStyles.optionTextSelected]}>
                 Nenhum
               </Text>
               {modalMotorista === null && <Icon name={IconNames.check} size="sm" color={colors.primary.dark} />}
-            </TouchableOpacity>
+            </Tappable>
             {allMotoristas.map(m => (
-              <TouchableOpacity
+              <Tappable
                 key={m.id}
                 style={[modalStyles.optionItem, modalMotorista === m.id && modalStyles.optionItemSelected]}
                 onPress={() => setModalMotorista(m.id)}>
@@ -303,21 +303,21 @@ const RotaMotorista = ({ navigation }) => {
                   {m.cnh && <Text style={modalStyles.optionSub}>CNH {m.cnh}</Text>}
                 </View>
                 {modalMotorista === m.id && <Icon name={IconNames.check} size="sm" color={colors.primary.dark} />}
-              </TouchableOpacity>
+              </Tappable>
             ))}
 
             {/* Veículo picker */}
             <Text style={[modalStyles.sectionLabel, { marginTop: spacing.lg }]}>Veículo Padrão</Text>
-            <TouchableOpacity
+            <Tappable
               style={[modalStyles.optionItem, modalVeiculo === null && modalStyles.optionItemSelected]}
               onPress={() => setModalVeiculo(null)}>
               <Text style={[modalStyles.optionText, modalVeiculo === null && modalStyles.optionTextSelected]}>
                 Nenhum
               </Text>
               {modalVeiculo === null && <Icon name={IconNames.check} size="sm" color={colors.primary.dark} />}
-            </TouchableOpacity>
+            </Tappable>
             {allOnibus.map(o => (
-              <TouchableOpacity
+              <Tappable
                 key={o.id}
                 style={[modalStyles.optionItem, modalVeiculo === o.id && modalStyles.optionItemSelected]}
                 onPress={() => setModalVeiculo(o.id)}>
@@ -328,18 +328,18 @@ const RotaMotorista = ({ navigation }) => {
                   {o.capacidade && <Text style={modalStyles.optionSub}>{o.capacidade} passageiros</Text>}
                 </View>
                 {modalVeiculo === o.id && <Icon name={IconNames.check} size="sm" color={colors.primary.dark} />}
-              </TouchableOpacity>
+              </Tappable>
             ))}
           </ScrollView>
 
           <View style={modalStyles.footer}>
-            <TouchableOpacity
+            <Tappable
               style={modalStyles.cancelBtn}
               onPress={() => setModalRota(null)}
               disabled={saving}>
               <Text style={modalStyles.cancelBtnText}>Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Tappable>
+            <Tappable
               style={modalStyles.saveBtn}
               onPress={handleSalvarAtribuicao}
               disabled={saving}>
@@ -348,7 +348,7 @@ const RotaMotorista = ({ navigation }) => {
               ) : (
                 <Text style={modalStyles.saveBtnText}>Salvar</Text>
               )}
-            </TouchableOpacity>
+            </Tappable>
           </View>
         </View>
       </View>
@@ -362,12 +362,12 @@ const RotaMotorista = ({ navigation }) => {
         subtitulo={loading ? '...' : `${rotas.length} rota${rotas.length !== 1 ? 's' : ''} cadastrada${rotas.length !== 1 ? 's' : ''}`}
         onBack={() => navigation.goBack()}>
         {isGestor && (
-          <TouchableOpacity
+          <Tappable navega
             style={styles.criarRotaButton}
             onPress={() => navigation.navigate('CriarRota')}>
             <Icon name={IconNames.add} size="sm" color={colors.text.inverse} />
             <Text style={styles.criarRotaButtonText}>Nova Rota</Text>
-          </TouchableOpacity>
+          </Tappable>
         )}
       </SubHeader>
 
@@ -388,11 +388,11 @@ const RotaMotorista = ({ navigation }) => {
                 <Text style={styles.emptyText}>Nenhuma rota cadastrada ainda</Text>
                 <Text style={styles.emptySubtext}>Crie sua primeira rota para começar</Text>
                 {isGestor && (
-                  <TouchableOpacity
+                  <Tappable navega
                     style={styles.emptyButton}
                     onPress={() => navigation.navigate('CriarRota')}>
                     <Text style={styles.emptyButtonText}>Criar Primeira Rota</Text>
-                  </TouchableOpacity>
+                  </Tappable>
                 )}
               </View>
             ) : (

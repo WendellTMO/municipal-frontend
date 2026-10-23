@@ -3,10 +3,11 @@
  * quadrado colorido, ícone branco e nome.
  */
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
 import Icon from './Icon';
 import ModalApp from './ModalApp';
+import Tappable from './Tappable';
 
 const MaisSheet = ({ visible, onClose, itens }) => {
   const escolher = item => {
@@ -17,7 +18,7 @@ const MaisSheet = ({ visible, onClose, itens }) => {
   return (
     <ModalApp visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <TouchableOpacity
+        <Tappable
           style={styles.backdrop}
           activeOpacity={1}
           onPress={onClose}
@@ -27,7 +28,7 @@ const MaisSheet = ({ visible, onClose, itens }) => {
           <View style={styles.handle} />
           <Text style={styles.title}>Mais ações</Text>
           {itens.map(item => (
-            <TouchableOpacity
+            <Tappable navega
               key={item.nome}
               style={styles.item}
               onPress={() => escolher(item)}
@@ -37,7 +38,7 @@ const MaisSheet = ({ visible, onClose, itens }) => {
                 <Icon name={item.icone} size="lg" color="#FFFFFF" />
               </View>
               <Text style={styles.nome}>{item.nome}</Text>
-            </TouchableOpacity>
+            </Tappable>
           ))}
         </View>
       </View>

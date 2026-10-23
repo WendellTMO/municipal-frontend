@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { gestorService } from '../../services/gestorService';
@@ -17,6 +16,7 @@ import SubHeader from '../../components/SubHeader';
 import { getErrorMessageFromError } from '../../utils/errors';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import Tappable from '../../components/Tappable';
 
 const CadastrosPendentes = ({ navigation }) => {
   const [alunos, setAlunos] = useState([]);
@@ -63,9 +63,9 @@ const CadastrosPendentes = ({ navigation }) => {
         ) : erro ? (
           <View style={styles.vazio}>
             <Text style={styles.vazioTexto}>{erro}</Text>
-            <TouchableOpacity onPress={carregar} accessibilityRole="button" accessibilityLabel="Tentar de novo">
+            <Tappable onPress={carregar} accessibilityRole="button" accessibilityLabel="Tentar de novo">
               <Icon name={IconNames.refresh} size="lg" color={colors.primary.main} />
-            </TouchableOpacity>
+            </Tappable>
           </View>
         ) : alunos.length === 0 ? (
           <View style={styles.vazio}>
@@ -74,7 +74,7 @@ const CadastrosPendentes = ({ navigation }) => {
           </View>
         ) : (
           alunos.map(a => (
-            <TouchableOpacity
+            <Tappable navega
               key={a.id}
               style={styles.item}
               onPress={() => navigation.navigate('DetalheAlunoGestor', { alunoId: a.id })}
@@ -92,7 +92,7 @@ const CadastrosPendentes = ({ navigation }) => {
                 </Text>
               </View>
               <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} />
-            </TouchableOpacity>
+            </Tappable>
           ))
         )}
         <SairDaConta />

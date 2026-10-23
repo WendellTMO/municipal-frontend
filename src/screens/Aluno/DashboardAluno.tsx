@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -32,6 +31,7 @@ import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import Tappable from '../../components/Tappable';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = { navigation: NativeStackNavigationProp<RootParamList> };
@@ -249,14 +249,14 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             </View>
           )}
 
-          <TouchableOpacity
+          <Tappable
             style={styles.blockedLogoutBtn}
             onPress={() => void logout()}
             accessibilityRole="button"
             accessibilityLabel="Sair da conta">
             <Icon name="logout" size="sm" color={colors.text.secondary} style={undefined} />
             <Text style={styles.blockedLogoutText}>Sair da conta</Text>
-          </TouchableOpacity>
+          </Tappable>
         </View>
       </SafeAreaView>
     );
@@ -286,7 +286,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
         {/* Today's Trip Banner */}
         {todayBannerConfig && (
-          <TouchableOpacity
+          <Tappable
             style={[
               styles.todayBanner,
               {
@@ -328,7 +328,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
                 accessibilityElementsHidden
               />
             )}
-          </TouchableOpacity>
+          </Tappable>
         )}
 
         {/* Ônibus a caminho */}
@@ -403,21 +403,21 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.sectionTitle} accessibilityRole="header">
               Minhas rotas
             </Text>
-            <TouchableOpacity
+            <Tappable navega
               style={styles.verTodasButton}
               onPress={() => navigation.navigate('SelecaoRotas')}
               accessibilityRole="button"
               accessibilityLabel="Ver todas as rotas">
               <Text style={styles.verTodasText}>Ver todas</Text>
               <Icon name={IconNames.chevronRight} size="sm" color={colors.secondary.main} accessibilityElementsHidden />
-            </TouchableOpacity>
+            </Tappable>
           </View>
 
           {rotasCadastradas.length > 0 ? (
             (rotasCadastradas as unknown[]).map((rota: unknown) => {
               const r = rota as Record<string, unknown>;
               return (
-                <TouchableOpacity
+                <Tappable navega
                   key={r.id as string}
                   style={styles.rotaCard}
                   onPress={() => navigation.navigate('RotaAluno', { rota })}
@@ -435,7 +435,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
                     ) : null}
                   </View>
                   <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} accessibilityElementsHidden />
-                </TouchableOpacity>
+                </Tappable>
               );
             })
           ) : (
@@ -447,20 +447,20 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.emptyStateText}>
                 Você ainda não está inscrito em nenhuma rota de transporte escolar
               </Text>
-              <TouchableOpacity
+              <Tappable navega
                 style={styles.emptyStateButton}
                 onPress={() => navigation.navigate('SelecaoRotas')}
                 accessibilityRole="button"
                 accessibilityLabel="Ver rotas disponíveis">
                 <Icon name={IconNames.add} size="md" color={colors.primary.contrast} accessibilityElementsHidden />
                 <Text style={styles.emptyStateButtonText}>Ver rotas disponíveis</Text>
-              </TouchableOpacity>
+              </Tappable>
             </View>
           )}
         </View>
 
         {/* Settings */}
-        <TouchableOpacity
+        <Tappable navega
           style={styles.configButton}
           onPress={() => navigation.navigate('ConfigNotificacoesAluno')}
           accessibilityRole="button"
@@ -468,7 +468,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           <Icon name={IconNames.settings} size="base" color={colors.text.secondary} accessibilityElementsHidden />
           <Text style={styles.configButtonText}>Configurações</Text>
           <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} accessibilityElementsHidden />
-        </TouchableOpacity>
+        </Tappable>
 
         <SairDaConta />
 

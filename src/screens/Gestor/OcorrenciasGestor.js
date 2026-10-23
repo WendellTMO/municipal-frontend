@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { listarOcorrencias, resolverOcorrencia } from '../../services/ocorrenciaService';
@@ -19,6 +18,7 @@ import { getErrorMessageFromError } from '../../utils/errors';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import ModalApp from '../../components/ModalApp';
+import Tappable from '../../components/Tappable';
 
 const TIPOS = {
   ATRASO: 'Atraso',
@@ -100,14 +100,14 @@ const OcorrenciasGestor = ({ navigation }) => {
         {FILTROS.map(f => {
           const ativo = filtro === f.chave;
           return (
-            <TouchableOpacity
+            <Tappable
               key={f.chave}
               style={[styles.filtro, ativo && styles.filtroAtivo]}
               onPress={() => setFiltro(f.chave)}
               accessibilityRole="radio"
               accessibilityState={{ checked: ativo }}>
               <Text style={[styles.filtroTexto, ativo && styles.filtroTextoAtivo]}>{f.rotulo}</Text>
-            </TouchableOpacity>
+            </Tappable>
           );
         })}
       </View>
@@ -128,9 +128,9 @@ const OcorrenciasGestor = ({ navigation }) => {
         ) : erro ? (
           <View style={styles.vazio}>
             <Text style={styles.vazioTexto}>{erro}</Text>
-            <TouchableOpacity onPress={carregar} accessibilityRole="button" accessibilityLabel="Tentar de novo">
+            <Tappable onPress={carregar} accessibilityRole="button" accessibilityLabel="Tentar de novo">
               <Icon name={IconNames.refresh} size="lg" color={colors.primary.main} />
-            </TouchableOpacity>
+            </Tappable>
           </View>
         ) : itens.length === 0 ? (
           <View style={styles.vazio}>
@@ -141,7 +141,7 @@ const OcorrenciasGestor = ({ navigation }) => {
           </View>
         ) : (
           itens.map(o => (
-            <TouchableOpacity
+            <Tappable
               key={o.id}
               style={styles.item}
               onPress={() => setDetalhe(o)}
@@ -162,7 +162,7 @@ const OcorrenciasGestor = ({ navigation }) => {
                 {o.autor_nome}
                 {o.viagem_id ? ' · viagem vinculada' : ''} · {quando(o.created_at)}
               </Text>
-            </TouchableOpacity>
+            </Tappable>
           ))
         )}
         <SairDaConta />
@@ -170,7 +170,7 @@ const OcorrenciasGestor = ({ navigation }) => {
 
       <ModalApp visible={!!detalhe} transparent animationType="slide" onRequestClose={() => setDetalhe(null)}>
         <View style={styles.overlay}>
-          <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setDetalhe(null)} accessibilityLabel="Fechar" />
+          <Tappable style={styles.backdrop} activeOpacity={1} onPress={() => setDetalhe(null)} accessibilityLabel="Fechar" />
           {detalhe ? (
             <View style={styles.sheet}>
               <View style={styles.handle} />
@@ -183,7 +183,7 @@ const OcorrenciasGestor = ({ navigation }) => {
                 <Text style={styles.detalheTexto}>{detalhe.descricao || 'Sem descrição.'}</Text>
               </ScrollView>
               {detalhe.status === 'ABERTA' ? (
-                <TouchableOpacity
+                <Tappable
                   style={styles.botao}
                   onPress={resolver}
                   disabled={resolvendo}
@@ -194,7 +194,7 @@ const OcorrenciasGestor = ({ navigation }) => {
                   ) : (
                     <Text style={styles.botaoTexto}>Marcar como resolvida</Text>
                   )}
-                </TouchableOpacity>
+                </Tappable>
               ) : (
                 <Text style={styles.resolvidaTexto}>Ocorrência resolvida</Text>
               )}

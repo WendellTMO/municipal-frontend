@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { gestorService } from '../../services/gestorService';
@@ -24,6 +23,7 @@ import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const INFO_COLOR = colors.info.main;
@@ -180,13 +180,13 @@ const FrotaGestor = ({ navigation }) => {
           subtitulo={`${(onibus ?? []).length} ônibus cadastrado(s)`}
           onBack={navigation?.canGoBack?.() ? () => navigation.goBack() : undefined}
           direita={
-            <TouchableOpacity
+            <Tappable
               style={styles.addButton}
               onPress={() => setMostrarForm(!mostrarForm)}
               accessibilityRole="button"
               accessibilityLabel={mostrarForm ? 'Fechar formulário' : 'Adicionar ônibus'}>
               <Icon name={mostrarForm ? IconNames.close : IconNames.add} size="md" color="#FFFFFF" />
-            </TouchableOpacity>
+            </Tappable>
           }
         />
 
@@ -224,7 +224,7 @@ const FrotaGestor = ({ navigation }) => {
               onChangeText={v => setField('modelo', v)}
             />
 
-            <TouchableOpacity
+            <Tappable
               style={[styles.formBtn, salvando && styles.formBtnDisabled]}
               onPress={handleCriarOnibus}
               disabled={salvando}>
@@ -236,7 +236,7 @@ const FrotaGestor = ({ navigation }) => {
                   <Text style={styles.formBtnText}>Adicionar à Frota</Text>
                 </>
               )}
-            </TouchableOpacity>
+            </Tappable>
           </View>
         )}
 
@@ -283,7 +283,7 @@ const FrotaGestor = ({ navigation }) => {
                     </View>
 
                     <View style={styles.cardActions}>
-                      <TouchableOpacity
+                      <Tappable
                         style={styles.editBtn}
                         onPress={() => editandoId === o.id ? cancelarEdicao() : abrirEdicao(o)}>
                         <Icon
@@ -291,8 +291,8 @@ const FrotaGestor = ({ navigation }) => {
                           size="sm"
                           color={GESTOR_COLOR}
                         />
-                      </TouchableOpacity>
-                      <TouchableOpacity
+                      </Tappable>
+                      <Tappable
                         style={styles.deleteBtn}
                         onPress={() => handleExcluir(o)}
                         disabled={excluindo === o.id}>
@@ -301,7 +301,7 @@ const FrotaGestor = ({ navigation }) => {
                         ) : (
                           <Icon name={IconNames.delete} size="sm" color={colors.error.main} />
                         )}
-                      </TouchableOpacity>
+                      </Tappable>
                     </View>
                   </View>
 
@@ -336,7 +336,7 @@ const FrotaGestor = ({ navigation }) => {
                         value={editForm.modelo}
                         onChangeText={v => setEditField('modelo', v)}
                       />
-                      <TouchableOpacity
+                      <Tappable
                         style={[styles.formBtn, salvando && styles.formBtnDisabled]}
                         onPress={handleAtualizarOnibus}
                         disabled={salvando}>
@@ -348,7 +348,7 @@ const FrotaGestor = ({ navigation }) => {
                             <Text style={styles.formBtnText}>Salvar Alterações</Text>
                           </>
                         )}
-                      </TouchableOpacity>
+                      </Tappable>
                     </View>
                   )}
                 </View>

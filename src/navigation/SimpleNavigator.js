@@ -1,5 +1,5 @@
 import React, {useState, createContext, useContext, useEffect} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {AccessibilityInfo, Animated, View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 
 const NavigationContext = createContext();
 
@@ -153,7 +153,38 @@ export const Navigator = ({children, initialRoute}) => {
     );
   }
 
-  return <>{matched}</>;
+  return <TransicaoTela chave={currentRoute}>{matched}</TransicaoTela>;
+};
+
+// Fade e deslize curtos ao trocar de tela no web (o nativo já anima o stack). Sem animação
+// com "reduzir movimento". A chave nova remonta o wrapper e reinicia a animação.
+const TransicaoTela = ({chave, children}) => {
+  const progresso = React.useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    let reduzir = false;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((v) => {
+        reduzir = !!v;
+      })
+      .catch(() => {})
+      .finally(() => {
+        progresso.setValue(reduzir ? 1 : 0);
+        if (!reduzir) {
+          Animated.timing(progresso, {toValue: 1, duration: 160, useNativeDriver: false}).start();
+        }
+      });
+  }, [chave, progresso]);
+  return (
+    <Animated.View
+      style={{
+        flex: 1,
+        height: '100%',
+        opacity: progresso,
+        transform: [{translateX: progresso.interpolate({inputRange: [0, 1], outputRange: [14, 0]})}],
+      }}>
+      {children}
+    </Animated.View>
+  );
 };
 
 const RouteNotFound = ({routeName, available, onBack}) => (
