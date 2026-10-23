@@ -2,9 +2,10 @@
  * Ação rápida: quadrado de cor sólida com ícone branco e uma palavra embaixo.
  */
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
 import Icon from './Icon';
+import Tappable from './Tappable';
 
 const ActionTile = ({
   icon,
@@ -15,7 +16,9 @@ const ActionTile = ({
   accessibilityLabel,
   badge = 0,
 }) => (
-  <TouchableOpacity
+  <Tappable
+      navega
+      sombra={false}
     style={[styles.container, disabled && styles.disabled]}
     onPress={onPress}
     disabled={disabled}
@@ -34,7 +37,7 @@ const ActionTile = ({
     <Text style={styles.label} numberOfLines={1}>
       {label}
     </Text>
-  </TouchableOpacity>
+  </Tappable>
 );
 
 const styles = StyleSheet.create({

@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +18,7 @@ import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -84,7 +84,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
   };
 
   const renderItem = ({ item }: { item: Notificacao }) => (
-    <TouchableOpacity
+    <Tappable
       style={[styles.card, !item.enviada && styles.cardUnread]}
       onPress={() => handleMarkAsRead(item)}
       activeOpacity={0.7}
@@ -101,7 +101,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
         </View>
         <Text style={styles.cardMessage}>{item.mensagem}</Text>
       </View>
-    </TouchableOpacity>
+    </Tappable>
   );
 
   if (loading) {
@@ -127,7 +127,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.errorMessage}>
             Verifique a sua ligação e tente novamente.
           </Text>
-          <TouchableOpacity
+          <Tappable
             style={styles.retryButton}
             onPress={() => {
               setLoading(true);
@@ -137,7 +137,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
             accessibilityLabel="Tentar novamente">
             <Icon name={IconNames.refresh} size="md" color={colors.primary.contrast} />
             <Text style={styles.retryButtonText}>Tentar novamente</Text>
-          </TouchableOpacity>
+          </Tappable>
         </View>
       </SafeAreaView>
     );
@@ -151,13 +151,13 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
         onBack={() => navigation.goBack()}
         direita={
           unreadCount > 0 ? (
-            <TouchableOpacity
+            <Tappable
               style={styles.markAllButton}
               onPress={handleMarkAllAsRead}
               accessibilityRole="button"
               accessibilityLabel={`Marcar todas as ${unreadCount} notificações como lidas`}>
               <Icon name={IconNames.checkCircle} size="md" color={colors.primary.contrast} />
-            </TouchableOpacity>
+            </Tappable>
           ) : null
         }
       />

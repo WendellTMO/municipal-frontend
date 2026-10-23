@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +18,7 @@ import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -78,7 +78,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
   const unreadCount = notificacoes.filter(n => !n.enviada).length;
 
   const renderItem = ({ item }: { item: Notificacao }) => (
-    <TouchableOpacity
+    <Tappable
       style={[styles.card, !item.enviada && styles.cardUnread]}
       onPress={() => handleMarkRead(item)}
       activeOpacity={0.7}
@@ -94,7 +94,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
         </Text>
         <Text style={styles.cardDate}>{formatDate(item.data_envio)}</Text>
       </View>
-    </TouchableOpacity>
+    </Tappable>
   );
 
   return (

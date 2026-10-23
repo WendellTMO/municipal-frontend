@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { gestorService } from '../../services/gestorService';
@@ -25,6 +24,7 @@ import { api } from '../../api/client';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const SEGMENT = { MOTORISTAS: 0, ALUNOS: 1 };
@@ -216,13 +216,13 @@ const EquipeGestor = ({ navigation }) => {
           onBack={navigation?.canGoBack?.() ? () => navigation.goBack() : undefined}
           direita={
             segmento === SEGMENT.MOTORISTAS ? (
-              <TouchableOpacity
+              <Tappable
                 style={styles.addButton}
                 onPress={() => setMostrarForm(!mostrarForm)}
                 accessibilityRole="button"
                 accessibilityLabel={mostrarForm ? 'Fechar formulário' : 'Adicionar motorista'}>
                 <Icon name={mostrarForm ? IconNames.close : IconNames.add} size="md" color="#FFFFFF" />
-              </TouchableOpacity>
+              </Tappable>
             ) : null
           }
         />
@@ -231,7 +231,7 @@ const EquipeGestor = ({ navigation }) => {
         <View style={styles.controls}>
           <View style={styles.segment}>
             {[{ id: SEGMENT.MOTORISTAS, label: 'Motoristas' }, { id: SEGMENT.ALUNOS, label: 'Alunos' }].map(s => (
-              <TouchableOpacity
+              <Tappable
                 key={s.id}
                 style={[styles.segBtn, segmento === s.id && styles.segBtnActive]}
                 onPress={() => { setSegmento(s.id); setBusca(''); setMostrarForm(false); }}
@@ -248,7 +248,7 @@ const EquipeGestor = ({ navigation }) => {
                     </View>
                   )}
                 </View>
-              </TouchableOpacity>
+              </Tappable>
             ))}
           </View>
 
@@ -262,9 +262,9 @@ const EquipeGestor = ({ navigation }) => {
               onChangeText={setBusca}
             />
             {busca.length > 0 && (
-              <TouchableOpacity onPress={() => setBusca('')}>
+              <Tappable onPress={() => setBusca('')}>
                 <Icon name={IconNames.close} size="sm" color={colors.text.secondary} />
-              </TouchableOpacity>
+              </Tappable>
             )}
           </View>
         </View>
@@ -300,7 +300,7 @@ const EquipeGestor = ({ navigation }) => {
                 maxLength={field === 'cpf' ? 14 : field === 'cnh' ? 11 : undefined}
               />
             ))}
-            <TouchableOpacity
+            <Tappable
               style={[styles.formBtn, salvando && styles.formBtnDisabled]}
               onPress={handleCriarMotorista}
               disabled={salvando}>
@@ -312,7 +312,7 @@ const EquipeGestor = ({ navigation }) => {
                   <Text style={styles.formBtnText}>Cadastrar</Text>
                 </>
               )}
-            </TouchableOpacity>
+            </Tappable>
           </View>
         )}
 
@@ -363,15 +363,15 @@ const EquipeGestor = ({ navigation }) => {
                       />
                       {a.status === 'PENDING_APPROVAL' && (
                         <View style={styles.alunoActions}>
-                          <TouchableOpacity
+                          <Tappable navega
                             style={styles.detailBtn}
                             onPress={() => navigation?.navigate?.('DetalheAlunoGestor', { alunoId: a.id })}
                             accessibilityRole="button"
                             accessibilityLabel={`Ver detalhes de ${a.nome}`}>
                             <Icon name="info-outline" size="sm" color={GESTOR_COLOR} />
                             <Text style={styles.detailBtnText}>Ver detalhes</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
+                          </Tappable>
+                          <Tappable
                             style={[styles.aprovarBtn, aprovandoId === a.id && styles.formBtnDisabled]}
                             onPress={() => handleAprovar(a.id)}
                             disabled={aprovandoId === a.id}
@@ -385,7 +385,7 @@ const EquipeGestor = ({ navigation }) => {
                                 <Text style={styles.aprovarBtnText}>Aprovar cadastro</Text>
                               </>
                             )}
-                          </TouchableOpacity>
+                          </Tappable>
                         </View>
                       )}
                     </View>
@@ -430,7 +430,7 @@ const PessoaCard = ({ nome, detalhe, extra, color, statusLabel, onDelete, deleti
         )}
       </View>
       {onDelete && (
-        <TouchableOpacity
+        <Tappable
           style={cardStyles.deleteBtn}
           onPress={onDelete}
           disabled={deleting}
@@ -441,7 +441,7 @@ const PessoaCard = ({ nome, detalhe, extra, color, statusLabel, onDelete, deleti
           ) : (
             <Icon name={IconNames.delete} size="sm" color={colors.error.main} />
           )}
-        </TouchableOpacity>
+        </Tappable>
       )}
     </View>
   );

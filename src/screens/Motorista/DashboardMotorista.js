@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   ScrollView,
@@ -18,6 +17,7 @@ import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import Tappable from '../../components/Tappable';
 
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
@@ -205,7 +205,7 @@ const DashboardMotorista = ({navigation}) => {
                   : 'Nenhum aluno inscrito nesta rota'}
               </Text>
             </View>
-            <TouchableOpacity
+            <Tappable navega
               style={[
                 styles.iniciarButton,
                 emAndamento ? styles.continuarButton : null,
@@ -219,7 +219,7 @@ const DashboardMotorista = ({navigation}) => {
               <Text style={styles.iniciarButtonText}>
                 {emAndamento ? 'Continuar viagem' : 'Iniciar viagem'}
               </Text>
-            </TouchableOpacity>
+            </Tappable>
           </TripHeroCard>
         ) : (
           <View style={styles.proximaViagemCard}>

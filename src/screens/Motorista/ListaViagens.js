@@ -2,7 +2,6 @@ import React, {useState, useCallback} from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   ScrollView,
@@ -17,6 +16,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -142,7 +142,7 @@ const ListaViagens = ({navigation, route}) => {
               const statusLabel = getStatusLabel(viagem.status);
               const statusColor = getStatusColor(viagem.status);
               return (
-                <TouchableOpacity
+                <Tappable navega
                   key={viagem.id}
                   style={styles.viagemCard}
                   onPress={() =>
@@ -181,7 +181,7 @@ const ListaViagens = ({navigation, route}) => {
                       {viagem.origem} → {viagem.destino}
                     </Text>
                   )}
-                </TouchableOpacity>
+                </Tappable>
               );
             })}
           </View>

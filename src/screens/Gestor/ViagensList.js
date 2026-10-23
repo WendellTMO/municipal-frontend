@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { api } from '../../api/client';
@@ -20,6 +19,7 @@ import { useToast } from '../../components/Toast';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
 
 const GESTOR_COLOR = colors.roles.gestor;
 
@@ -124,12 +124,12 @@ const ViagensList = ({ navigation }) => {
         subtitulo={viagens ? `${viagens.length} resultado(s)` : 'Todas as viagens'}
         onBack={navigation?.canGoBack?.() ? () => navigation.goBack() : undefined}
         direita={
-          <TouchableOpacity
+          <Tappable navega
             style={styles.newButton}
             onPress={() => navigation.navigate('CriarViagem')}>
             <Icon name={IconNames.add} size="md" color="#FFFFFF" />
             <Text style={styles.newButtonText}>Nova</Text>
-          </TouchableOpacity>
+          </Tappable>
         }
       />
 
@@ -139,7 +139,7 @@ const ViagensList = ({ navigation }) => {
           {FILTERS.map(f => {
             const active = filtroAtivo === f.key;
             return (
-              <TouchableOpacity
+              <Tappable
                 key={f.key}
                 style={[styles.chip, active && styles.chipActive]}
                 onPress={() => setFiltroAtivo(f.key)}
@@ -147,7 +147,7 @@ const ViagensList = ({ navigation }) => {
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>
                   {f.label}
                 </Text>
-              </TouchableOpacity>
+              </Tappable>
             );
           })}
         </ScrollView>
@@ -183,7 +183,7 @@ const ViagensList = ({ navigation }) => {
               const podeCancel = v.status === 'AGENDADA';
               return (
                 <View key={v.id} style={styles.card}>
-                  <TouchableOpacity
+                  <Tappable navega
                     activeOpacity={0.7}
                     onPress={() => navigation.navigate('DetalheViagemMotorista', { viagem: v })}>
 
@@ -223,10 +223,10 @@ const ViagensList = ({ navigation }) => {
                         {v.origem} → {v.destino}
                       </Text>
                     )}
-                  </TouchableOpacity>
+                  </Tappable>
 
                   {podeCancel && (
-                    <TouchableOpacity
+                    <Tappable
                       style={[styles.cancelBtn, cancelando === v.id && { opacity: 0.5 }]}
                       onPress={() => handleCancelarViagem(v)}
                       disabled={cancelando === v.id}
@@ -240,7 +240,7 @@ const ViagensList = ({ navigation }) => {
                           <Text style={styles.cancelBtnText}>Cancelar viagem</Text>
                         </>
                       )}
-                    </TouchableOpacity>
+                    </Tappable>
                   )}
                 </View>
               );

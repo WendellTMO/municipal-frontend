@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { gestorService } from '../../services/gestorService';
@@ -26,6 +25,7 @@ import { webTitleProps } from '../../utils/webTitle';
 import { isoLocal } from '../../utils/saudacao';
 import { ehDeHoje, horaCurta, ordenarPorHorario, situacaoViagem } from '../../utils/viagemPainel';
 import SairDaConta from '../../components/SairDaConta';
+import Tappable from '../../components/Tappable';
 
 const TONS = {
   verde: { fundo: colors.success.light, texto: colors.success.dark },
@@ -134,7 +134,7 @@ const DashboardGestor = ({ navigation }) => {
           {totalCadastros > 0 || totalOcorrencias > 0 ? (
             <View style={styles.pilulas}>
               {totalCadastros > 0 ? (
-                <TouchableOpacity
+                <Tappable navega
                   style={[styles.pilula, { backgroundColor: colors.warning.light }]}
                   onPress={() => abrir('EquipeTab', 'CadastrosPendentes')}
                   accessibilityRole="button"
@@ -143,10 +143,10 @@ const DashboardGestor = ({ navigation }) => {
                   <Text style={[styles.pilulaTexto, { color: '#92400E' }]}>
                     {totalCadastros} {totalCadastros === 1 ? 'cadastro' : 'cadastros'}
                   </Text>
-                </TouchableOpacity>
+                </Tappable>
               ) : null}
               {totalOcorrencias > 0 ? (
-                <TouchableOpacity
+                <Tappable navega
                   style={[styles.pilula, { backgroundColor: colors.error.light }]}
                   onPress={() => abrir('PerfilTab', 'OcorrenciasGestor')}
                   accessibilityRole="button"
@@ -155,7 +155,7 @@ const DashboardGestor = ({ navigation }) => {
                   <Text style={[styles.pilulaTexto, { color: '#B91C1C' }]}>
                     {totalOcorrencias} {totalOcorrencias === 1 ? 'ocorrência' : 'ocorrências'}
                   </Text>
-                </TouchableOpacity>
+                </Tappable>
               ) : null}
             </View>
           ) : null}
@@ -178,21 +178,21 @@ const DashboardGestor = ({ navigation }) => {
           {/* Hoje */}
           <View style={styles.hojeHeader}>
             <Text style={styles.sectionTitle}>Hoje</Text>
-            <TouchableOpacity
+            <Tappable navega
               onPress={() => irParaAba('ViagensTab')}
               accessibilityRole="button"
               accessibilityLabel="Ver todas as viagens">
               <Text style={styles.verTodas}>Ver todas</Text>
-            </TouchableOpacity>
+            </Tappable>
           </View>
           {hoje.carregando ? (
             <ActivityIndicator color={colors.primary.main} style={{ marginVertical: spacing.base }} />
           ) : hoje.erro ? (
             <View style={styles.vazio}>
               <Text style={styles.vazioTexto}>Não foi possível carregar as viagens.</Text>
-              <TouchableOpacity onPress={carregar} accessibilityRole="button" accessibilityLabel="Tentar de novo">
+              <Tappable onPress={carregar} accessibilityRole="button" accessibilityLabel="Tentar de novo">
                 <Icon name={IconNames.refresh} size="md" color={colors.primary.main} />
-              </TouchableOpacity>
+              </Tappable>
             </View>
           ) : viagensHoje.length === 0 ? (
             <View style={styles.vazio}>
@@ -207,7 +207,7 @@ const DashboardGestor = ({ navigation }) => {
               const motorista = v.motorista_nome && v.motorista_nome !== 'Sem Motorista' ? v.motorista_nome : '';
               const placa = v.veiculo_placa && v.veiculo_placa !== 'Sem Veículo' ? `Ônibus ${v.veiculo_placa}` : '';
               return (
-                <TouchableOpacity
+                <Tappable navega
                   key={v.id}
                   style={styles.viagem}
                   onPress={() => abrir('ViagensTab', 'DetalheViagemMotorista', { viagem: v })}
@@ -229,7 +229,7 @@ const DashboardGestor = ({ navigation }) => {
                   <View style={[styles.selo, { backgroundColor: tom.fundo }]}>
                     <Text style={[styles.seloTexto, { color: tom.texto }]}>{situacao.selo}</Text>
                   </View>
-                </TouchableOpacity>
+                </Tappable>
               );
             })
           )}

@@ -5,9 +5,10 @@
  * colors.gradients quando houver uma.
  */
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
+import Tappable from './Tappable';
 
 const TripHeroCard = ({
   dayLabel,
@@ -22,7 +23,8 @@ const TripHeroCard = ({
   children = undefined,
 }) => (
   <View style={styles.card}>
-    <TouchableOpacity
+    <Tappable
+      navega
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityRole="button"
@@ -46,7 +48,7 @@ const TripHeroCard = ({
           <Icon name={IconNames.chevronRight} size="md" color="#FFFFFF" />
         </View>
       </View>
-    </TouchableOpacity>
+    </Tappable>
     {children}
   </View>
 );

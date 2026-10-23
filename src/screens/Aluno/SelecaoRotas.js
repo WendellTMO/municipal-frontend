@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   ScrollView,
@@ -17,6 +16,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import Tappable from '../../components/Tappable';
 
 const SelecaoRotas = ({navigation}) => {
   const [busca, setBusca] = useState('');
@@ -120,9 +120,9 @@ const SelecaoRotas = ({navigation}) => {
             onChangeText={setBusca}
           />
           {busca.length > 0 && (
-            <TouchableOpacity onPress={() => setBusca('')}>
+            <Tappable onPress={() => setBusca('')}>
               <Icon name={IconNames.close} size="md" color={colors.text.hint} />
-            </TouchableOpacity>
+            </Tappable>
           )}
         </View>
       </View>
@@ -153,7 +153,7 @@ const SelecaoRotas = ({navigation}) => {
                 </Text>
                 {rotasInscritas.map((rota) => (
                   <View key={rota.id} style={[styles.rotaCard, styles.rotaCardInscrita]}>
-                    <TouchableOpacity
+                    <Tappable navega
                       style={styles.rotaHeader}
                       onPress={() => navigation.navigate('RotaAluno', { rota })}>
                       <View style={[styles.rotaIconContainer, { backgroundColor: colors.success.light }]}>
@@ -171,8 +171,8 @@ const SelecaoRotas = ({navigation}) => {
                         </View>
                       </View>
                       <Icon name={IconNames.chevronRight} size="md" color={colors.text.secondary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </Tappable>
+                    <Tappable
                       style={styles.sairRotaButton}
                       onPress={() => handleSairDaRota(rota)}
                       disabled={unsubscribing === rota.id}
@@ -186,7 +186,7 @@ const SelecaoRotas = ({navigation}) => {
                           <Text style={styles.sairRotaButtonText}>Sair da rota</Text>
                         </>
                       )}
-                    </TouchableOpacity>
+                    </Tappable>
                   </View>
                 ))}
               </>
@@ -218,7 +218,7 @@ const SelecaoRotas = ({navigation}) => {
                     </View>
                   </View>
 
-                  <TouchableOpacity
+                  <Tappable
                     style={[styles.cadastrarButton, isSubscribing && styles.cadastrarButtonDisabled]}
                     onPress={() => handleCadastrar(rota)}
                     disabled={isSubscribing}>
@@ -230,7 +230,7 @@ const SelecaoRotas = ({navigation}) => {
                         <Text style={styles.cadastrarButtonText}>Cadastrar nesta rota</Text>
                       </>
                     )}
-                  </TouchableOpacity>
+                  </Tappable>
                 </View>
               );
             })}
