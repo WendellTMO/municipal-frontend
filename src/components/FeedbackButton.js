@@ -2,18 +2,17 @@
  * Botão flutuante de feedback (círculo dourado com uma exclamação).
  * FeedbackBadge é o mesmo desenho sem posição, usado no aviso beta.
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useSyncExternalStore } from 'react';
 import { PanResponder, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { colors } from '../theme';
 import Icon, { IconNames } from './Icon';
-import { Storage } from '../utils/storage';
+import { assinarPosicao, definirPosicao, lerPosicao } from '../utils/fabStore';
 import { useFeedbackPadraoAtual } from './FeedbackPadraoContext';
 import {
   decidirPosicao,
   ehArraste,
-  ladoMaisProximo,
+  encaixar,
   limitarBaixo,
-  posicaoGuardada,
   xDoLado,
 } from '../utils/fabPosicao';
 
@@ -38,12 +37,12 @@ const RODAPE = 24 + (Platform.OS === 'ios' ? 34 : 0);
 const TOPO = 48;
 const MARGEM = 18;
 const TAMANHO = 56;
-const CHAVE_POSICAO = 'feedback_fab_posicao';
 
 const FeedbackButton = ({ onPress }) => {
   const { width, height } = useWindowDimensions();
   const padraoTela = useFeedbackPadraoAtual();
-  const [guardada, setGuardada] = useState(null);
+  // Posição única compartilhada por todas as instâncias do botão (raiz e Modais).
+  const guardada = useSyncExternalStore(assinarPosicao, lerPosicao, lerPosicao);
   const posicao = decidirPosicao({ guardada, padraoTela, altura: height, tamanho: TAMANHO, rodape: RODAPE });
   const [arrasto, setArrasto] = useState(null); // { x, y } em pixels enquanto o dedo move
 
@@ -52,18 +51,6 @@ const FeedbackButton = ({ onPress }) => {
   atual.current = { width, height, posicao, onPress };
   const inicio = useRef({ x: 0, y: 0 });
   const moveu = useRef(false);
-
-  useEffect(() => {
-    const carregar = async () => {
-      try {
-        const salva = posicaoGuardada(await Storage.getItem(CHAVE_POSICAO));
-        if (salva) setGuardada(salva);
-      } catch (e) {
-        // sem storage fica na posição padrão
-      }
-    };
-    carregar();
-  }, []);
 
   const baixoValido = limitarBaixo(posicao.baixo, height, TAMANHO, TOPO, RODAPE);
   const x = xDoLado(posicao.lado, width, TAMANHO, MARGEM);
@@ -104,13 +91,10 @@ const FeedbackButton = ({ onPress }) => {
         }
         const solto = posicaoDoToque(g);
         const { width: w, height: h } = atual.current;
-        const nova = {
-          lado: ladoMaisProximo(solto.x + TAMANHO / 2, w),
-          baixo: limitarBaixo(h - TAMANHO - solto.y, h, TAMANHO, TOPO, RODAPE),
-        };
-        setGuardada(nova);
+        definirPosicao(
+          encaixar({ x: solto.x, y: solto.y, largura: w, altura: h, tamanho: TAMANHO, topo: TOPO, rodape: RODAPE }),
+        );
         setArrasto(null);
-        Storage.setItem(CHAVE_POSICAO, nova);
       },
       onPanResponderTerminate: () => setArrasto(null),
     }),

@@ -40,3 +40,9 @@ export const decidirPosicao = ({ guardada, padraoTela, altura, tamanho, rodape }
   }
   return { lado: 'dir', baixo: rodape };
 };
+
+// Soltou o botão em (x, y) de tela: encaixa na borda mais próxima e limita a altura.
+export const encaixar = ({ x, y, largura, altura, tamanho, topo, rodape }) => ({
+  lado: ladoMaisProximo(x + tamanho / 2, largura),
+  baixo: limitarBaixo(altura - tamanho - y, altura, tamanho, topo, rodape),
+});
