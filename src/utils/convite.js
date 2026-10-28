@@ -53,6 +53,24 @@ export const validarCadastro = form => {
     }
   }
 
+  const obrigatorios = [
+    ['logradouro', 'Rua é obrigatória.'],
+    ['numero', 'Número é obrigatório.'],
+    ['bairro', 'Bairro é obrigatório.'],
+    ['cidade', 'Cidade é obrigatória.'],
+  ];
+  for (const [chave, mensagem] of obrigatorios) {
+    if (!(form[chave] || '').trim()) {
+      erros[chave] = mensagem;
+    }
+  }
+  if (!/^[A-Za-z]{2}$/.test(form.estado || '')) {
+    erros.estado = 'Informe a UF com 2 letras.';
+  }
+  if (form.cep && onlyDigits(form.cep).length !== 8) {
+    erros.cep = 'CEP inválido.';
+  }
+
   if (!form.aceiteTermos) {
     erros.aceiteTermos = 'É preciso aceitar os termos para concluir.';
   }
@@ -68,7 +86,21 @@ export const montarPayloadAceite = (pin, form) => {
     cpf: onlyDigits(form.cpf),
     data_nascimento: toIsoDate(form.dataNascimento),
     aceite_termos: true,
+    endereco: {
+      logradouro: form.logradouro.trim(),
+      numero: form.numero.trim(),
+      bairro: form.bairro.trim(),
+      cidade: form.cidade.trim(),
+      estado: form.estado.toUpperCase(),
+    },
   };
+
+  if (onlyDigits(form.cep)) {
+    payload.endereco.cep = onlyDigits(form.cep);
+  }
+  if ((form.complemento || '').trim()) {
+    payload.endereco.complemento = form.complemento.trim();
+  }
 
   if (form.pedeTelefone) {
     payload.telefone = onlyDigits(form.telefone);
@@ -88,7 +120,7 @@ const MSG_INVALIDO =
 const MSG_BLOQUEADO =
   'Este convite foi bloqueado depois de 5 tentativas erradas. Peça um novo convite ao gestor.';
 
-// Traduz o erro da API em {tipo, texto}. Tipos: invalido, bloqueado, pin, conflito, outro.
+// Traduz o erro da API em {tipo, texto}. Tipos: invalido, bloqueado, pin, conflito, campo, outro.
 // invalido e bloqueado encerram o convite (a tela só oferece ir ao login).
 export const interpretarErroConvite = erro => {
   const status = erro && erro.statusCode;
@@ -106,6 +138,15 @@ export const interpretarErroConvite = erro => {
     };
   }
   if (status === 400) {
+    // Erro de campo do endereço: {endereco: {estado: ['...']}}. Vira mensagem junto ao campo.
+    const detalheEndereco = erro.details ? erro.details.endereco : undefined;
+    if (detalheEndereco && typeof detalheEndereco === 'object' && !Array.isArray(detalheEndereco)) {
+      const campos = {};
+      for (const chave of Object.keys(detalheEndereco)) {
+        campos[chave] = 'Confira este campo.';
+      }
+      return {tipo: 'campo', campos, texto: 'Confira o endereço informado.'};
+    }
     const restantes = erro.details ? erro.details.tentativas_restantes : undefined;
     if (typeof restantes === 'number') {
       const palavra = restantes === 1 ? 'tentativa' : 'tentativas';

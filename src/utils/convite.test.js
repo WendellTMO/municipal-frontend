@@ -26,6 +26,13 @@ const formBase = () => ({
   cpfResponsavel: '',
   emailResponsavel: '',
   aceiteTermos: true,
+  logradouro: 'Rua das Flores',
+  numero: '120',
+  bairro: 'Centro',
+  cidade: 'Campina Grande',
+  estado: 'pb',
+  cep: '',
+  complemento: '',
 });
 
 describe('ehMenor', () => {
@@ -76,6 +83,18 @@ describe('validarCadastro', () => {
   });
 });
 
+describe('endereço', () => {
+  it('exige rua, número, bairro, cidade e UF', () => {
+    const erros = validarCadastro({...formBase(), logradouro: ' ', numero: '', bairro: '', cidade: '', estado: 'P'});
+    expect(Object.keys(erros).sort()).toEqual(['bairro', 'cidade', 'estado', 'logradouro', 'numero']);
+  });
+
+  it('CEP e complemento são opcionais, mas CEP incompleto é recusado', () => {
+    expect(validarCadastro({...formBase(), cep: '58400-000'})).toEqual({});
+    expect(validarCadastro({...formBase(), cep: '584'}).cep).toBeDefined();
+  });
+});
+
 describe('montarPayloadAceite', () => {
   it('monta o corpo do maior de idade sem campos do responsável', () => {
     expect(montarPayloadAceite('123456', formBase())).toEqual({
@@ -84,7 +103,20 @@ describe('montarPayloadAceite', () => {
       cpf: '12345678909',
       data_nascimento: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       aceite_termos: true,
+      endereco: {
+        logradouro: 'Rua das Flores',
+        numero: '120',
+        bairro: 'Centro',
+        cidade: 'Campina Grande',
+        estado: 'PB',
+      },
     });
+  });
+
+  it('inclui CEP só com dígitos e complemento quando preenchidos', () => {
+    const payload = montarPayloadAceite('123456', {...formBase(), cep: '58400-000', complemento: ' Apto 2 '});
+    expect(payload.endereco.cep).toBe('58400000');
+    expect(payload.endereco.complemento).toBe('Apto 2');
   });
 
   it('inclui o responsável do menor e o telefone pedido', () => {
@@ -107,6 +139,12 @@ describe('montarPayloadAceite', () => {
 });
 
 describe('interpretarErroConvite', () => {
+  it('400 com erro de campo do endereço aponta os campos', () => {
+    const r = interpretarErroConvite({statusCode: 400, details: {endereco: {estado: ['x']}}});
+    expect(r.tipo).toBe('campo');
+    expect(Object.keys(r.campos)).toEqual(['estado']);
+  });
+
   it('404 vira link inválido', () => {
     expect(interpretarErroConvite({statusCode: 404}).tipo).toBe('invalido');
   });
