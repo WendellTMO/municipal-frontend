@@ -29,6 +29,7 @@ import {
 } from '../../utils/errors';
 import {unwrapItems} from '@/types';
 import {formatCpf, formatPhone, formatCep, formatDate} from '../../utils/masks';
+import {calcAge, toIsoDate} from '../../utils/dataNascimento';
 
 const {height: SCREEN_H} = Dimensions.get('screen');
 
@@ -73,30 +74,7 @@ const CriarConta = ({navigation}) => {
   const [dataNascimento, setDataNascimento] = useState('');
   const [emailResponsavel, setEmailResponsavel] = useState('');
 
-  const calcAge = rawDate => {
-    const digits = rawDate.replace(/\D/g, '');
-    if (digits.length !== 8) return null;
-    const day = parseInt(digits.slice(0, 2), 10);
-    const month = parseInt(digits.slice(2, 4), 10) - 1;
-    const year = parseInt(digits.slice(4, 8), 10);
-    const birth = new Date(year, month, day);
-    if (isNaN(birth.getTime())) return null;
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    if (
-      today.getMonth() < birth.getMonth() ||
-      (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
-    ) age--;
-    return age;
-  };
-
   const isMinor = calcAge(dataNascimento) !== null && calcAge(dataNascimento) < 18;
-
-  const toIsoDate = rawDate => {
-    const digits = rawDate.replace(/\D/g, '');
-    if (digits.length !== 8) return null;
-    return `${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}`;
-  };
 
   const [instituicaoId, setInstituicaoId] = useState('');
   const [instituicoes, setInstituicoes] = useState([]);
