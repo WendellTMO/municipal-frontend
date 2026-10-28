@@ -1,11 +1,13 @@
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {ActivityIndicator, ScrollView, Text, TextInput, View, StyleSheet} from 'react-native';
 import {useAuth} from '../../contexts/AuthContext';
 import {Icon, IconNames} from '../../components';
 import Tappable from '../../components/Tappable';
 import {colors, spacing, borderRadius} from '../../theme';
 import {conviteService} from '../../services/conviteService';
+import {cepService} from '../../services/cepService';
 import {formatCep, formatCpf, formatDate, formatPhone} from '../../utils/masks';
+import {camposDoCep, cepParaConsulta, mensagemErroCep} from '../../utils/cep';
 import {
   destinoPosAceite,
   ehMenor,
@@ -46,6 +48,40 @@ const CompletarCadastro = ({navigation, route}) => {
   const [loading, setLoading] = useState(false);
   const [erroGeral, setErroGeral] = useState('');
   const [encerrado, setEncerrado] = useState('');
+  const [consultandoCep, setConsultandoCep] = useState(false);
+  const [avisoCep, setAvisoCep] = useState({tipo: '', texto: ''});
+  const camposEditados = useRef({}); // campos digitados à mão: o CEP não sobrescreve
+  const inputs = useRef({});
+
+  // Consulta o CEP ao completar 8 dígitos. O cleanup descarta respostas de CEPs antigos.
+  useEffect(() => {
+    const cep = cepParaConsulta(form.cep);
+    setAvisoCep({tipo: '', texto: ''});
+    setConsultandoCep(false);
+    if (!cep) return undefined;
+
+    let descartar = false;
+    setConsultandoCep(true);
+    cepService
+      .buscar(cep)
+      .then(resposta => {
+        if (descartar) return;
+        const novos = camposDoCep(resposta, camposEditados.current);
+        setForm(atual => ({...atual, ...novos}));
+        setAvisoCep({tipo: 'ok', texto: 'CEP encontrado'});
+        if (inputs.current.numero) inputs.current.numero.focus();
+      })
+      .catch(erro => {
+        if (descartar) return;
+        setAvisoCep({tipo: 'erro', texto: mensagemErroCep(erro)});
+      })
+      .finally(() => {
+        if (!descartar) setConsultandoCep(false);
+      });
+    return () => {
+      descartar = true;
+    };
+  }, [form.cep]);
 
   const irParaLogin = mensagem => navigation.navigate('Login', mensagem ? {message: mensagem} : {});
 
@@ -73,6 +109,7 @@ const CompletarCadastro = ({navigation, route}) => {
   const menor = ehMenor(form.dataNascimento);
 
   const mudar = (campo, valor) => {
+    camposEditados.current[campo] = true;
     setForm(atual => ({...atual, [campo]: valor}));
     if (erros[campo]) setErros(atual => ({...atual, [campo]: undefined}));
     if (erroGeral) setErroGeral('');
@@ -132,6 +169,9 @@ const CompletarCadastro = ({navigation, route}) => {
         ]}>
         {extras.icone ? <Icon name={extras.icone} size="md" color={colors.neutral[400]} /> : null}
         <TextInput
+          ref={el => {
+            inputs.current[chave] = el;
+          }}
           style={styles.input}
           value={form[chave]}
           onChangeText={texto => mudar(chave, extras.mascara ? extras.mascara(texto) : texto)}
@@ -145,6 +185,7 @@ const CompletarCadastro = ({navigation, route}) => {
           maxLength={extras.maxLength}
           autoCorrect={false}
         />
+        {extras.carregando ? <ActivityIndicator size="small" color={colors.neutral[400]} /> : null}
         {extras.senha && chave === 'senha' ? (
           <Tappable onPress={() => setMostrarSenha(v => !v)} sombra={false} accessibilityLabel="Mostrar senha">
             <Icon
@@ -200,7 +241,15 @@ const CompletarCadastro = ({navigation, route}) => {
         maxLength: 2,
         mascara: texto => texto.replace(/[^A-Za-z]/g, '').toUpperCase(),
       })}
-      {campo('cep', 'CEP', {placeholder: '00000-000', teclado: 'number-pad', mascara: formatCep})}
+      {campo('cep', 'CEP', {
+        placeholder: '00000-000',
+        teclado: 'number-pad',
+        mascara: formatCep,
+        carregando: consultandoCep,
+      })}
+      {avisoCep.texto ? (
+        <Text style={avisoCep.tipo === 'ok' ? local.cepOk : local.cepAviso}>{avisoCep.texto}</Text>
+      ) : null}
       {campo('complemento', 'Complemento', {placeholder: 'Apto, bloco, referência'})}
 
       {menor ? (
@@ -285,6 +334,8 @@ const local = StyleSheet.create({
     borderColor: colors.border.light,
   },
   termosTexto: {fontFamily: 'Inter-Regular', fontSize: 13, color: colors.text.secondary, lineHeight: 19},
+  cepOk: {fontFamily: 'Inter-Medium', fontSize: 13, color: colors.success.main, marginTop: spacing.xs},
+  cepAviso: {fontFamily: 'Inter-Regular', fontSize: 13, color: colors.text.secondary, marginTop: spacing.xs},
   aceiteLinha: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md},
   aceiteTexto: {flex: 1, fontFamily: 'Inter-Medium', fontSize: 14, color: colors.text.primary},
 });
