@@ -26,15 +26,15 @@ export const getActiveWebRoute = () => activeRoute.route;
 
 export const resolveRoute = (routeName) => ROUTE_ALIASES[routeName] || routeName;
 
-export const NavigationProvider = ({children, initialRoute = 'Login'}) => {
+export const NavigationProvider = ({children, initialRoute = 'Login', initialParams = {}}) => {
   // Os navegadores de papel aninham providers (App > MainNavigator > Gestor...).
   // Guardar a profundidade permite identificar o provider mais interno, que é o
   // dono das telas visíveis.
   const parentContext = useContext(NavigationContext);
   const depth = (parentContext?.depth ?? -1) + 1;
   const [currentRoute, setCurrentRoute] = useState(initialRoute);
-  const [routeParams, setRouteParams] = useState({});
-  const [history, setHistory] = useState([{route: initialRoute, params: {}}]);
+  const [routeParams, setRouteParams] = useState(initialParams);
+  const [history, setHistory] = useState([{route: initialRoute, params: initialParams}]);
 
   useEffect(() => {
     if (typeof document !== 'undefined') {

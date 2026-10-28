@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Platform} from 'react-native';
 import Login from '../screens/Auth/Login';
 import CriarConta from '../screens/Auth/CriarConta';
@@ -9,6 +9,7 @@ import {
   Navigator,
   Screen,
 } from './SimpleNavigator';
+import {lerRotaDaUrl, limparUrl} from './rotaDaUrl';
 
 // Detecta se está na web
 const isWeb = Platform.OS === 'web';
@@ -28,10 +29,19 @@ if (!isWeb) {
 }
 
 const AuthNavigator = () => {
+  // Lido uma vez só: o link vira a rota inicial e a URL é limpa.
+  const [entrada] = useState(() => {
+    const rota = lerRotaDaUrl();
+    if (rota) limparUrl();
+    return rota;
+  });
+
   // Se estiver na web ou React Navigation não estiver disponível, usa navegação simples
   if (isWeb || !createNativeStackNavigator) {
     return (
-      <NavigationProvider initialRoute="Login">
+      <NavigationProvider
+        initialRoute={entrada ? entrada.route : 'Login'}
+        initialParams={entrada ? entrada.params : {}}>
         <Navigator>
           <Screen name="Login" component={Login} />
           <Screen name="CriarConta" component={CriarConta} />
