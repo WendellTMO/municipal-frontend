@@ -13,6 +13,16 @@ import type {
 } from '../types';
 import { unwrapItems } from '../types';
 
+export type EnderecoAluno = {
+  logradouro?: string | null;
+  numero?: string | null;
+  bairro?: string | null;
+  cidade?: string | null;
+  estado?: string | null;
+  cep?: string | null;
+  complemento?: string | null;
+};
+
 // Normalized UI representation of a ViagemAgendaAlunoResponse
 export type ViagemAgendaUI = {
   id: string | undefined;
@@ -228,6 +238,12 @@ export const alunoService = {
    */
   async listarHorariosRota(rotaId: string): Promise<RotaHorarioListResponse> {
     const response = await api.get<RotaHorarioListResponse>(`/rotas/${rotaId}/horarios`);
+    return response.data;
+  },
+
+  /** GET /v1/alunos/me: perfil do aluno, com `endereco` salvo (ou null) */
+  async obterPerfil(): Promise<AlunoResponse & { endereco?: EnderecoAluno | null }> {
+    const response = await api.get<AlunoResponse & { endereco?: EnderecoAluno | null }>('/alunos/me');
     return response.data;
   },
 

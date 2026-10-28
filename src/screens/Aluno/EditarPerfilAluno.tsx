@@ -33,7 +33,9 @@ type FormState = {
   numero: string;
   bairro: string;
   cidade: string;
+  estado: string;
   cep: string;
+  complemento: string;
 };
 
 const ALUNO_COLOR = colors.roles?.aluno ?? colors.primary.main;
@@ -53,22 +55,47 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     numero: '',
     bairro: '',
     cidade: '',
+    estado: '',
     cep: '',
+    complemento: '',
   });
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setForm({
-        nome: (user.nome as string) ?? '',
-        telefone: formatPhone((user.telefone as string) ?? ''),
-        logradouro: '',
-        numero: '',
-        bairro: '',
-        cidade: '',
-        cep: '',
-      });
-    }
+    if (!user) return;
+    let cancelado = false;
+    const base = {
+      nome: (user.nome as string) ?? '',
+      telefone: formatPhone((user.telefone as string) ?? ''),
+    };
+    setForm(prev => ({ ...prev, ...base }));
+
+    const carregarEndereco = async () => {
+      try {
+        const perfil = await alunoService.obterPerfil();
+        const e = perfil.endereco;
+        if (cancelado || !e) return;
+        setForm(prev => ({
+          ...prev,
+          logradouro: e.logradouro ?? '',
+          numero: e.numero ?? '',
+          bairro: e.bairro ?? '',
+          cidade: e.cidade ?? '',
+          estado: e.estado ?? '',
+          cep: formatCep(e.cep ?? ''),
+          complemento: e.complemento ?? '',
+        }));
+      } catch {
+        if (!cancelado) toast.error('Não foi possível carregar seu endereço. Tente novamente mais tarde.');
+      }
+    };
+    carregarEndereco();
+
+    return () => {
+      cancelado = true;
+    };
+    // toast muda de identidade a cada render do provider; só recarrega quando o usuário muda
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const setField = useCallback(
@@ -93,15 +120,30 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
       form.numero.trim() ||
       form.bairro.trim() ||
       form.cidade.trim() ||
-      form.cep.trim();
+      form.estado.trim() ||
+      form.cep.trim() ||
+      form.complemento.trim();
 
     if (temEndereco) {
+      const obrigatorios = [form.logradouro, form.numero, form.bairro, form.cidade, form.estado, form.cep];
+      for (const valor of obrigatorios) {
+        if (!valor.trim()) {
+          toast.error('Preencha rua, número, bairro, cidade, UF e CEP, ou deixe o endereço todo em branco.');
+          return;
+        }
+      }
+      if (onlyDigits(form.cep).length !== 8) {
+        toast.error('CEP deve ter 8 dígitos.');
+        return;
+      }
       payload.endereco = {
-        logradouro: form.logradouro.trim() || undefined,
-        numero: form.numero.trim() || undefined,
-        bairro: form.bairro.trim() || undefined,
-        cidade: form.cidade.trim() || undefined,
-        cep: onlyDigits(form.cep) || undefined,
+        logradouro: form.logradouro.trim(),
+        numero: form.numero.trim(),
+        bairro: form.bairro.trim(),
+        cidade: form.cidade.trim(),
+        estado: form.estado.trim().toUpperCase(),
+        cep: onlyDigits(form.cep),
+        complemento: form.complemento.trim() || undefined,
       };
     }
 
@@ -112,8 +154,12 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
       toast.success('Perfil atualizado com sucesso!');
       navigation.goBack();
     } catch (e: unknown) {
-      const err = e as { message?: string };
-      toast.error(err?.message ?? 'Erro ao salvar perfil.');
+      const err = e as { message?: string; statusCode?: number };
+      if (err?.statusCode === 400 || err?.statusCode === 422) {
+        toast.error(err.message || 'Confira os dados do endereço e tente novamente.');
+      } else {
+        toast.error('Não foi possível salvar seu perfil agora. Tente novamente em instantes.');
+      }
     } finally {
       setSalvando(false);
     }
@@ -257,6 +303,31 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
                   placeholderTextColor={colors.text.hint}
                   keyboardType="number-pad"
                   maxLength={9}
+                />
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.fieldGroup, { flex: 1 }]}>
+                <Text style={styles.label}>UF</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.estado}
+                  onChangeText={v => setField('estado', v.replace(/[^A-Za-z]/g, '').toUpperCase())}
+                  placeholder="PB"
+                  placeholderTextColor={colors.text.hint}
+                  autoCapitalize="characters"
+                  maxLength={2}
+                />
+              </View>
+              <View style={[styles.fieldGroup, { flex: 2, marginLeft: spacing.sm }]}>
+                <Text style={styles.label}>Complemento</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.complemento}
+                  onChangeText={v => setField('complemento', v)}
+                  placeholder="Apto, bloco, referência"
+                  placeholderTextColor={colors.text.hint}
                 />
               </View>
             </View>
