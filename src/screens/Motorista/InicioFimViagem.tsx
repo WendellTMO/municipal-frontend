@@ -422,15 +422,18 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         {/* Minha posição: leva o mapa ao ônibus (apagado enquanto não há GPS) */}
-        <TouchableOpacity
-          style={[styles.minhaPosicao, { bottom: alturaPainel + spacing.base }, !posMotorista && styles.acaoDesabilitada]}
-          onPress={() => setCentralizarTick((n) => n + 1)}
-          disabled={!posMotorista}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !posMotorista }}
-          accessibilityLabel="Centralizar na minha posição">
-          <Icon name={IconNames.myLocation} size="lg" color="#FFFFFF" />
-        </TouchableOpacity>
+        <View style={[styles.minhaPosicaoWrap, { bottom: alturaPainel + spacing.base }]}>
+          <TouchableOpacity
+            style={[styles.minhaPosicao, !posMotorista && styles.acaoDesabilitada]}
+            onPress={() => setCentralizarTick((n) => n + 1)}
+            disabled={!posMotorista}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !posMotorista }}
+            accessibilityLabel="Centralizar na minha posição">
+            <Icon name={IconNames.myLocation} size="lg" color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.minhaPosicaoLegenda} numberOfLines={1}>Minha posição</Text>
+        </View>
 
         {/* Cabeçalho no padrão do app: voltar desabilitado, rota e cronômetro */}
         <View style={styles.floatingTop} onLayout={(e) => setAlturaTopo(e.nativeEvent.layout.height)}>
@@ -534,38 +537,50 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
           {/* Ações só com ícone: Paradas, No ponto, Avisar, Alunos */}
           <View style={styles.acoesRow} accessibilityRole="toolbar">
-            <TouchableOpacity
-              style={[styles.acaoIcone, { backgroundColor: colors.solid.teal }]}
-              onPress={() => setListaAberta(!listaAberta)}
-              accessibilityRole="button"
-              accessibilityState={{ expanded: listaAberta }}
-              accessibilityLabel="Paradas">
-              <Icon name={IconNames.route} size="xl" color="#FFFFFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.acaoIcone, { backgroundColor: colors.solid.green }, !proxima && styles.acaoDesabilitada]}
-              onPress={marcarChegada}
-              disabled={!proxima}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !proxima }}
-              accessibilityLabel="No ponto">
-              <Icon name={IconNames.noPonto} size="xl" color="#FFFFFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.acaoIcone, { backgroundColor: colors.solid.amber }]}
-              onPress={() => setBroadcastVisible(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Avisar"
-              accessibilityHint="Avisar os alunos ou registrar um problema para a gestão">
-              <Icon name={IconNames.campaign} size="xl" color="#FFFFFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.acaoIcone, { backgroundColor: colors.solid.blue }]}
-              onPress={() => navigation.navigate('ListaAlunosConfirmados', { viagem: currentViagem })}
-              accessibilityRole="button"
-              accessibilityLabel="Alunos">
-              <Icon name={IconNames.group} size="xl" color="#FFFFFF" />
-            </TouchableOpacity>
+            <View style={styles.acaoItem}>
+              <TouchableOpacity
+                style={[styles.acaoIcone, { backgroundColor: colors.solid.teal }]}
+                onPress={() => setListaAberta(!listaAberta)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: listaAberta }}
+                accessibilityLabel="Paradas">
+                <Icon name={IconNames.route} size="xl" color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text style={styles.acaoLegenda} numberOfLines={1}>Ver paradas</Text>
+            </View>
+            <View style={styles.acaoItem}>
+              <TouchableOpacity
+                style={[styles.acaoIcone, { backgroundColor: colors.solid.green }, !proxima && styles.acaoDesabilitada]}
+                onPress={marcarChegada}
+                disabled={!proxima}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !proxima }}
+                accessibilityLabel="No ponto">
+                <Icon name={IconNames.noPonto} size="xl" color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text style={styles.acaoLegenda} numberOfLines={1}>Cheguei</Text>
+            </View>
+            <View style={styles.acaoItem}>
+              <TouchableOpacity
+                style={[styles.acaoIcone, { backgroundColor: colors.solid.amber }]}
+                onPress={() => setBroadcastVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Avisar"
+                accessibilityHint="Avisar os alunos ou registrar um problema para a gestão">
+                <Icon name={IconNames.campaign} size="xl" color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text style={styles.acaoLegenda} numberOfLines={1}>Avisar</Text>
+            </View>
+            <View style={styles.acaoItem}>
+              <TouchableOpacity
+                style={[styles.acaoIcone, { backgroundColor: colors.solid.blue }]}
+                onPress={() => navigation.navigate('ListaAlunosConfirmados', { viagem: currentViagem })}
+                accessibilityRole="button"
+                accessibilityLabel="Alunos">
+                <Icon name={IconNames.group} size="xl" color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text style={styles.acaoLegenda} numberOfLines={1}>Confirmados</Text>
+            </View>
           </View>
 
           <TouchableOpacity
@@ -995,22 +1010,32 @@ const styles = StyleSheet.create({
   instituicaoNome: { ...textStyles.h5, color: colors.text.primary },
   instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
   instituicaoQtd: { ...textStyles.h5, color: colors.primary.main },
-  // Quatro botões com flex igual e vão de 8 px: ocupam a largura do Finalizar Viagem, sem sobras.
+  minhaPosicaoWrap: { position: 'absolute', right: spacing.base, alignItems: 'center', gap: 4, zIndex: 15 },
+  minhaPosicaoLegenda: {
+    ...textStyles.caption,
+    color: colors.text.primary,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    overflow: 'hidden',
+  },
   minhaPosicao: {
-    position: 'absolute',
-    right: spacing.base,
     width: 52,
     height: 52,
     borderRadius: 26,
     backgroundColor: colors.solid.blue,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 15,
     ...shadows.lg,
   },
+  // Quatro botões com flex igual e vão de 8 px: ocupam a largura do Finalizar Viagem, sem sobras.
   acoesRow: { flexDirection: 'row', gap: spacing.sm },
+  acaoItem: { flex: 1, alignItems: 'center', gap: 4 },
+  // 12 px Inter, uma linha; "Confirmados" cabe em ~75 px (celular de 360 px dá ~78 px por botão)
+  acaoLegenda: { ...textStyles.caption, color: colors.text.secondary, textAlign: 'center' },
   acaoIcone: {
-    flex: 1,
+    alignSelf: 'stretch',
     height: 64,
     borderRadius: 18,
     alignItems: 'center',
