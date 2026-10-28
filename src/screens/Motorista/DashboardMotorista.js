@@ -228,7 +228,7 @@ const DashboardMotorista = ({navigation}) => {
               </View>
             ) : (
               <View style={styles.emptyState}>
-                <Icon name={IconNames.route} size="xxl" color={colors.neutral[300]} />
+                <Icon name={IconNames.route} size="xxl" color={colors.neutral[400]} />
                 <Text style={styles.emptyText}>Nenhuma viagem agendada</Text>
                 <Text style={styles.emptySubtext}>Aguarde o gestor atribuir viagens para você</Text>
               </View>
@@ -302,7 +302,8 @@ const styles = StyleSheet.create({
     margin: spacing.base,
     marginTop: spacing.lg,
     padding: spacing.lg,
-    backgroundColor: colors.primary.lighter,
+    // Fundo branco sólido como os demais cards; o azul claro deixava o texto cinza ilegível.
+    backgroundColor: colors.background.paper,
     borderRadius: borderRadius.xl,
     ...shadows.lg,
   },
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     ...textStyles.bodySmall,
-    color: colors.text.hint,
+    color: colors.text.secondary,
     textAlign: 'center',
     marginTop: spacing.xs,
   },
