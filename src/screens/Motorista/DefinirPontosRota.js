@@ -9,6 +9,7 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import {motoristaService} from '../../services/motoristaService';
 import { colors, spacing, borderRadius, shadows, textStyles, fontWeight } from '../../theme';
@@ -18,6 +19,12 @@ import { StaticRouteMap, MapPointPicker } from '../../features/map/index';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import {
+  validarLatitude,
+  validarLongitude,
+  dividirParColado,
+  coordenadasValidas,
+} from '../../utils/coordenadas';
 
 const RotaMapaSimples = ({ pontos }) => {
   const { validPontos, hasValidPoints } = useMemo(() => {
@@ -364,6 +371,40 @@ const DefinirPontosRota = ({navigation, route}) => {
   const [resultadoSelecionado, setResultadoSelecionado] = useState(null);
   const [localizacaoPin, setLocalizacaoPin] = useState(null);
   const [nomePontoCustom, setNomePontoCustom] = useState('');
+  const [modoPonto, setModoPonto] = useState('endereco');
+  const [latTexto, setLatTexto] = useState('');
+  const [lonTexto, setLonTexto] = useState('');
+  const [latTocado, setLatTocado] = useState(false);
+  const [lonTocado, setLonTocado] = useState(false);
+  const tecladoDecimal = Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric';
+
+  const atualizarCoordenadas = (lat, lon) => {
+    setLatTexto(lat);
+    setLonTexto(lon);
+    setLocalizacaoPin(coordenadasValidas(lat, lon));
+  };
+
+  const handleMudarLatitude = texto => {
+    setLatTocado(true);
+    const par = dividirParColado(texto);
+    if (par) {
+      setLonTocado(true);
+      atualizarCoordenadas(par.latitude, par.longitude);
+      return;
+    }
+    atualizarCoordenadas(texto, lonTexto);
+  };
+
+  const handleMudarLongitude = texto => {
+    setLonTocado(true);
+    atualizarCoordenadas(latTexto, texto);
+  };
+
+  const handleMudarModo = modo => {
+    if (modo === modoPonto) return;
+    handleLimparNovoPonto();
+    setModoPonto(modo);
+  };
 
   const handleBuscarEndereco = async () => {
     if (!termoBusca.trim()) {
@@ -429,6 +470,10 @@ const DefinirPontosRota = ({navigation, route}) => {
     setLocalizacaoPin(null);
     setNomePontoCustom('');
     setTermoBusca('');
+    setLatTexto('');
+    setLonTexto('');
+    setLatTocado(false);
+    setLonTocado(false);
   };
 
   // Load existing points
@@ -787,7 +832,51 @@ const DefinirPontosRota = ({navigation, route}) => {
             {mostrarFormNovoPonto && (
               <View style={styles.formContainer}>
 
+                {/* Mode selector */}
+                <View style={npStyles.modeRow}>
+                  {[['endereco', 'Endereço'], ['coordenadas', 'Coordenadas']].map(([modo, rotulo]) => (
+                    <TouchableOpacity
+                      key={modo}
+                      style={[npStyles.modeButton, modoPonto === modo && npStyles.modeButtonActive]}
+                      onPress={() => handleMudarModo(modo)}>
+                      <Text style={[npStyles.modeText, modoPonto === modo && npStyles.modeTextActive]}>
+                        {rotulo}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {modoPonto === 'coordenadas' && (
+                  <View>
+                    <Text style={npStyles.fieldLabel}>Latitude</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="-7.2290"
+                      placeholderTextColor={colors.text.hint}
+                      value={latTexto}
+                      onChangeText={handleMudarLatitude}
+                      keyboardType={tecladoDecimal}
+                    />
+                    {latTocado && !!validarLatitude(latTexto) && (
+                      <Text style={npStyles.fieldError}>{validarLatitude(latTexto)}</Text>
+                    )}
+                    <Text style={npStyles.fieldLabel}>Longitude</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="-35.9020"
+                      placeholderTextColor={colors.text.hint}
+                      value={lonTexto}
+                      onChangeText={handleMudarLongitude}
+                      keyboardType={tecladoDecimal}
+                    />
+                    {lonTocado && !!validarLongitude(lonTexto) && (
+                      <Text style={npStyles.fieldError}>{validarLongitude(lonTexto)}</Text>
+                    )}
+                  </View>
+                )}
+
                 {/* Search row */}
+                {modoPonto === 'endereco' && (
                 <View style={npStyles.searchRow}>
                   <TextInput
                     style={[styles.input, npStyles.searchInput]}
@@ -810,6 +899,7 @@ const DefinirPontosRota = ({navigation, route}) => {
                     )}
                   </TouchableOpacity>
                 </View>
+                )}
 
                 {/* Search results list */}
                 {resultadosBusca.length > 0 && !resultadoSelecionado && (
@@ -844,29 +934,34 @@ const DefinirPontosRota = ({navigation, route}) => {
                 )}
 
                 {/* Selected location + map picker + name */}
-                {resultadoSelecionado && localizacaoPin && (
+                {localizacaoPin && (modoPonto === 'coordenadas' || resultadoSelecionado) && (
                   <>
                     {/* Selected address header */}
                     <View style={npStyles.selectedHeader}>
                       <View style={npStyles.selectedInfo}>
                         <Text style={npStyles.selectedLabel}>Local selecionado</Text>
-                        <Text style={npStyles.selectedAddress} numberOfLines={2}>
-                          {resultadoSelecionado.display_name.split(',').slice(0, 3).join(',')}
-                        </Text>
+                        {modoPonto === 'endereco' && (
+                          <Text style={npStyles.selectedAddress} numberOfLines={2}>
+                            {resultadoSelecionado.display_name.split(',').slice(0, 3).join(',')}
+                          </Text>
+                        )}
                         <Text style={npStyles.coordText}>
                           {localizacaoPin.latitude.toFixed(6)}, {localizacaoPin.longitude.toFixed(6)}
                         </Text>
                       </View>
-                      <TouchableOpacity
-                        onPress={() => { setResultadoSelecionado(null); setLocalizacaoPin(null); }}
-                        style={npStyles.changeButton}>
-                        <Text style={npStyles.changeButtonText}>Trocar</Text>
-                      </TouchableOpacity>
+                      {modoPonto === 'endereco' && (
+                        <TouchableOpacity
+                          onPress={() => { setResultadoSelecionado(null); setLocalizacaoPin(null); }}
+                          style={npStyles.changeButton}>
+                          <Text style={npStyles.changeButtonText}>Trocar</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
 
                     {/* Interactive map picker */}
                     <View style={npStyles.mapPickerWrap}>
                       <MapPointPicker
+                        key={modoPonto === 'coordenadas' ? `${localizacaoPin.latitude},${localizacaoPin.longitude}` : 'endereco'}
                         initialLocation={localizacaoPin}
                         onLocationChange={loc => setLocalizacaoPin(loc)}
                       />
@@ -903,7 +998,7 @@ const DefinirPontosRota = ({navigation, route}) => {
                 )}
 
                 {/* Empty hint */}
-                {resultadosBusca.length === 0 && !resultadoSelecionado && !buscandoEndereco && (
+                {modoPonto === 'endereco' && resultadosBusca.length === 0 && !resultadoSelecionado && !buscandoEndereco && (
                   <Text style={npStyles.hint}>
                     Busque um endereço ou local para adicionar um novo ponto à rota
                   </Text>
@@ -1193,6 +1288,38 @@ const styles = StyleSheet.create({
 });
 
 const npStyles = StyleSheet.create({
+  modeRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  modeButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.neutral[300],
+    alignItems: 'center',
+  },
+  modeButtonActive: {
+    backgroundColor: colors.primary.dark,
+    borderColor: colors.primary.dark,
+  },
+  modeText: {
+    color: colors.text.secondary,
+    fontWeight: '600',
+  },
+  modeTextActive: {
+    color: '#fff',
+  },
+  fieldLabel: {
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+  },
+  fieldError: {
+    color: colors.error.main,
+    marginBottom: spacing.sm,
+  },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
