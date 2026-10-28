@@ -4,12 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TextInput,
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { motoristaService } from '../../services/motoristaService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/Toast';
@@ -164,17 +164,17 @@ const CriarViagem = ({ navigation, route }) => {
 
   if (loadingRotas) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <SubHeader titulo="Nova Viagem" onBack={() => navigation.goBack()} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary.dark} />
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Nova Viagem" subtitulo="Configure os detalhes da viagem" onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} keyboardShouldPersistTaps="handled">
@@ -404,7 +404,7 @@ const CriarViagem = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { alunoService } from '../../services';
 import { getNotificacoes } from '../../services/notificacaoService';
@@ -208,21 +208,21 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <LoadingSpinner
           fullScreen
           message="Carregando suas informações..."
           color={colors.secondary.main}
           accessibilityLabel="Carregando painel do aluno"
         />
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
   if (isAwaitingGuardian || isPendingApproval) {
     const isGuardian = isAwaitingGuardian;
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <View style={styles.blockedRoot}>
           <View style={styles.blockedIconWrap}>
             <Icon
@@ -261,12 +261,12 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.blockedLogoutText}>Sair da conta</Text>
           </Tappable>
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <TripAlertBanner alert={alert} onDismiss={() => setAlert(null)} />
 
       <ScrollView
@@ -489,7 +489,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

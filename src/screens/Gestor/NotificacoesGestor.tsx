@@ -2,11 +2,11 @@ import React, { useCallback, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   getNotificacoes,
@@ -98,7 +98,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader
         titulo="Notificações"
         subtitulo={unreadCount > 0 ? `${unreadCount} não lida(s)` : undefined}
@@ -130,7 +130,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
           }
         />
       )}
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

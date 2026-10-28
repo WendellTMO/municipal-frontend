@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   PanResponder,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
@@ -238,13 +238,13 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
 
   if (!rota || !viagem) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <SubHeader titulo="Localização" onBack={() => navigation.goBack()} />
         <View style={styles.emptyContent}>
           <Icon name={IconNames.warning} size="xxl" color={colors.warning.main} />
           <Text style={styles.emptyText}>Dados da rota não disponíveis</Text>
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
@@ -263,7 +263,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
       : null;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       {/* Mapa de fundo, ocupando a tela inteira */}
       <View style={styles.mapaFundo}>
         {loading ? (
@@ -410,7 +410,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
           </>
         )}
       </View>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

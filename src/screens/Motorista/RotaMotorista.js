@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   ActivityIndicator,
   RefreshControl,
   } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { motoristaService } from '../../services/motoristaService';
 import { gestorService } from '../../services/gestorService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -357,7 +357,7 @@ const RotaMotorista = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader
         titulo="Minhas Rotas"
         subtitulo={loading ? '...' : `${rotas.length} rota${rotas.length !== 1 ? 's' : ''} cadastrada${rotas.length !== 1 ? 's' : ''}`}
@@ -404,7 +404,7 @@ const RotaMotorista = ({ navigation }) => {
       )}
 
       {renderModal()}
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { useAuth } from '../../contexts/AuthContext';
 import {motoristaService} from '../../services/motoristaService';
 import pontoService from '../../services/pontoService';
@@ -163,7 +163,7 @@ const DashboardMotorista = ({navigation}) => {
   const emAndamento = proximaViagem?.status === 'Em andamento';
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <PainelHeader
           perfil="Motorista"
@@ -282,7 +282,7 @@ const DashboardMotorista = ({navigation}) => {
 
         <SairDaConta />
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

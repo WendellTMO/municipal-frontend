@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   getNotificacoes,
@@ -106,20 +106,20 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <LoadingSpinner
           fullScreen
           message="Carregando notificações..."
           color={colors.primary.main}
           accessibilityLabel="Carregando notificações"
         />
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <SubHeader titulo="Notificações" onBack={() => navigation.goBack()} />
         <View style={styles.errorContainer}>
           <Icon name={IconNames.error} size="xl" color={colors.error.main} />
@@ -139,12 +139,12 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.retryButtonText}>Tentar novamente</Text>
           </Tappable>
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader
         titulo="Notificações"
         subtitulo={unreadCount > 0 ? `${unreadCount} não ${unreadCount === 1 ? 'lida' : 'lidas'}` : undefined}
@@ -191,7 +191,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
         ListFooterComponent={<SairDaConta />}
         accessibilityLabel="Lista de notificações"
       />
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

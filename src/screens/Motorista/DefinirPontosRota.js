@@ -4,13 +4,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
   TextInput,
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import {motoristaService} from '../../services/motoristaService';
 import { colors, spacing, borderRadius, shadows, textStyles, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
@@ -682,17 +682,17 @@ const DefinirPontosRota = ({navigation, route}) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary.dark} />
           <Text style={styles.loadingText}>Carregando pontos...</Text>
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       {/* Header */}
       <SubHeader titulo="Pontos da Rota" subtitulo={rotaNome} onBack={() => navigation.goBack()} />
 
@@ -1030,7 +1030,7 @@ const DefinirPontosRota = ({navigation, route}) => {
           )}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

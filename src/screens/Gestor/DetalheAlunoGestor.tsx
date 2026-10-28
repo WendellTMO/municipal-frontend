@@ -2,13 +2,13 @@ import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { api } from '../../api/client';
 import Icon from '../../components/Icon';
 import { LoadingView, ErrorView } from '../../components/LoadingState';
@@ -114,9 +114,9 @@ const DetalheAlunoGestor = ({ route, navigation }: any) => {
   if (isLoading) return <LoadingView message="Carregando..." />;
   if (isError || !aluno) {
     return (
-      <SafeAreaView style={styles.root}>
+      <TelaSegura style={styles.root}>
         <ErrorView message={error?.message ?? 'Erro ao carregar aluno'} onRetry={refetch} />
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
@@ -124,7 +124,7 @@ const DetalheAlunoGestor = ({ route, navigation }: any) => {
   const consentedAt = fmtDatetime(aluno.guardian_consented_at);
 
   return (
-    <SafeAreaView style={styles.root}>
+    <TelaSegura style={styles.root}>
       {/* Header */}
       <SubHeader
         titulo={aluno.nome}
@@ -196,7 +196,7 @@ const DetalheAlunoGestor = ({ route, navigation }: any) => {
           </TouchableOpacity>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

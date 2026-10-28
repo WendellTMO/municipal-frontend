@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { gestorService } from '../../services/gestorService';
 import { unwrapItems } from '../../types';
 import { colors, spacing, textStyles, borderRadius } from '../../theme';
@@ -45,7 +45,7 @@ const CadastrosPendentes = ({ navigation }) => {
   }, [carregar, navigation]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Cadastros pendentes" onBack={() => navigation.goBack()} />
       <ScrollView
         contentContainerStyle={withFabSpace(styles.lista)}
@@ -97,7 +97,7 @@ const CadastrosPendentes = ({ navigation }) => {
         )}
         <SairDaConta />
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

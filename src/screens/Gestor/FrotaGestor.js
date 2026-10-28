@@ -5,13 +5,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { gestorService } from '../../services/gestorService';
 import { unwrapItems } from '../../types';
 import { useFetch } from '../../hooks';
@@ -169,7 +169,7 @@ const FrotaGestor = ({ navigation }) => {
   // ─── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -358,7 +358,7 @@ const FrotaGestor = ({ navigation }) => {
           </ScrollView>
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

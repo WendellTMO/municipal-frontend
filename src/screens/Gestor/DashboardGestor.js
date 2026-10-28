@@ -3,12 +3,12 @@ import {
   ActivityIndicator,
   Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { gestorService } from '../../services/gestorService';
 import { listarOcorrencias } from '../../services/ocorrenciaService';
 import { getNotificacoes } from '../../services/notificacaoService';
@@ -116,7 +116,7 @@ const DashboardGestor = ({ navigation }) => {
   const viagensHoje = hoje.dados || [];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <ScrollView
         contentContainerStyle={withFabSpace()}
         style={styles.scroll}
@@ -251,7 +251,7 @@ const DashboardGestor = ({ navigation }) => {
           toast.success(mensagem);
         }}
       />
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

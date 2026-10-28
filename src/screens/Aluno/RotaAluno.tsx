@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { alunoService } from '../../services';
@@ -247,16 +247,16 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary.main} />
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader
         titulo={screenTitle}
         subtitulo={`${viagens.length} viage${viagens.length !== 1 ? 'ns' : 'm'}`}
@@ -400,7 +400,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
           onPress: esquecerMeuPonto,
         }}
       />
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

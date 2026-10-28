@@ -4,7 +4,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { alunoService } from '../../services/alunoService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -185,7 +185,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -374,7 +374,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
           <SairDaConta />
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

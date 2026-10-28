@@ -5,12 +5,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Switch,
   Alert,
   Platform,
 } from 'react-native';
+import TelaSegura from '../components/TelaSegura';
 import { useAuth } from '../contexts/AuthContext';
 import { userService } from '../services/userService';
 import { useToast } from '../components/Toast';
@@ -89,7 +89,7 @@ const ConfigNotificacoes = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Configurações" subtitulo={headerSubtitle} onBack={() => navigation.goBack()} />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={withFabSpace(styles.content)}>
@@ -152,7 +152,7 @@ const ConfigNotificacoes = ({ navigation }) => {
 
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

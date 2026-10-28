@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   RefreshControl,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import {motoristaService} from '../../services/motoristaService';
 import {useAuth} from '../../contexts/AuthContext';
 import { useFetch } from '../../hooks';
@@ -100,7 +100,7 @@ const ListaViagens = ({navigation, route}) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader
         titulo={rotaFiltro ? 'Viagens' : 'Minhas Viagens'}
         subtitulo={rotaFiltro ? rotaFiltro.nome : undefined}
@@ -184,7 +184,7 @@ const ListaViagens = ({navigation, route}) => {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 
