@@ -12,12 +12,18 @@ import { FeedbackPadraoProvider } from './src/components/FeedbackPadraoContext';
 import { FEEDBACK_ENABLED } from './src/config/feedback';
 import { navigationRef } from './src/navigation/currentRoute';
 import { Platform } from 'react-native';
+import { limparUrl } from './src/navigation/rotaDaUrl';
 
 const Root: React.FC = () => {
   const { loading, isAuthenticated, biometria } = useAuth();
 
   const DEBUG_HOLD_SPLASH = __DEV__ && Platform.OS !== 'web';
   const [released, setReleased] = React.useState(!DEBUG_HOLD_SPLASH);
+
+  // Quem já está logado ao abrir um link de convite cai no painel; a URL é limpa.
+  React.useEffect(() => {
+    if (isAuthenticated) limparUrl();
+  }, [isAuthenticated]);
 
   if (loading || !released) {
     return <SplashScreen onContinue={() => setReleased(true)} />;
