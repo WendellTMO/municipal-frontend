@@ -4,6 +4,8 @@ import Login from '../screens/Auth/Login';
 import CriarConta from '../screens/Auth/CriarConta';
 import RecuperarSenha from '../screens/Auth/RecuperarSenha';
 import ConsentimentoResponsavel from '../screens/Auth/ConsentimentoResponsavel';
+import ConvitePin from '../screens/Auth/ConvitePin';
+import CompletarCadastro from '../screens/Auth/CompletarCadastro';
 import {
   NavigationProvider,
   Navigator,
@@ -47,6 +49,8 @@ const AuthNavigator = () => {
           <Screen name="CriarConta" component={CriarConta} />
           <Screen name="RecuperarSenha" component={RecuperarSenha} />
           <Screen name="ConsentimentoResponsavel" component={ConsentimentoResponsavel} />
+          <Screen name="ConvitePin" component={ConvitePin} />
+          <Screen name="CompletarCadastro" component={CompletarCadastro} />
         </Navigator>
       </NavigationProvider>
     );
@@ -70,6 +74,8 @@ const AuthNavigator = () => {
       <Stack.Screen name="CriarConta" component={CriarConta} />
       <Stack.Screen name="RecuperarSenha" component={RecuperarSenha} />
       <Stack.Screen name="ConsentimentoResponsavel" component={ConsentimentoResponsavel} />
+      <Stack.Screen name="ConvitePin" component={ConvitePin} />
+      <Stack.Screen name="CompletarCadastro" component={CompletarCadastro} />
     </Stack.Navigator>
   );
 };

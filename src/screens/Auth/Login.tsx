@@ -22,9 +22,11 @@ type LoginProps = {
   navigation: {
     navigate: (screen: string) => void;
   };
+  route?: { params?: { message?: string } };
 };
 
-const Login: React.FC<LoginProps> = ({ navigation }) => {
+const Login: React.FC<LoginProps> = ({ navigation, route }) => {
+  const aviso = route?.params?.message;
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -195,6 +197,13 @@ const Login: React.FC<LoginProps> = ({ navigation }) => {
                     />
                   </TouchableOpacity>
                 </View>
+
+                {aviso && !erro ? (
+                  <View style={styles.avisoBox}>
+                    <Icon name={IconNames.info} size="sm" color="#1D4ED8" style={undefined} />
+                    <Text style={styles.avisoText}>{aviso}</Text>
+                  </View>
+                ) : null}
 
                 {erro ? (
                   <View style={styles.errorBox}>
@@ -421,6 +430,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
+  },
+  avisoBox: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  avisoText: {
+    marginLeft: 8,
+    color: '#1E40AF',
+    fontSize: 14,
+    flex: 1,
   },
   errorText: {
     marginLeft: 8,
