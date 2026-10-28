@@ -24,6 +24,9 @@ export type ViagemAgendaUI = {
   rota_nome: string | undefined;
   status_confirmacao: boolean | undefined;
   ponto_embarque_id: string | undefined;
+  ponto_destino_id: string | undefined;
+  /** true quando ainda não confirmou e não há ponto padrão salvo para o sentido */
+  precisa_escolher_ponto: boolean;
   /** Trip operational status (AGENDADA | EM_ANDAMENTO | FINALIZADA | CANCELADA) */
   status_viagem: string | undefined;
   alunos_confirmados_count: number;
@@ -42,11 +45,25 @@ function normalizeViagemAgenda(viagem: ViagemAgendaAlunoResponse): ViagemAgendaU
     rota_nome: viagem.rota_nome,
     status_confirmacao: viagem.status_confirmacao,
     ponto_embarque_id: viagem.ponto_embarque_id,
+    ponto_destino_id: (raw.ponto_destino_id as string) ?? undefined,
+    precisa_escolher_ponto: (raw.precisa_escolher_ponto as boolean) ?? false,
     status_viagem: (raw.status_viagem as string) ?? 'AGENDADA',
     alunos_confirmados_count: (raw.alunos_confirmados_count as number) ?? 0,
     total_alunos: (raw.total_alunos as number) ?? 0,
   };
 }
+
+export type EscolhaPontos = {
+  ponto_embarque_id?: string;
+  ponto_desembarque_id?: string;
+  lembrar_escolha?: boolean;
+};
+
+export type MeuPonto = {
+  rota_id: string;
+  ponto_embarque: { id: string; apelido: string } | null;
+  ponto_desembarque: { id: string; apelido: string } | null;
+};
 
 export const alunoService = {
   /**
@@ -151,29 +168,45 @@ export const alunoService = {
   },
 
   /**
-   * Confirm or cancel presence in a trip
+   * Confirm or cancel presence for a trip
    * Backend: PUT /v1/viagens/{id}/confirmacao
-   * @param {string} viagemId - Trip UUID
-   * @param {boolean} confirmacao - Whether to confirm (true) or cancel (false)
-   * @param {string} pontoEmbarqueId - Boarding point UUID (required for confirmation)
+   * `escolha` leva ponto_embarque_id, ponto_desembarque_id e lembrar_escolha (ver utils/presenca).
    */
   async alterarPresencaViagem(
     viagemId: string,
     confirmacao: boolean,
-    pontoEmbarqueId: string | null = null,
+    escolha: EscolhaPontos = {},
   ): Promise<ViagemAlunoConfirmacaoResponse> {
     if (!viagemId) {
       throw new Error('ID da viagem é obrigatório');
     }
-    const payload: { confirmacao: boolean; ponto_embarque_id?: string } = { confirmacao };
-    if (confirmacao && pontoEmbarqueId) {
-      payload.ponto_embarque_id = pontoEmbarqueId;
-    }
+    const payload = confirmacao ? { confirmacao, ...escolha } : { confirmacao };
     const response = await api.put<ViagemAlunoConfirmacaoResponse>(
       `/viagens/${viagemId}/confirmacao`,
       payload,
     );
 
+    return response.data;
+  },
+
+  /** GET /v1/rotas/{id}/meu-ponto-embarque: pontos que o aluno pediu para lembrar */
+  async obterMeuPonto(rotaId: string): Promise<MeuPonto> {
+    const response = await api.get<MeuPonto>(`/rotas/${rotaId}/meu-ponto-embarque`);
+    return response.data;
+  },
+
+  /** PUT /v1/rotas/{id}/meu-ponto-embarque: guarda embarque e/ou desembarque padrão */
+  async salvarMeuPonto(
+    rotaId: string,
+    pontos: { ponto_embarque_id?: string; ponto_desembarque_id?: string },
+  ): Promise<MeuPonto> {
+    const response = await api.put<MeuPonto>(`/rotas/${rotaId}/meu-ponto-embarque`, pontos);
+    return response.data;
+  },
+
+  /** DELETE /v1/rotas/{id}/meu-ponto-embarque: esquece a escolha, o app volta a perguntar */
+  async esquecerMeuPonto(rotaId: string): Promise<MeuPonto> {
+    const response = await api.delete<MeuPonto>(`/rotas/${rotaId}/meu-ponto-embarque`);
     return response.data;
   },
 

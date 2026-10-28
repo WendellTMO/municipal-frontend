@@ -10,38 +10,54 @@ import DialogoConfirmacao from './DialogoConfirmacao';
 import Icon, { IconNames } from './Icon';
 import { colors, spacing, textStyles } from '../theme';
 import { usePresencaViagem } from '../hooks/usePresencaViagem';
+import EscolhaPontoSheet, { LinhaDosPontos } from './EscolhaPontoSheet';
 
 type Props = {
-  viagem: { id?: string; rota_id?: string; ponto_embarque_id?: string };
+  viagem: {
+    id?: string;
+    rota_id?: string;
+    tipo?: string;
+    ponto_embarque_id?: string;
+    ponto_destino_id?: string;
+    precisa_escolher_ponto?: boolean;
+  };
   confirmadaInicial: boolean;
   onMudou: (confirmada: boolean) => void;
 };
 
 const PresencaAcoes = ({ viagem, confirmadaInicial, onMudou }: Props) => {
-  const { confirmada, salvando, confirmar, cancelar } = usePresencaViagem(viagem, confirmadaInicial, onMudou);
+  const { confirmada, salvando, confirmar, cancelar, alterar, linhaPontos, folhaProps } = usePresencaViagem(
+    viagem,
+    confirmadaInicial,
+    onMudou,
+  );
   const [dialogo, setDialogo] = useState(false);
 
   if (!confirmada) {
     return (
-      <Tappable
-        style={[styles.confirmar, salvando && styles.desabilitado]}
-        onPress={confirmar}
-        disabled={salvando}
-        accessibilityLabel="Confirmar presença">
-        {salvando ? (
-          <ActivityIndicator color={colors.primary.main} />
-        ) : (
-          <>
-            <Icon name={IconNames.checkCircle} size="lg" color={colors.primary.main} style={undefined} />
-            <Text style={styles.confirmarTexto}>Confirmar presença</Text>
-          </>
-        )}
-      </Tappable>
+      <>
+        <Tappable
+          style={[styles.confirmar, salvando && styles.desabilitado]}
+          onPress={confirmar}
+          disabled={salvando}
+          accessibilityLabel="Confirmar presença">
+          {salvando ? (
+            <ActivityIndicator color={colors.primary.main} />
+          ) : (
+            <>
+              <Icon name={IconNames.checkCircle} size="lg" color={colors.primary.main} style={undefined} />
+              <Text style={styles.confirmarTexto}>Confirmar presença</Text>
+            </>
+          )}
+        </Tappable>
+        <EscolhaPontoSheet {...folhaProps} />
+      </>
     );
   }
 
   return (
     <>
+      <LinhaDosPontos texto={linhaPontos} onAlterar={alterar} claro />
       <Tappable
         style={styles.cancelar}
         onPress={() => setDialogo(true)}
@@ -65,6 +81,7 @@ const PresencaAcoes = ({ viagem, confirmadaInicial, onMudou }: Props) => {
           },
         }}
       />
+      <EscolhaPontoSheet {...folhaProps} />
     </>
   );
 };

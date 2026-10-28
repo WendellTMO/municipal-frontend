@@ -14,10 +14,9 @@ import { alunoService } from '../../services';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { useToast } from '../../components/Toast';
-import { unwrapItems } from '../../types';
-import { escolherPontoEmbarque, MSG_SEM_PONTO } from '../../utils/presenca';
-import type { PontoFlatResponse } from '../../types';
-import type { ViagemAgendaUI } from '../../services/alunoService';
+import type { MeuPonto, ViagemAgendaUI } from '../../services/alunoService';
+import { usePresencaViagem } from '../../hooks/usePresencaViagem';
+import EscolhaPontoSheet, { LinhaDosPontos } from '../../components/EscolhaPontoSheet';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
@@ -68,6 +67,69 @@ const CapacityPill: React.FC<{ confirmed: number; total: number }> = ({
   );
 };
 
+// Botão de presença de um card de viagem, com a folha de escolha de ponto e o diálogo de cancelar.
+const PresencaDaViagem: React.FC<{ viagem: ViagemAgendaUI; onMudou: (confirmada: boolean) => void }> = ({
+  viagem,
+  onMudou,
+}) => {
+  const { confirmada, salvando, confirmar, cancelar, alterar, linhaPontos, folhaProps } = usePresencaViagem(
+    viagem,
+    !!viagem.status_confirmacao,
+    onMudou,
+  );
+  const [cancelando, setCancelando] = useState(false);
+
+  return (
+    <>
+      {confirmada ? <LinhaDosPontos texto={linhaPontos} onAlterar={alterar} /> : null}
+      <Tappable
+        style={[
+          styles.confirmarButton,
+          confirmada && styles.confirmarButtonActive,
+          salvando && styles.confirmarButtonDisabled,
+        ]}
+        onPress={confirmada ? () => setCancelando(true) : confirmar}
+        disabled={salvando}
+        accessibilityRole="button"
+        accessibilityLabel={confirmada ? 'Cancelar presença' : 'Confirmar presença'}
+        accessibilityState={{ disabled: salvando }}
+        hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
+        {salvando ? (
+          <ActivityIndicator color={colors.primary.contrast} />
+        ) : (
+          <>
+            <Icon
+              name={confirmada ? IconNames.close : IconNames.checkCircle}
+              size="md"
+              color={colors.primary.contrast}
+            />
+            <Text style={styles.confirmarButtonText}>
+              {confirmada ? 'Cancelar Presença' : 'Confirmar Presença'}
+            </Text>
+          </>
+        )}
+      </Tappable>
+      <EscolhaPontoSheet {...folhaProps} />
+      <DialogoConfirmacao
+        visible={cancelando}
+        titulo="Cancelar presença?"
+        resumo="O motorista deixa de contar com você nesta viagem."
+        onCancelar={() => setCancelando(false)}
+        principal={{ texto: 'Manter presença', cor: colors.success.main, onPress: () => setCancelando(false) }}
+        secundario={{
+          texto: 'Sim, cancelar',
+          cor: colors.error.main,
+          carregando: salvando,
+          onPress: async () => {
+            await cancelar();
+            setCancelando(false);
+          },
+        }}
+      />
+    </>
+  );
+};
+
 const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
   const rota = route?.params?.rota;
   const toast = useToast();
@@ -76,7 +138,9 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
   const [presencasStatus, setPresencasStatus] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [updatingPresenca, setUpdatingPresenca] = useState<string | null>(null);
+  const [meuPonto, setMeuPonto] = useState<MeuPonto | null>(null);
+  const [esquecerAberto, setEsquecerAberto] = useState(false);
+  const [esquecendo, setEsquecendo] = useState(false);
   const isMountedRef = useRef(true);
 
   const isAllTrips = !rota;
@@ -96,6 +160,14 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
         statusMap[viagem.id ?? ''] = viagem.status_confirmacao ?? false;
       });
       setPresencasStatus(statusMap);
+
+      if (!isAllTrips) {
+        try {
+          setMeuPonto(await alunoService.obterMeuPonto(rota.id as string));
+        } catch {
+          setMeuPonto(null);
+        }
+      }
     } catch {
       toast.error('Não foi possível carregar as viagens.');
     } finally {
@@ -133,41 +205,18 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  // Cancelar presença pede confirmação num diálogo antes de chamar o endpoint.
-  const [cancelarViagem, setCancelarViagem] = useState<ViagemAgendaUI | null>(null);
-
-  const handleConfirmarPresenca = async (viagem: ViagemAgendaUI, currentStatus: string) => {
-    if (!viagem.id) return;
+  const esquecerMeuPonto = async () => {
+    if (!rota?.id) return;
+    setEsquecendo(true);
     try {
-      setUpdatingPresenca(viagem.id);
-      const novoStatus = currentStatus !== 'Confirmado';
-
-      let pontos: PontoFlatResponse[] = [];
-      if (novoStatus && !viagem.ponto_embarque_id && viagem.rota_id) {
-        try {
-          pontos = (await alunoService.listarPontosRota(viagem.rota_id).then(unwrapItems)) as PontoFlatResponse[];
-        } catch (e: unknown) {
-          toast.error(`Erro ao buscar pontos: ${(e as Error).message || 'erro desconhecido'}`);
-          return;
-        }
-      }
-      const pontoEmbarqueId = escolherPontoEmbarque(viagem, pontos);
-      if (novoStatus && !pontoEmbarqueId) {
-        toast.error(MSG_SEM_PONTO);
-        return;
-      }
-
-      await alunoService.alterarPresencaViagem(viagem.id, novoStatus, pontoEmbarqueId ?? null);
-      setPresencasStatus((prev) => ({ ...prev, [viagem.id!]: novoStatus }));
-      toast.success(novoStatus ? 'Presença confirmada!' : 'Presença cancelada.');
+      setMeuPonto(await alunoService.esquecerMeuPonto(rota.id as string));
+      toast.success('Escolha esquecida.');
       loadViagens();
-    } catch (error: unknown) {
-      const msg = (error as Record<string, unknown>)?.message as string ||
-        (error as Record<string, unknown>)?.error as string ||
-        'Não foi possível atualizar a presença.';
-      toast.error(msg);
+    } catch {
+      toast.error('Não foi possível esquecer a escolha.');
     } finally {
-      setUpdatingPresenca(null);
+      setEsquecendo(false);
+      setEsquecerAberto(false);
     }
   };
 
@@ -222,6 +271,23 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
           />
         }>
         <View style={styles.content}>
+          {meuPonto && (meuPonto.ponto_embarque || meuPonto.ponto_desembarque) ? (
+            <View style={styles.meusPontos}>
+              <Text style={styles.meusPontosTitulo}>Meus pontos</Text>
+              {meuPonto.ponto_embarque ? (
+                <Text style={styles.meusPontosLinha}>Embarque: {meuPonto.ponto_embarque.apelido}</Text>
+              ) : null}
+              {meuPonto.ponto_desembarque ? (
+                <Text style={styles.meusPontosLinha}>Desembarque: {meuPonto.ponto_desembarque.apelido}</Text>
+              ) : null}
+              <Tappable
+                onPress={() => setEsquecerAberto(true)}
+                sombra={false}
+                accessibilityLabel="Esquecer minha escolha">
+                <Text style={styles.meusPontosEsquecer}>Esquecer minha escolha</Text>
+              </Tappable>
+            </View>
+          ) : null}
           <Text style={styles.sectionTitle} accessibilityRole="header">
             Viagens
           </Text>
@@ -230,7 +296,6 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
             viagens.map((viagem) => {
               const status = getStatusFromViagem(viagem);
               const statusConfig = getStatusConfig(status);
-              const isUpdating = updatingPresenca === viagem.id;
 
               return (
                 <View
@@ -274,37 +339,14 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                   />
 
                   {podeConfirmar(viagem) && (
-                    <Tappable
-                      style={[
-                        styles.confirmarButton,
-                        status === 'Confirmado' && styles.confirmarButtonActive,
-                        isUpdating && styles.confirmarButtonDisabled,
-                      ]}
-                      onPress={() =>
-                        status === 'Confirmado' ? setCancelarViagem(viagem) : handleConfirmarPresenca(viagem, status)
-                      }
-                      disabled={isUpdating}
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        status === 'Confirmado' ? 'Cancelar presença' : 'Confirmar presença'
-                      }
-                      accessibilityState={{ disabled: isUpdating }}
-                      hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
-                      {isUpdating ? (
-                        <ActivityIndicator color={colors.primary.contrast} />
-                      ) : (
-                        <>
-                          <Icon
-                            name={status === 'Confirmado' ? IconNames.close : IconNames.checkCircle}
-                            size="md"
-                            color={colors.primary.contrast}
-                          />
-                          <Text style={styles.confirmarButtonText}>
-                            {status === 'Confirmado' ? 'Cancelar Presença' : 'Confirmar Presença'}
-                          </Text>
-                        </>
-                      )}
-                    </Tappable>
+                    <PresencaDaViagem
+                      key={`${viagem.id}-${viagem.precisa_escolher_ponto}-${viagem.status_confirmacao}`}
+                      viagem={viagem}
+                      onMudou={(confirmada) => {
+                        setPresencasStatus((prev) => ({ ...prev, [viagem.id ?? '']: confirmada }));
+                        loadViagens();
+                      }}
+                    />
                   )}
 
                   <Tappable navega
@@ -337,19 +379,16 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </ScrollView>
       <DialogoConfirmacao
-        visible={!!cancelarViagem}
-        titulo="Cancelar presença?"
-        resumo="O motorista deixa de contar com você nesta viagem."
-        onCancelar={() => setCancelarViagem(null)}
-        principal={{ texto: 'Manter presença', cor: colors.success.main, onPress: () => setCancelarViagem(null) }}
+        visible={esquecerAberto}
+        titulo="Esquecer minha escolha?"
+        resumo="O app volta a perguntar onde você embarca e desce a cada confirmação."
+        onCancelar={() => setEsquecerAberto(false)}
+        principal={{ texto: 'Manter escolha', cor: colors.success.main, onPress: () => setEsquecerAberto(false) }}
         secundario={{
-          texto: 'Sim, cancelar',
+          texto: 'Sim, esquecer',
           cor: colors.error.main,
-          carregando: !!updatingPresenca,
-          onPress: async () => {
-            if (cancelarViagem) await handleConfirmarPresenca(cancelarViagem, 'Confirmado');
-            setCancelarViagem(null);
-          },
+          carregando: esquecendo,
+          onPress: esquecerMeuPonto,
         }}
       />
     </SafeAreaView>
@@ -357,6 +396,23 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
+  meusPontos: {
+    backgroundColor: colors.background.paper,
+    borderRadius: borderRadius.lg,
+    padding: spacing.base,
+    marginBottom: spacing.base,
+    gap: spacing.xs,
+    ...shadows.sm,
+  },
+  meusPontosTitulo: { ...textStyles.h5, color: colors.text.primary },
+  meusPontosLinha: { ...textStyles.body, color: colors.text.secondary },
+  meusPontosEsquecer: {
+    ...textStyles.caption,
+    color: colors.text.secondary,
+    fontWeight: '700' as const,
+    textDecorationLine: 'underline',
+    marginTop: spacing.xs,
+  },
   container: { flex: 1, backgroundColor: colors.background.default },
   header: {
     backgroundColor: colors.primary.dark,
