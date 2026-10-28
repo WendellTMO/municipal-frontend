@@ -17,13 +17,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
@@ -80,13 +80,13 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
 
   if (!viagem?.id) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <SubHeader titulo="Detalhes da Viagem" onBack={() => navigation.goBack()} />
         <View style={styles.centered}>
           <Icon name={IconNames.warning} size="xxl" color={colors.warning.main} />
           <Text style={styles.emptyText}>Dados da viagem não disponíveis</Text>
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
@@ -98,7 +98,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
   const capacidadePercent = totalAlunos > 0 ? (alunosConfirmados / totalAlunos) * 100 : 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Detalhes da Viagem" subtitulo={`${formatarSentido(viagem.tipo as string)} · ${horaCurta(viagem.horario_inicio as string)}`} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -238,7 +238,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
 
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

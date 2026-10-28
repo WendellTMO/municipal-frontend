@@ -3,12 +3,12 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { api } from '../../api/client';
 import { gestorService } from '../../services/gestorService';
 import { unwrapItems } from '../../types';
@@ -114,7 +114,7 @@ const ViagensList = ({ navigation }) => {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       {/* Header */}
       <SubHeader
         titulo="Viagens"
@@ -245,7 +245,7 @@ const ViagensList = ({ navigation }) => {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

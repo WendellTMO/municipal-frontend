@@ -4,11 +4,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { motoristaService } from '../../services/motoristaService';
 import { gestorService } from '../../services/gestorService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -92,7 +92,7 @@ const CriarRota = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Nova Rota" subtitulo="Configure sua nova rota" onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} keyboardShouldPersistTaps="handled">
@@ -244,7 +244,7 @@ const CriarRota = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

@@ -16,7 +16,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import {
@@ -381,24 +381,24 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
   if (!viagemParam) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <SubHeader titulo="Iniciar Viagem" onBack={() => navigation.goBack()} />
         <View style={styles.centered}>
           <Icon name={IconNames.warning} size="xxl" color={colors.warning.main} />
           <Text style={styles.emptyText}>Dados da viagem não disponíveis</Text>
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
   if (loadingStatus) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <SubHeader titulo="Carregando…" onBack={() => navigation.goBack()} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.primary.dark} />
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
@@ -700,7 +700,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   // ── Pre-trip — summary + static map preview + iniciar ────────────────────
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader
         titulo="Iniciar Viagem"
         subtitulo={`${formatarSentido(currentViagem.tipo as string)} · ${horaCurta(currentViagem.horario_inicio as string)}`}
@@ -895,7 +895,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         onClose={() => setReportVisible(false)}
         viagemId={viagemId}
       />
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

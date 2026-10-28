@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { gestorService } from '../../services/gestorService';
 import { colors, spacing, textStyles, borderRadius } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
@@ -38,7 +39,7 @@ const ResumoSemana = ({ navigation }) => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Resumo da semana" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={withFabSpace(styles.conteudo)}>
         <Text style={styles.periodo}>{periodoUltimosDias(7)}</Text>
@@ -65,7 +66,7 @@ const ResumoSemana = ({ navigation }) => {
         )}
         <SairDaConta />
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

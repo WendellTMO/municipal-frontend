@@ -4,9 +4,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight, lineHeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { withFabSpace } from '../../config/feedback';
@@ -22,7 +22,7 @@ const RotaOtimizada = ({navigation, route}) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Rota Otimizada" onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
@@ -128,7 +128,7 @@ const RotaOtimizada = ({navigation, route}) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

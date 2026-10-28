@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { listarOcorrencias, resolverOcorrencia } from '../../services/ocorrenciaService';
 import { colors, spacing, textStyles, borderRadius } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
@@ -93,7 +93,7 @@ const OcorrenciasGestor = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Ocorrências" onBack={() => navigation.goBack()} />
 
       <View style={styles.filtros}>
@@ -202,7 +202,7 @@ const OcorrenciasGestor = ({ navigation }) => {
           ) : null}
         </View>
       </ModalApp>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

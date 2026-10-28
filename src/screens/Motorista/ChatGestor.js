@@ -5,11 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import SubHeader from '../../components/SubHeader';
@@ -55,7 +55,7 @@ const ChatGestor = ({navigation}) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Chat" subtitulo="Gestor Municipal" onBack={() => navigation.goBack()} />
 
       <KeyboardAvoidingView
@@ -111,7 +111,7 @@ const ChatGestor = ({navigation}) => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

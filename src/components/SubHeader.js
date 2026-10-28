@@ -7,10 +7,14 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon, { IconNames } from './Icon';
+import { topoDoCabecalho } from '../utils/topoCabecalho';
 
-const SubHeader = ({ titulo, subtitulo, onBack, voltarDesabilitado, direita, children }) => (
-  <View style={styles.header}>
+const SubHeader = ({ titulo, subtitulo, onBack, voltarDesabilitado, direita, children }) => {
+  const insets = useSafeAreaInsets();
+  return (
+  <View style={[styles.header, { paddingTop: topoDoCabecalho(insets.top) }]}>
     <View style={styles.linha}>
       {onBack ? (
         <TouchableOpacity
@@ -45,18 +49,18 @@ const SubHeader = ({ titulo, subtitulo, onBack, voltarDesabilitado, direita, chi
     </View>
     {children}
   </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary.main,
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.xl + 18,
     paddingBottom: spacing.xl,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
-  // minHeight fixa a altura do cabeçalho em 113 px com ou sem subtítulo.
+  // minHeight fixa a altura do cabeçalho em 113 px (sem inset) com ou sem subtítulo; o topo vem da área segura.
   linha: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 47 },
   voltar: {
     width: 46,

@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   Switch,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { gestorService } from '../../services/gestorService';
 import { unwrapItems } from '../../types';
 import { useFetch } from '../../hooks';
@@ -255,7 +255,7 @@ const EquipeGestor = ({ navigation }) => {
   const total = segmento === SEGMENT.MOTORISTAS ? (motoristas ?? []).length : (alunos ?? []).length;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -458,7 +458,7 @@ const EquipeGestor = ({ navigation }) => {
           </ScrollView>
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

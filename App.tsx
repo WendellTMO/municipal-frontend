@@ -11,7 +11,8 @@ import DesbloqueioBiometria from './src/screens/Auth/DesbloqueioBiometria';
 import { FeedbackPadraoProvider } from './src/components/FeedbackPadraoContext';
 import { FEEDBACK_ENABLED } from './src/config/feedback';
 import { navigationRef } from './src/navigation/currentRoute';
-import { Platform } from 'react-native';
+import { Platform, StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { limparUrl } from './src/navigation/rotaDaUrl';
 
 const Root: React.FC = () => {
@@ -35,6 +36,8 @@ const Root: React.FC = () => {
 
   return (
     <>
+      {/* Android: desenha sob a barra de status; o inset dela vira o topo do cabeçalho. */}
+      {isAuthenticated ? <StatusBar translucent backgroundColor="transparent" barStyle="light-content" /> : null}
       <MainNavigator />
       {isAuthenticated ? <BiometriaOferta /> : null}
       {isAuthenticated && FEEDBACK_ENABLED ? <FeedbackLayer /> : null}
@@ -44,6 +47,7 @@ const Root: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
+    <SafeAreaProvider>
     <ToastProvider>
       <AuthProvider>
         <FeedbackPadraoProvider>
@@ -59,5 +63,6 @@ export const App: React.FC = () => {
         </FeedbackPadraoProvider>
       </AuthProvider>
     </ToastProvider>
+    </SafeAreaProvider>
   );
 };

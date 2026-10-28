@@ -4,9 +4,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { withFabSpace } from '../../config/feedback';
@@ -64,7 +64,7 @@ const ListaAlunosConfirmados = ({navigation, route}) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Alunos Confirmados" subtitulo={`${formatarSentido(viagem.tipo)} • ${horaCurta(viagem.horario_inicio)}`} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
@@ -100,7 +100,7 @@ const ListaAlunosConfirmados = ({navigation, route}) => {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

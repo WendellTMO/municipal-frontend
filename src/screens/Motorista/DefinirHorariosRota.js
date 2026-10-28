@@ -4,11 +4,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { motoristaService } from '../../services/motoristaService';
 import { useToast } from '../../components/Toast';
 import { colors, spacing, borderRadius, shadows, textStyles, fontWeight } from '../../theme';
@@ -154,7 +154,7 @@ const DefinirHorariosRota = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       {/* Header */}
       <SubHeader titulo="Horários" subtitulo={rotaNome} onBack={() => navigation.goBack()} />
 
@@ -290,7 +290,7 @@ const DefinirHorariosRota = ({ navigation, route }) => {
           <Text style={styles.concluirButtonText}>Concluir Configuração</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

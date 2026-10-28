@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { alunoService } from '../../services';
@@ -117,13 +117,13 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
 
   if (!rota || !viagem) {
     return (
-      <SafeAreaView style={styles.container}>
+      <TelaSegura style={styles.container}>
         <SubHeader titulo="Detalhes da Viagem" onBack={() => navigation.goBack()} />
         <View style={styles.emptyContent}>
           <Icon name={IconNames.warning} size="xxl" color={colors.warning.main} />
           <Text style={styles.emptyText}>Dados da viagem não disponíveis</Text>
         </View>
-      </SafeAreaView>
+      </TelaSegura>
     );
   }
 
@@ -168,7 +168,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader
         titulo="Detalhes da Viagem"
         subtitulo={`${formatarSentido(viagem.tipo)} • ${horario}`}
@@ -389,7 +389,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
         onClose={() => setReportVisible(false)}
         viagemId={viagem.id}
       />
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 

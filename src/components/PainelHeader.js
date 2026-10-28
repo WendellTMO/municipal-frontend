@@ -5,7 +5,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon, { IconNames } from './Icon';
+import { topoDoCabecalho } from '../utils/topoCabecalho';
 import { useAuth } from '../contexts/AuthContext';
 import { confirmarSaida } from './SairDaConta';
 import { saudacao, primeiroNome, iniciais, linhaPerfil } from '../utils/saudacao';
@@ -18,6 +20,7 @@ const PainelHeader = ({
   onOpenConfig,
 }) => {
   const { user, logout } = useAuth();
+  const topo = topoDoCabecalho(useSafeAreaInsets().top);
   const [menuVisivel, setMenuVisivel] = useState(false);
 
   const municipio = user?.municipio?.nome || '';
@@ -39,7 +42,7 @@ const PainelHeader = ({
       : 'Notificações';
 
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: topo }]}>
       <TouchableOpacity
         style={styles.avatar}
         onPress={() => setMenuVisivel(true)}
@@ -81,7 +84,7 @@ const PainelHeader = ({
           activeOpacity={1}
           onPress={() => setMenuVisivel(false)}
           accessibilityLabel="Fechar menu">
-          <View style={styles.menu}>
+          <View style={[styles.menu, { marginTop: topo + 48 }]}>
             <View style={styles.menuTopo}>
               <Text style={styles.menuNome} numberOfLines={1}>
                 {nome}
@@ -122,7 +125,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     backgroundColor: colors.primary.main,
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.xl + 18,
     paddingBottom: spacing.xl,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
@@ -162,7 +164,6 @@ const styles = StyleSheet.create({
   contadorTexto: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   fundo: { flex: 1, backgroundColor: 'rgba(15,23,42,0.35)' },
   menu: {
-    marginTop: 90,
     marginLeft: spacing.base,
     width: 270,
     backgroundColor: '#FFFFFF',

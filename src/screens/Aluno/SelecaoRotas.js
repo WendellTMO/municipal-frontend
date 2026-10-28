@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TextInput,
   ActivityIndicator,
   Alert,
   RefreshControl,
 } from 'react-native';
+import TelaSegura from '../../components/TelaSegura';
 import { alunoService } from '../../services';
 import { colors, spacing, borderRadius, shadows, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
@@ -106,7 +106,7 @@ const SelecaoRotas = ({navigation}) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Rotas" subtitulo="Encontre sua rota escolar" onBack={() => navigation.goBack()} />
 
       <View style={styles.searchContainer}>
@@ -247,7 +247,7 @@ const SelecaoRotas = ({navigation}) => {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </TelaSegura>
   );
 };
 
