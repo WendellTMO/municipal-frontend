@@ -10,6 +10,8 @@ interface LocalizacaoResponse {
 interface EnviarLocalizacaoResponse {
   message: string;
   distancia_metros: number;
+  observadores?: boolean;
+  intervalo_sugerido_segundos?: number;
 }
 
 export type OrdemInstituicao = { instituicao_id: string; nome: string; tipo?: string | null; ordem: number };

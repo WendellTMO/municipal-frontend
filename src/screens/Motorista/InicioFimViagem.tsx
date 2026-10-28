@@ -44,6 +44,7 @@ import ConfirmacaoTelaCheia from '../../components/ConfirmacaoTelaCheia';
 import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { agruparConfirmadosPorInstituicao, montarParadas } from '../../utils/paradasViagem';
+import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
 import { horaCurta } from '../../utils/viagemPainel';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import ListaReordenavel from '../../components/ListaReordenavel';
@@ -200,6 +201,15 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   useEffect(() => {
     if (!viagemIniciada || !viagemIdRef.current || !Geolocation) return;
 
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let parado = false;
+
+    // Um único setTimeout encadeado: só agenda o próximo depois de terminar o atual.
+    const agendar = (ms: number) => {
+      if (parado) return;
+      timer = setTimeout(sendPos, ms);
+    };
+
     const sendPos = () => {
       Geolocation!.getCurrentPosition(
         (pos) => {
@@ -209,16 +219,19 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               latitude: pos.coords.latitude,
               longitude: pos.coords.longitude,
             })
-            .catch(() => {});
+            .then((resp) => agendar(proximoIntervaloMs(resp, GPS_SEND_INTERVAL_MS)))
+            .catch(() => agendar(GPS_SEND_INTERVAL_MS));
         },
-        () => {},
+        () => agendar(GPS_SEND_INTERVAL_MS),
         { enableHighAccuracy: true, timeout: 10_000, maximumAge: 5_000 },
       );
     };
 
     sendPos();
-    const gpsInterval = setInterval(sendPos, GPS_SEND_INTERVAL_MS);
-    return () => clearInterval(gpsInterval);
+    return () => {
+      parado = true;
+      if (timer) clearTimeout(timer);
+    };
   }, [viagemIniciada]);
 
   // Paradas válidas (com coordenadas), com estado e instituição de ensino.
