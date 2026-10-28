@@ -230,6 +230,13 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
     return tripDate >= today;
   };
 
+  const abrirDetalhe = (viagem: ViagemAgendaUI) => {
+    navigation.navigate('DetalheViagem', {
+      rota: rota || { id: viagem.rota_id, nome: viagem.rota_nome },
+      viagem,
+    });
+  };
+
   const getStatusFromViagem = (viagem: ViagemAgendaUI): string => {
     const isConfirmed = presencasStatus[viagem.id ?? ''] ?? viagem.status_confirmacao;
     return isConfirmed ? 'Confirmado' : 'Não confirmado';
@@ -303,6 +310,12 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                   style={styles.viagemCard}
                   accessible
                   accessibilityLabel={`Viagem ${formatarSentido(viagem.tipo)} às ${formatarHora(viagem.horario_inicio)}, ${formatDate(viagem.data)}, ${status}`}>
+                  <Tappable
+                    navega
+                    onPress={() => abrirDetalhe(viagem)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Ver detalhes desta viagem"
+                    accessibilityHint="Abre a tela de detalhes">
                   <View style={styles.viagemHeader}>
                     <View style={styles.viagemInfo}>
                       <View style={styles.viagemTipoContainer}>
@@ -337,6 +350,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                     confirmed={viagem.alunos_confirmados_count}
                     total={viagem.total_alunos}
                   />
+                  </Tappable>
 
                   {podeConfirmar(viagem) && (
                     <PresencaDaViagem
@@ -351,12 +365,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
 
                   <Tappable navega
                     style={styles.detalhesButton}
-                    onPress={() =>
-                      navigation.navigate('DetalheViagem', {
-                        rota: rota || { id: viagem.rota_id, nome: viagem.rota_nome },
-                        viagem,
-                      })
-                    }
+                    onPress={() => abrirDetalhe(viagem)}
                     accessibilityRole="button"
                     accessibilityLabel="Ver detalhes desta viagem"
                     accessibilityHint="Abre a tela de detalhes">
