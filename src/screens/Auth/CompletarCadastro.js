@@ -68,7 +68,6 @@ const CompletarCadastro = ({navigation, route}) => {
         if (descartar) return;
         const novos = camposDoCep(resposta, camposEditados.current);
         setForm(atual => ({...atual, ...novos}));
-        setAvisoCep({tipo: 'ok', texto: 'CEP encontrado'});
         if (inputs.current.numero) inputs.current.numero.focus();
       })
       .catch(erro => {
@@ -247,9 +246,7 @@ const CompletarCadastro = ({navigation, route}) => {
         mascara: formatCep,
         carregando: consultandoCep,
       })}
-      {avisoCep.texto ? (
-        <Text style={avisoCep.tipo === 'ok' ? local.cepOk : local.cepAviso}>{avisoCep.texto}</Text>
-      ) : null}
+      {avisoCep.texto ? <Text style={local.cepAviso}>{avisoCep.texto}</Text> : null}
       {campo('complemento', 'Complemento', {placeholder: 'Apto, bloco, referência'})}
 
       {menor ? (
@@ -334,7 +331,6 @@ const local = StyleSheet.create({
     borderColor: colors.border.light,
   },
   termosTexto: {fontFamily: 'Inter-Regular', fontSize: 13, color: colors.text.secondary, lineHeight: 19},
-  cepOk: {fontFamily: 'Inter-Medium', fontSize: 13, color: colors.success.main, marginTop: spacing.xs},
   cepAviso: {fontFamily: 'Inter-Regular', fontSize: 13, color: colors.text.secondary, marginTop: spacing.xs},
   aceiteLinha: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md},
   aceiteTexto: {flex: 1, fontFamily: 'Inter-Medium', fontSize: 14, color: colors.text.primary},
