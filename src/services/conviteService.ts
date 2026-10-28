@@ -4,7 +4,6 @@ export interface ConviteInfo {
   nome: string;
   email: string;
   telefone: string | null;
-  ponto: { id: string; apelido: string } | null;
   instituicao: { id: string; nome: string } | null;
   rota: { id: string; nome: string } | null;
 }
@@ -19,8 +18,6 @@ interface ValidarConviteApi {
   nome: string;
   email: string;
   telefone: string | null;
-  ponto_id: string | null;
-  ponto_apelido: string | null;
   instituicao_id: string | null;
   instituicao_nome: string | null;
   rota_id: string | null;
@@ -49,7 +46,6 @@ export const conviteService = {
         nome: d.nome,
         email: d.email,
         telefone: d.telefone,
-        ponto: d.ponto_id ? { id: d.ponto_id, apelido: d.ponto_apelido || '' } : null,
         instituicao: d.instituicao_id ? { id: d.instituicao_id, nome: d.instituicao_nome || '' } : null,
         rota: d.rota_id ? { id: d.rota_id, nome: d.rota_nome || '' } : null,
       },

@@ -5,7 +5,7 @@ import {Icon, IconNames} from '../../components';
 import Tappable from '../../components/Tappable';
 import {colors, spacing, borderRadius} from '../../theme';
 import {conviteService} from '../../services/conviteService';
-import {formatCpf, formatDate, formatPhone} from '../../utils/masks';
+import {formatCep, formatCpf, formatDate, formatPhone} from '../../utils/masks';
 import {
   destinoPosAceite,
   ehMenor,
@@ -21,6 +21,13 @@ const FORM_VAZIO = {
   cpf: '',
   dataNascimento: '',
   telefone: '',
+  logradouro: '',
+  numero: '',
+  bairro: '',
+  cidade: '',
+  estado: '',
+  cep: '',
+  complemento: '',
   nomeResponsavel: '',
   cpfResponsavel: '',
   emailResponsavel: '',
@@ -95,6 +102,9 @@ const CompletarCadastro = ({navigation, route}) => {
       const resultado = interpretarErroConvite(erro);
       if (resultado.tipo === 'invalido' || resultado.tipo === 'bloqueado') {
         setEncerrado(resultado.texto);
+      } else if (resultado.tipo === 'campo') {
+        setErros(resultado.campos);
+        setErroGeral(resultado.texto);
       } else {
         setErroGeral(resultado.texto);
       }
@@ -131,7 +141,8 @@ const CompletarCadastro = ({navigation, route}) => {
           placeholderTextColor={colors.neutral[400]}
           keyboardType={extras.teclado}
           secureTextEntry={!!extras.senha && !mostrarSenha}
-          autoCapitalize={extras.teclado === 'email-address' ? 'none' : undefined}
+          autoCapitalize={extras.teclado === 'email-address' ? 'none' : extras.capitalizar}
+          maxLength={extras.maxLength}
           autoCorrect={false}
         />
         {extras.senha && chave === 'senha' ? (
@@ -176,6 +187,21 @@ const CompletarCadastro = ({navigation, route}) => {
             mascara: formatPhone,
           })
         : null}
+
+      <Text style={styles.sectionTitle}>Onde você mora</Text>
+      {campo('logradouro', 'Rua *', {icone: 'home', placeholder: 'Nome da rua', capitalizar: 'words'})}
+      {campo('numero', 'Número *', {placeholder: '120', teclado: 'default'})}
+      {campo('bairro', 'Bairro *', {placeholder: 'Bairro', capitalizar: 'words'})}
+      {campo('cidade', 'Cidade *', {placeholder: 'Cidade', capitalizar: 'words'})}
+      {campo('estado', 'UF *', {
+        placeholder: 'PB',
+        teclado: 'default',
+        capitalizar: 'characters',
+        maxLength: 2,
+        mascara: texto => texto.replace(/[^A-Za-z]/g, '').toUpperCase(),
+      })}
+      {campo('cep', 'CEP', {placeholder: '00000-000', teclado: 'number-pad', mascara: formatCep})}
+      {campo('complemento', 'Complemento', {placeholder: 'Apto, bloco, referência'})}
 
       {menor ? (
         <View>
