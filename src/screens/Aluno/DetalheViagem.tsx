@@ -22,6 +22,7 @@ import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
+import EscolhaPontoSheet, { LinhaDosPontos } from '../../components/EscolhaPontoSheet';
 import { usePresencaViagem } from '../../hooks/usePresencaViagem';
 import { aceitaPresenca } from '../../utils/presenca';
 import { formatarSentido } from '../../utils/formatarSentido';
@@ -80,6 +81,9 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
     salvando: salvandoPresenca,
     confirmar,
     cancelar,
+    alterar,
+    linhaPontos,
+    folhaProps,
   } = usePresencaViagem(viagem, viagem?.status_confirmacao ?? false);
   const [cancelarVisivel, setCancelarVisivel] = useState(false);
   const [pontosRota, setPontosRota] = useState<PontoFlatResponse[]>([]);
@@ -253,6 +257,10 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
             </View>
 
             {aceitaPresenca(statusViagem) && presencaConfirmada && (
+              <LinhaDosPontos texto={linhaPontos} onAlterar={alterar} />
+            )}
+
+            {aceitaPresenca(statusViagem) && presencaConfirmada && (
               <Tappable
                 style={styles.cancelarPresenca}
                 onPress={() => setCancelarVisivel(true)}
@@ -358,6 +366,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </ScrollView>
 
+      <EscolhaPontoSheet {...folhaProps} />
       <DialogoConfirmacao
         visible={cancelarVisivel}
         titulo="Cancelar presença?"
