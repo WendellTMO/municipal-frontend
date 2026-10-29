@@ -107,10 +107,15 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [concluidas, setConcluidas] = useState(0);
   const [roteiroAberto, setRoteiroAberto] = useState(false);
   const [novaParadaVisivel, setNovaParadaVisivel] = useState(false);
-  // Durante a viagem o botão de feedback fica no alto, fora do painel de baixo.
-  useFeedbackPadrao(viagemIniciada && !roteiroAberto ? 'topo' : null);
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
   const [iniciarVisivel, setIniciarVisivel] = useState(false);
+  // Antes de iniciar o botão de feedback fica logo acima da barra Iniciar viagem; na confirmação e
+  // no painel da viagem fica no alto. Só o Roteiro aberto durante a viagem deixa o canto padrão.
+  let padraoFeedback: string | null = 'topo';
+  if (iniciarVisivel) padraoFeedback = 'topo';
+  else if (!viagemIniciada) padraoFeedback = 'barra';
+  else if (roteiroAberto) padraoFeedback = null;
+  useFeedbackPadrao(padraoFeedback);
   const [ordemSalva, setOrdemSalva] = useState<OrdemInstituicao[]>([]);
   const [gruposOrdenados, setGruposOrdenados] = useState<GrupoConfirmado[]>([]);
   const [gruposIniciais, setGruposIniciais] = useState<GrupoConfirmado[]>([]);
