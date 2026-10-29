@@ -16,7 +16,6 @@ import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme'
 import { Icon, IconNames, LoadingSpinner, EmptyState } from '../../components';
 import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
-import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 
@@ -185,10 +184,9 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
           <EmptyState
             icon={IconNames.notifications}
             title="Sem notificações"
-            message="Quando houver avisos sobre as suas viagens eles aparecerão aqui."
+            description="Quando houver avisos sobre as suas viagens eles aparecerão aqui."
           />
         }
-        ListFooterComponent={<SairDaConta />}
         accessibilityLabel="Lista de notificações"
       />
     </TelaSegura>

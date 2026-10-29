@@ -24,7 +24,7 @@ const EmptyState = ({
       accessibilityLabel={`${title}${description ? `. ${description}` : ''}`}
     >
       <View style={styles.iconContainer}>
-        <Icon name={icon} size="xxxl" color={iconColor} />
+        <Icon name={icon} size="huge" color={iconColor} />
       </View>
       
       <Text style={styles.title}>{title}</Text>
