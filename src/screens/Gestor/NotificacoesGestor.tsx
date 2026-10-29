@@ -10,6 +10,7 @@ import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   deleteNotificacao,
+  deleteTodasNotificacoes,
   getNotificacoes,
   markNotificacaoAsSent,
 } from '../../services/notificacaoService';
@@ -19,6 +20,7 @@ import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import { confirmAction } from '../../utils/confirm';
 import DeslizarParaExcluir from '../../components/DeslizarParaExcluir';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
@@ -86,6 +88,27 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const limparTudo = async () => {
+    const anteriores = notificacoes;
+    setNotificacoes([]);
+    try {
+      await deleteTodasNotificacoes();
+    } catch {
+      setNotificacoes(anteriores);
+    }
+  };
+
+  const handleLimparTudo = () => {
+    confirmAction({
+      title: 'Limpar notificações',
+      message: 'Excluir todas as notificações? Isso não pode ser desfeito.',
+      confirmText: 'Limpar tudo',
+      destructive: true,
+      onConfirm: limparTudo,
+      onCancel: undefined,
+    });
+  };
+
   const unreadCount = notificacoes.filter(n => !n.enviada).length;
 
   const renderItem = ({ item }: { item: Notificacao }) => (
@@ -116,6 +139,17 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
         titulo="Notificações"
         subtitulo={unreadCount > 0 ? `${unreadCount} não lida(s)` : undefined}
         onBack={() => navigation.goBack()}
+        direita={
+          notificacoes.length > 0 ? (
+            <Tappable
+              style={styles.limparBtn}
+              onPress={handleLimparTudo}
+              accessibilityRole="button"
+              accessibilityLabel="Limpar todas as notificações">
+              <Icon name={IconNames.delete} size="md" color={colors.primary.contrast} />
+            </Tappable>
+          ) : null
+        }
       />
 
       {loading ? (
@@ -182,6 +216,14 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: 'rgba(255,255,255,0.75)',
     marginTop: 2,
+  },
+  limparBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContent: {
     padding: spacing.base,

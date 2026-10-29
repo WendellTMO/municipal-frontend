@@ -10,6 +10,7 @@ import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   deleteNotificacao,
+  deleteTodasNotificacoes,
   getNotificacoes,
   markNotificacaoAsSent,
 } from '../../services/notificacaoService';
@@ -19,6 +20,7 @@ import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import { confirmAction } from '../../utils/confirm';
 import DeslizarParaExcluir from '../../components/DeslizarParaExcluir';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
@@ -94,6 +96,27 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const limparTudo = async () => {
+    const anteriores = notificacoes;
+    setNotificacoes([]);
+    try {
+      await deleteTodasNotificacoes();
+    } catch {
+      setNotificacoes(anteriores);
+    }
+  };
+
+  const handleLimparTudo = () => {
+    confirmAction({
+      title: 'Limpar notificações',
+      message: 'Excluir todas as notificações? Isso não pode ser desfeito.',
+      confirmText: 'Limpar tudo',
+      destructive: true,
+      onConfirm: limparTudo,
+      onCancel: undefined,
+    });
+  };
+
   const renderItem = ({ item }: { item: Notificacao }) => (
     <DeslizarParaExcluir onExcluir={() => handleExcluir(item)}>
     <Tappable
@@ -163,14 +186,25 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
         subtitulo={unreadCount > 0 ? `${unreadCount} não ${unreadCount === 1 ? 'lida' : 'lidas'}` : undefined}
         onBack={() => navigation.goBack()}
         direita={
-          unreadCount > 0 ? (
-            <Tappable
-              style={styles.markAllButton}
-              onPress={handleMarkAllAsRead}
-              accessibilityRole="button"
-              accessibilityLabel={`Marcar todas as ${unreadCount} notificações como lidas`}>
-              <Icon name={IconNames.checkCircle} size="md" color={colors.primary.contrast} />
-            </Tappable>
+          notificacoes.length > 0 ? (
+            <View style={styles.acoes}>
+              {unreadCount > 0 ? (
+                <Tappable
+                  style={styles.markAllButton}
+                  onPress={handleMarkAllAsRead}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Marcar todas as ${unreadCount} notificações como lidas`}>
+                  <Icon name={IconNames.checkCircle} size="md" color={colors.primary.contrast} />
+                </Tappable>
+              ) : null}
+              <Tappable
+                style={styles.markAllButton}
+                onPress={handleLimparTudo}
+                accessibilityRole="button"
+                accessibilityLabel="Limpar todas as notificações">
+                <Icon name={IconNames.delete} size="md" color={colors.primary.contrast} />
+              </Tappable>
+            </View>
           ) : null
         }
       />
@@ -234,6 +268,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.75)',
     marginTop: spacing.xs,
   },
+  acoes: { flexDirection: 'row', gap: spacing.sm },
   markAllButton: {
     width: 44,
     height: 44,
