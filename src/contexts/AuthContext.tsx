@@ -21,6 +21,8 @@ import {
   pedirBiometria,
 } from '../services/biometria';
 import { deveBloquear, deveOferecer } from '../utils/biometriaFluxo';
+import { deveEncerrarSessao } from '../utils/lembrarMe';
+import { Storage, STORAGE_KEYS } from '../utils/storage';
 import type { 
   AlunoResponse,
   AlunoSelfSignupRequest,
@@ -67,7 +69,7 @@ type AuthContextValue = {
   user: UserResponse | UserInfo | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (loginData: LoginRequest) => Promise<TokenResponse>;
+  login: (loginData: LoginRequest, lembrar?: boolean) => Promise<TokenResponse>;
   register: (userData: AlunoSelfSignupRequest) => Promise<AlunoResponse>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
@@ -110,6 +112,13 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   const checkAuthStatus = useCallback(async (): Promise<void> => {
     try {
       const hasToken = await authService.isAuthenticated();
+      const sessaoTemporaria = await Storage.getItem(STORAGE_KEYS.SESSAO_TEMPORARIA);
+
+      if (deveEncerrarSessao({ temToken: hasToken, sessaoTemporaria })) {
+        await authService.logout();
+        await Storage.removeItem(STORAGE_KEYS.SESSAO_TEMPORARIA);
+        return;
+      }
 
       if (!hasToken) {
         return;
@@ -188,9 +197,10 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   }, []);
 
   const login = useCallback(
-    async (loginData: LoginRequest): Promise<LoginResult> => {
+    async (loginData: LoginRequest, lembrar = true): Promise<LoginResult> => {
       try {
         const { user: loggedInUser } = await authService.login(loginData);
+        await Storage.setItem(STORAGE_KEYS.SESSAO_TEMPORARIA, !lembrar);
 
         try {
           const fullUserData = await userService.getCurrentUser();
@@ -272,6 +282,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
     try {
       errorLogger.info('Logout initiated', { userId: user?.id });
       await authService.logout();
+      await Storage.removeItem(STORAGE_KEYS.SESSAO_TEMPORARIA);
       await desligarNoLogout();
       setBioAtiva(false);
       setBioBloqueado(false);
