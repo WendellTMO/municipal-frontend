@@ -15,6 +15,20 @@ interface RoutePoint {
 
 interface StaticRouteMapProps {
   pontosRota: RoutePoint[];
+  // Tela cheia com a folha de pontos: altura própria, pinos 1..N, pino dourado e toque longo.
+  altura?: number | '100%';
+  numerar?: boolean;
+  pino?: { latitude: number; longitude: number } | null;
+  aoTocarLongo?: (local: { latitude: number; longitude: number }) => void;
+  margemTopo?: number;
+  margemBase?: number;
+}
+
+interface OpcoesHtml {
+  numerar?: boolean;
+  pino?: { latitude: number; longitude: number } | null;
+  margemTopo: number;
+  margemBase: number;
 }
 
 function pontosValidos(points: RoutePoint[]): RoutePoint[] {
@@ -27,16 +41,25 @@ function pontosValidos(points: RoutePoint[]): RoutePoint[] {
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
 }
 
-function buildStaticRouteHtml(points: RoutePoint[], trajeto: { latitude: number; longitude: number }[]): string {
+function buildStaticRouteHtml(
+  points: RoutePoint[],
+  trajeto: { latitude: number; longitude: number }[],
+  opcoes: OpcoesHtml,
+): string {
   const validPoints = pontosValidos(points);
+  const pinoJson = JSON.stringify(opcoes.pino || null);
   const ruasJson = JSON.stringify(trajeto.map(c => [c.latitude, c.longitude]));
 
   const pointsJson = JSON.stringify(
     validPoints.map((p, i) => ({
       lat: Number(p.latitude),
       lng: Number(p.longitude),
-      label: i === 0 ? 'A' : i === validPoints.length - 1 ? 'B' : String(i + 1),
-      color: i === 0 ? '#34A853' : i === validPoints.length - 1 ? '#EA4335' : '#4285F4',
+      label: opcoes.numerar
+        ? String(i + 1)
+        : i === 0 ? 'A' : i === validPoints.length - 1 ? 'B' : String(i + 1),
+      color: opcoes.numerar
+        ? '#4285F4'
+        : i === 0 ? '#34A853' : i === validPoints.length - 1 ? '#EA4335' : '#4285F4',
       name: p.nome || p.apelido || `Ponto ${i + 1}`,
     })),
   );
@@ -64,7 +87,8 @@ function buildStaticRouteHtml(points: RoutePoint[], trajeto: { latitude: number;
 
       var points = ${pointsJson};
       var ruas = ${ruasJson};
-      var map = L.map('map', { zoomControl: true }).setView([-15.78, -47.93], 5);
+      var pino = ${pinoJson};
+      var map = L.map('map', { zoomControl: ${!opcoes.numerar} }).setView([-15.78, -47.93], 5);
 
       L.tileLayer('${TILE_URL}', {
         attribution: '${TILE_ATTRIBUTION}',
@@ -119,10 +143,31 @@ function buildStaticRouteHtml(points: RoutePoint[], trajeto: { latitude: number;
             dashArray: '8, 4',
           }).addTo(map);
         }
-        map.fitBounds(L.latLngBounds(latLngs.concat(ruas)), { padding: [40, 40] });
+        map.fitBounds(L.latLngBounds(latLngs.concat(ruas)), {
+          paddingTopLeft: [40, ${opcoes.margemTopo}],
+          paddingBottomRight: [40, ${40 + opcoes.margemBase}],
+        });
       } else if (latLngs.length === 1) {
         map.setView(latLngs[0], 15);
       }
+
+      if (pino) {
+        var pinoHtml = '<div style="display:flex;flex-direction:column;align-items:center">' +
+          '<div style="width:30px;height:30px;border-radius:50%;background:#F5A623;border:3px solid white"></div>' +
+          '<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #F5A623;margin-top:-1px"></div></div>';
+        L.marker([pino.latitude, pino.longitude], {
+          icon: L.divIcon({ className: 'custom-pin', html: pinoHtml, iconSize: [30, 45], iconAnchor: [15, 45] }),
+        }).addTo(map);
+        map.panTo([pino.latitude, pino.longitude]);
+      }
+
+      map.on('contextmenu', function(e) {
+        try {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'longPress', latitude: e.latlng.lat, longitude: e.latlng.lng,
+          }));
+        } catch(err) {}
+      });
 
       try {
         window.ReactNativeWebView &&
@@ -135,7 +180,15 @@ function buildStaticRouteHtml(points: RoutePoint[], trajeto: { latitude: number;
   `;
 }
 
-export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
+export default function StaticRouteMap({
+  pontosRota,
+  altura,
+  numerar,
+  pino,
+  aoTocarLongo,
+  margemTopo = 40,
+  margemBase = 0,
+}: StaticRouteMapProps) {
   const [loading, setLoading] = useState(true);
 
   const paradas = useMemo(() => {
@@ -153,13 +206,13 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
       p => `${p.id}-${p.latitude}-${p.longitude}-${p.ordem}`,
     );
     return {
-      html: buildStaticRouteHtml(pontosRota || [], trajeto),
-      webViewKey: keyParts.join('|') + '#' + trajeto.length,
+      html: buildStaticRouteHtml(pontosRota || [], trajeto, { numerar, pino, margemTopo, margemBase }),
+      webViewKey: keyParts.join('|') + '#' + trajeto.length + '#' + (pino ? `${pino.latitude},${pino.longitude}` : '') + '#' + margemBase,
     };
-  }, [pontosRota, trajeto]);
+  }, [pontosRota, trajeto, numerar, pino, margemTopo, margemBase]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, altura !== undefined && { height: altura, borderRadius: 0 }]}>
       <WebView
         key={webViewKey}
         style={styles.webview}
@@ -175,6 +228,9 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
           try {
             const data = JSON.parse(event.nativeEvent.data);
             if (data.type === 'mapReady') setLoading(false);
+            if (data.type === 'longPress' && aoTocarLongo) {
+              aoTocarLongo({ latitude: data.latitude, longitude: data.longitude });
+            }
           } catch {}
         }}
         androidLayerType="software"
