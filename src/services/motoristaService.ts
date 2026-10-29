@@ -16,6 +16,24 @@ interface EnviarLocalizacaoResponse {
 
 export type OrdemInstituicao = { instituicao_id: string; nome: string; tipo?: string | null; ordem: number };
 
+export type CorpoNovaParada = {
+  ponto_id?: string;
+  apelido?: string;
+  latitude?: number;
+  longitude?: number;
+  posicao?: 'proxima' | 'fim';
+};
+export type ParadaDaViagem = {
+  ponto_id: string;
+  apelido: string;
+  latitude: number;
+  longitude: number;
+  ordem: number;
+  visitado: boolean;
+  chegada_real: string | null;
+};
+export type ViagemComParadas = ViagemResponse & { pontos: ParadaDaViagem[] };
+
 export const motoristaService = {
   /**
    * List routes assigned to the driver
@@ -171,6 +189,15 @@ export const motoristaService = {
       acao: 'INICIAR',
     };
     const response = await api.put<ViagemResponse>(`/viagens/${viagemId}/acao`, payload);
+    return response.data;
+  },
+
+  /**
+   * Add a stop to a trip in progress
+   * Backend: POST /v1/viagens/{id}/pontos
+   */
+  async adicionarPontoNaViagem(viagemId: string, corpo: CorpoNovaParada): Promise<ViagemComParadas> {
+    const response = await api.post<ViagemComParadas>(`/viagens/${viagemId}/pontos`, corpo);
     return response.data;
   },
 
