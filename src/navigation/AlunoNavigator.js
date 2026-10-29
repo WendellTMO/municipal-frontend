@@ -64,7 +64,7 @@ const AlunoNavigator = () => {
       initialRouteName="DashboardAluno"
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: 'fade',
       }}>
       <Stack.Screen name="DashboardAluno" component={DashboardAluno} />
       <Stack.Screen name="SelecaoRotas" component={SelecaoRotas} />

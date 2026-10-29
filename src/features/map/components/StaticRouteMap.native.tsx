@@ -222,7 +222,8 @@ export default function StaticRouteMap({
         javaScriptEnabled
         domStorageEnabled
         scrollEnabled={false}
-        nestedScrollEnabled={false}
+        // Mapa dentro de ScrollView: sem isto o Android entrega o gesto vertical à rolagem da página.
+        nestedScrollEnabled
         setSupportMultipleWindows={false}
         onMessage={event => {
           try {
