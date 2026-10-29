@@ -4,7 +4,7 @@ import type * as LeafletNS from 'leaflet';
 
 import type { LocationMapProps } from '../types';
 import { normalizeRoutePoints } from '../utils/points';
-import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
+import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_OPCOES_CELULAR, TILE_URL } from '../utils/tiles';
 import { destruirMapa } from '../utils/leafletSeguro';
 
 type LeafletModule = typeof LeafletNS;
@@ -43,9 +43,9 @@ export default function LocationMap({
     onSeguirRef.current?.(false);
   };
   // setView feito pelo app não conta como gesto do usuário (o zoomstart sai síncrono).
-  const irPara = (map: LeafletMap, centro: [number, number], zoom: number) => {
+  const irPara = (map: LeafletMap, centro: [number, number], zoom: number, animar = true) => {
     programaticoRef.current = true;
-    map.setView(centro, zoom);
+    map.setView(centro, zoom, { animate: animar });
     programaticoRef.current = false;
   };
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -101,6 +101,7 @@ export default function LocationMap({
       L.tileLayer(TILE_URL, {
         attribution: controles ? TILE_ATTRIBUTION : '',
         maxZoom: TILE_MAX_ZOOM,
+        ...TILE_OPCOES_CELULAR,
       }).addTo(map);
 
       map.on('dragstart', pararDeSeguir);
@@ -191,7 +192,7 @@ export default function LocationMap({
       }).addTo(map);
     }
 
-    if (seguirOnibus && seguindoRef.current) irPara(map, [latLng.lat, latLng.lng], map.getZoom());
+    if (seguirOnibus && seguindoRef.current) irPara(map, [latLng.lat, latLng.lng], map.getZoom(), false);
   }, [mapReady, destinationLatLng, seguirOnibus]);
 
   useEffect(() => {

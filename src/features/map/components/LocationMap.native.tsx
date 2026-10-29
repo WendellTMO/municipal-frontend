@@ -122,7 +122,7 @@ export default function LocationMap({
         setSupportMultipleWindows={false}
         onMessage={handleMessage}
         injectedJavaScript={previa ? CONFIGURA_PREVIA : undefined}
-        androidLayerType="software"
+        // Camada de hardware (padrão): o modo software e o opacity 0.99 antigos, sem motivo registrado, travavam arraste e zoom.
       />
 
       {loadingMap && !mapError && (
@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
-    opacity: 0.99,
     backgroundColor: 'transparent',
   },
   hidden: {
