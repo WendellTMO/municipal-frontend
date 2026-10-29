@@ -1,10 +1,11 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,16 +27,13 @@ const DashboardMotorista = ({navigation}) => {
 
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    const carregarNaoLidas = async () => {
-      try {
-        const notifs = await getNotificacoes();
-        setUnreadCount(notifs.filter((n) => !n.enviada).length);
-      } catch (e) {
-        // o contador é secundário
-      }
-    };
-    carregarNaoLidas();
+  const carregarNaoLidas = useCallback(async () => {
+    try {
+      const notifs = await getNotificacoes();
+      setUnreadCount(notifs.filter((n) => !n.enviada).length);
+    } catch (e) {
+      // o contador é secundário
+    }
   }, []);
 
   const [proximaViagem, setProximaViagem] = useState(null);
@@ -46,8 +44,8 @@ const DashboardMotorista = ({navigation}) => {
   });
   // loadingAlunos removed - data comes from viagem object directly
 
-  useEffect(() => {
-    const loadProximaViagem = async () => {
+  const loadProximaViagem = useCallback(async () => {
+    {
       try {
         const viagens = await motoristaService.listarViagens().then(unwrapItems);
         
@@ -138,10 +136,33 @@ const DashboardMotorista = ({navigation}) => {
       } finally {
         setLoadingViagem(false);
       }
-    };
-
-    loadProximaViagem();
+    }
   }, []);
+
+  // Recarrega ao abrir, ao voltar para a tela e ao arrastar para baixo, para o contador do sino
+  // e o botão Iniciar/Continuar viagem não ficarem com dados velhos.
+  const [refreshing, setRefreshing] = useState(false);
+  const carregandoRef = useRef(false);
+  const recarregar = useCallback(async () => {
+    if (carregandoRef.current) return;
+    carregandoRef.current = true;
+    try {
+      await Promise.all([carregarNaoLidas(), loadProximaViagem()]);
+    } finally {
+      carregandoRef.current = false;
+    }
+  }, [carregarNaoLidas, loadProximaViagem]);
+
+  useEffect(() => {
+    recarregar();
+    return navigation?.addListener ? navigation.addListener('focus', recarregar) : undefined;
+  }, [navigation, recarregar]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await recarregar();
+    setRefreshing(false);
+  };
 
   // Atualizar informações de alunos a partir da próxima viagem
   useEffect(() => {
@@ -164,7 +185,10 @@ const DashboardMotorista = ({navigation}) => {
 
   return (
     <TelaSegura style={styles.container}>
-      <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
+      <ScrollView
+        contentContainerStyle={withFabSpace()}
+        style={styles.scrollView}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <PainelHeader
           perfil="Motorista"
           unreadCount={unreadCount}
