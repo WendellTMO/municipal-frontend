@@ -49,7 +49,7 @@ import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao
 import RoteiroLista from '../../components/RoteiroLista';
 import RoteiroViagem from './RoteiroViagem';
 import { montarRoteiro } from '../../utils/roteiroViagem';
-import { subtituloRoteiro } from '../../utils/subtituloRoteiro';
+import { subtituloRoteiro, tituloRoteiro } from '../../utils/subtituloRoteiro';
 import { motoristaService } from '../../services/motoristaService';
 import { createNotificacao } from '../../services/notificacaoService';
 import { useToast } from '../../components/Toast';
@@ -693,7 +693,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <TelaSegura style={styles.container}>
-      <SubHeader titulo="Roteiro" subtitulo={subtituloRoteiro(currentViagem)} onBack={() => navigation.goBack()} />
+      <SubHeader titulo={tituloRoteiro(currentViagem)} subtitulo={subtituloRoteiro(currentViagem)} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace(styles.preContent)} showsVerticalScrollIndicator={false}>
         <RoteiroLista grupos={grupos} />

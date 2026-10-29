@@ -12,7 +12,7 @@ import { colors, spacing } from '../../theme';
 import { withFabSpace } from '../../config/feedback';
 import { montarParadas } from '../../utils/paradasViagem';
 import { montarRoteiro } from '../../utils/roteiroViagem';
-import { subtituloRoteiro } from '../../utils/subtituloRoteiro';
+import { subtituloRoteiro, tituloRoteiro } from '../../utils/subtituloRoteiro';
 import { motoristaService } from '../../services/motoristaService';
 
 const RoteiroViagem = ({ navigation = null, route = null, onBack = null, direita = null, ...props }) => {
@@ -39,7 +39,7 @@ const RoteiroViagem = ({ navigation = null, route = null, onBack = null, direita
   return (
     <TelaSegura style={styles.container}>
       <SubHeader
-        titulo="Roteiro"
+        titulo={tituloRoteiro(viagem)}
         subtitulo={subtituloRoteiro(viagem)}
         onBack={onBack || (() => navigation.goBack())}
         direita={direita}
