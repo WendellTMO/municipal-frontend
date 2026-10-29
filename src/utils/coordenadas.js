@@ -55,3 +55,29 @@ export function coordenadasValidas(latTexto, lonTexto) {
   }
   return {latitude: parseNumeroDecimal(latTexto), longitude: parseNumeroDecimal(lonTexto)};
 }
+
+export function distanciaMetros(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Diz se a posição andou mais que a tolerância (em metros). Sem posição anterior, mudou.
+export function posicaoMudou(anterior, atual, toleranciaM) {
+  if (!anterior) {
+    return true;
+  }
+  const andou = distanciaMetros(
+    anterior.latitude,
+    anterior.longitude,
+    atual.latitude,
+    atual.longitude,
+  );
+  return andou > toleranciaM;
+}

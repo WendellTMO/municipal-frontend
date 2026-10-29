@@ -17,6 +17,7 @@ import { motoristaService } from '../../services/motoristaService';
 import { alunoService } from '../../services';
 import { LocationMap } from '../../features/map/index';
 import { requestLocationPermission } from '../../features/map/hooks/useLocationPermission';
+import { distanciaMetros as haversineMetros, posicaoMudou } from '../../utils/coordenadas';
 import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
 
@@ -54,6 +55,10 @@ type EstadoOnibus = 'movimento' | 'parado' | 'semSinal';
 // disso é ruído de GPS: a viagem da demonstração anda uns 16 m entre leituras.
 const PARADO_M = 5;
 const SEM_SINAL_S = 60;
+// Posições que andam menos que isso não redesenham o marcador nem reenviam comando ao mapa.
+const TOLERANCIA_ALUNO_M = 5;
+const TOLERANCIA_ONIBUS_M = 1;
+const GPS_ALUNO_INTERVALO_MS = 30_000;
 
 export function estadoPorLeitura(
   anterior: LatLng | null,
@@ -76,18 +81,6 @@ const ESTADOS: Record<EstadoOnibus, { texto: string; cor: string }> = {
   parado: { texto: 'Ônibus parado', cor: colors.warning.main },
   semSinal: { texto: 'Sem sinal do ônibus', cor: colors.text.disabled },
 };
-
-function haversineMetros(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6_371_000;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 function etaMinutos(distanciaMetros: number): number {
   const km = distanciaMetros / 1000;
@@ -170,19 +163,12 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
 
   const localizacaoPermitida = useRef(false);
 
-  useEffect(() => {
-    requestLocationPermission().then((ok) => {
-      localizacaoPermitida.current = ok;
-    });
-  }, []);
-
-  const obterMinhaPosicao = useCallback(() => {
+  const obterMinhaPosicao = useCallback((precisa: boolean) => {
     if (!Geolocation || !localizacaoPermitida.current) return;
     const guardar = (pos: { coords: { latitude: number; longitude: number } }) => {
-      setPosicaoAluno({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      });
+      const nova = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      // Mesmo lugar devolve o objeto antigo e o React não renderiza de novo.
+      setPosicaoAluno((atual) => (posicaoMudou(atual, nova, TOLERANCIA_ALUNO_M) ? nova : atual));
     };
     Geolocation.getCurrentPosition(
       guardar,
@@ -194,9 +180,19 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
           timeout: 15_000,
           maximumAge: 60_000,
         }),
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 5_000 },
+      // Precisão alta só na abertura. Depois a leitura é balanceada (rede e GPS em cache).
+      { enableHighAccuracy: precisa, timeout: 10_000, maximumAge: precisa ? 5_000 : 20_000 },
     );
   }, []);
+
+  useEffect(() => {
+    requestLocationPermission().then((ok) => {
+      localizacaoPermitida.current = ok;
+      obterMinhaPosicao(true);
+    });
+    const gps = setInterval(() => obterMinhaPosicao(false), GPS_ALUNO_INTERVALO_MS);
+    return () => clearInterval(gps);
+  }, [obterMinhaPosicao]);
 
   const buscarLocalizacao = useCallback(async () => {
     if (!viagemId) return;
@@ -208,16 +204,17 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
       const atrasoS = enviadoEm ? (Date.now() - new Date(enviadoEm).getTime()) / 1000 : 0;
       const anterior = posicaoAnterior.current;
       posicaoAnterior.current = nova;
-      setPosicaoMotorista(nova);
+      setPosicaoMotorista((atual) =>
+        posicaoMudou(atual, nova, TOLERANCIA_ONIBUS_M) ? nova : atual,
+      );
       setEstadoOnibus(estadoPorLeitura(anterior, nova, atrasoS));
-      obterMinhaPosicao();
     } catch {
       // Mantém a última posição na tela, mas o selo passa a dizer que não há sinal.
       setEstadoOnibus('semSinal');
     } finally {
       setLoading(false);
     }
-  }, [viagemId, obterMinhaPosicao]);
+  }, [viagemId]);
 
   useEffect(() => {
     buscarLocalizacao();
@@ -378,14 +375,16 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.infoIconContainer}>
               <Icon name="straighten" size="md" color={colors.primary.main} />
             </View>
-            <Text style={styles.infoLabel}>Distância até você</Text>
-            <Text style={styles.infoValue}>
-              {distanciaMetros == null
-                ? '—'
-                : distanciaMetros >= 1000
-                ? `${(distanciaMetros / 1000).toFixed(1)} km`
-                : `${Math.round(distanciaMetros)} m`}
-            </Text>
+            <View>
+              <Text style={styles.infoLabel}>Distância até você</Text>
+              <Text style={styles.infoValue}>
+                {distanciaMetros == null
+                  ? '—'
+                  : distanciaMetros >= 1000
+                  ? `${(distanciaMetros / 1000).toFixed(1)} km`
+                  : `${Math.round(distanciaMetros)} m`}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.infoDivider} />
@@ -401,10 +400,12 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.infoIconContainer}>
               <Icon name={IconNames.schedule} size="md" color={colors.primary.main} />
             </View>
-            <Text style={styles.infoLabel}>Tempo estimado</Text>
-            <Text style={styles.infoValue}>
-              {etaParaOnibus == null ? '—' : `${etaParaOnibus} min`}
-            </Text>
+            <View>
+              <Text style={styles.infoLabel}>Tempo estimado</Text>
+              <Text style={styles.infoValue}>
+                {etaParaOnibus == null ? '—' : `${etaParaOnibus} min`}
+              </Text>
+            </View>
           </View>
         </View>
           </>
@@ -459,7 +460,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginBottom: spacing.base,
+    marginBottom: spacing.md,
   },
   proximaIcone: {
     width: 40,
@@ -482,7 +483,7 @@ const styles = StyleSheet.create({
   divisorPainel: {
     height: 1,
     backgroundColor: colors.border.light,
-    marginBottom: spacing.base,
+    marginBottom: spacing.md,
   },
 
   mapaFundo: {
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
     // O padding de baixo é maior de propósito: em telefone a barra de navegação
     // do sistema come uns pixels da borda, e sem folga o selo de status some.
     backgroundColor: colors.background.paper,
-    padding: spacing.lg,
+    padding: spacing.base,
     paddingBottom: spacing.xl,
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
@@ -514,9 +515,15 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: spacing.md,
   },
-  infoItem: { alignItems: 'center', flex: 1 },
+  // Ícone ao lado do texto: o painel fica uns 45 px mais baixo e o mapa ganha esse espaço.
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
   infoIconContainer: {
     width: 40,
     height: 40,
@@ -524,7 +531,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary.lighter,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
   },
   infoLabel: { ...textStyles.caption, color: colors.text.secondary, marginBottom: spacing.xxs },
   infoValue: { ...textStyles.h3, color: colors.primary.main },

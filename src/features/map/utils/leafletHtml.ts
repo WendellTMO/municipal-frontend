@@ -1,5 +1,5 @@
 // src/components/map/utils/leafletHtml.ts
-import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from './tiles';
+import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_OPCOES_CELULAR, TILE_URL } from './tiles';
 export function buildLeafletHtml(): string {
     return `
   <!doctype html>
@@ -108,6 +108,7 @@ export function buildLeafletHtml(): string {
             L.tileLayer('${TILE_URL}', {
               attribution: '${TILE_ATTRIBUTION}',
               maxZoom: ${TILE_MAX_ZOOM},
+              ...${JSON.stringify(TILE_OPCOES_CELULAR)},
             }).addTo(this.mapInstance);
   
             // Arrastar ou dar zoom para de seguir o ônibus; o botão Minha posição religa.
@@ -141,7 +142,7 @@ export function buildLeafletHtml(): string {
 
             if (this.seguindo) {
               this.programatico = true;
-              this.mapInstance.setView(latLng, this.mapInstance.getZoom());
+              this.mapInstance.setView(latLng, this.mapInstance.getZoom(), { animate: false });
               this.programatico = false;
             }
           },

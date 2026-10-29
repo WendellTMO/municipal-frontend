@@ -4,6 +4,7 @@ import {
   validarLongitude,
   dividirParColado,
   coordenadasValidas,
+  posicaoMudou,
 } from './coordenadas';
 
 describe('parseNumeroDecimal', () => {
@@ -56,5 +57,21 @@ describe('coordenadasValidas', () => {
   it('devolve null se algum for inválido', () => {
     expect(coordenadasValidas('-7.2', '')).toBeNull();
     expect(coordenadasValidas('100', '-35')).toBeNull();
+  });
+});
+
+describe('posicaoMudou', () => {
+  const base = {latitude: -7.229, longitude: -35.902};
+  it('sem posição anterior conta como mudou', () => {
+    expect(posicaoMudou(null, base, 5)).toBe(true);
+  });
+  it('mesma posição ou ruído abaixo da tolerância não muda', () => {
+    expect(posicaoMudou(base, {...base}, 5)).toBe(false);
+    // 0,00002 grau de latitude são uns 2,2 m
+    expect(posicaoMudou(base, {latitude: -7.22902, longitude: -35.902}, 5)).toBe(false);
+  });
+  it('acima da tolerância muda', () => {
+    // 0,0001 grau de latitude são uns 11 m
+    expect(posicaoMudou(base, {latitude: -7.2291, longitude: -35.902}, 5)).toBe(true);
   });
 });
