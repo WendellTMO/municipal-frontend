@@ -23,6 +23,7 @@ import Tappable from '../../components/Tappable';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
+import { presencaTravada } from '../../utils/aBordo';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -78,37 +79,42 @@ const PresencaDaViagem: React.FC<{ viagem: ViagemAgendaUI; onMudou: (confirmada:
     onMudou,
   );
   const [cancelando, setCancelando] = useState(false);
+  const travada = presencaTravada(confirmada, viagem.status_viagem);
 
   return (
     <>
       {confirmada ? <LinhaDosPontos texto={linhaPontos} onAlterar={alterar} /> : null}
-      <Tappable
-        style={[
-          styles.confirmarButton,
-          confirmada && styles.confirmarButtonActive,
-          salvando && styles.confirmarButtonDisabled,
-        ]}
-        onPress={confirmada ? () => setCancelando(true) : confirmar}
-        disabled={salvando}
-        accessibilityRole="button"
-        accessibilityLabel={confirmada ? 'Cancelar presença' : 'Confirmar presença'}
-        accessibilityState={{ disabled: salvando }}
-        hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
-        {salvando ? (
-          <ActivityIndicator color={colors.primary.contrast} />
-        ) : (
-          <>
-            <Icon
-              name={confirmada ? IconNames.close : IconNames.checkCircle}
-              size="md"
-              color={colors.primary.contrast}
-            />
-            <Text style={styles.confirmarButtonText}>
-              {confirmada ? 'Cancelar Presença' : 'Confirmar Presença'}
-            </Text>
-          </>
-        )}
-      </Tappable>
+      {travada ? (
+        <Text style={styles.presencaTravada}>Presença confirmada</Text>
+      ) : (
+        <Tappable
+          style={[
+            styles.confirmarButton,
+            confirmada && styles.confirmarButtonActive,
+            salvando && styles.confirmarButtonDisabled,
+          ]}
+          onPress={confirmada ? () => setCancelando(true) : confirmar}
+          disabled={salvando}
+          accessibilityRole="button"
+          accessibilityLabel={confirmada ? 'Cancelar presença' : 'Confirmar presença'}
+          accessibilityState={{ disabled: salvando }}
+          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}>
+          {salvando ? (
+            <ActivityIndicator color={colors.primary.contrast} />
+          ) : (
+            <>
+              <Icon
+                name={confirmada ? IconNames.close : IconNames.checkCircle}
+                size="md"
+                color={colors.primary.contrast}
+              />
+              <Text style={styles.confirmarButtonText}>
+                {confirmada ? 'Cancelar Presença' : 'Confirmar Presença'}
+              </Text>
+            </>
+          )}
+        </Tappable>
+      )}
       <EscolhaPontoSheet {...folhaProps} />
       <DialogoConfirmacao
         visible={cancelando}
@@ -547,6 +553,12 @@ const styles = StyleSheet.create({
   },
   confirmarButtonActive: { backgroundColor: colors.error.main },
   confirmarButtonDisabled: { opacity: 0.6 },
+  presencaTravada: {
+    ...textStyles.button,
+    color: colors.success.main,
+    textAlign: 'center',
+    paddingVertical: spacing.md,
+  },
   confirmarButtonText: { ...textStyles.button, color: colors.primary.contrast },
   detalhesButton: {
     flexDirection: 'row',

@@ -10,6 +10,7 @@ import DialogoConfirmacao from './DialogoConfirmacao';
 import Icon, { IconNames } from './Icon';
 import { colors, spacing, textStyles } from '../theme';
 import { usePresencaViagem } from '../hooks/usePresencaViagem';
+import { presencaTravada } from '../utils/aBordo';
 import EscolhaPontoSheet, { LinhaDosPontos } from './EscolhaPontoSheet';
 
 type Props = {
@@ -20,6 +21,7 @@ type Props = {
     ponto_embarque_id?: string;
     ponto_destino_id?: string;
     precisa_escolher_ponto?: boolean;
+    status_viagem?: string;
   };
   confirmadaInicial: boolean;
   onMudou: (confirmada: boolean) => void;
@@ -58,13 +60,17 @@ const PresencaAcoes = ({ viagem, confirmadaInicial, onMudou }: Props) => {
   return (
     <>
       <LinhaDosPontos texto={linhaPontos} onAlterar={alterar} claro />
-      <Tappable
-        style={styles.cancelar}
-        onPress={() => setDialogo(true)}
-        disabled={salvando}
-        accessibilityLabel="Cancelar presença">
-        <Text style={styles.cancelarTexto}>Cancelar presença</Text>
-      </Tappable>
+      {presencaTravada(confirmada, viagem.status_viagem) ? (
+        <Text style={styles.travada}>Presença confirmada</Text>
+      ) : (
+        <Tappable
+          style={styles.cancelar}
+          onPress={() => setDialogo(true)}
+          disabled={salvando}
+          accessibilityLabel="Cancelar presença">
+          <Text style={styles.cancelarTexto}>Cancelar presença</Text>
+        </Tappable>
+      )}
       <DialogoConfirmacao
         visible={dialogo}
         titulo="Cancelar presença?"
@@ -100,6 +106,7 @@ const styles = StyleSheet.create({
   confirmarTexto: { ...textStyles.h5, color: colors.primary.main, fontWeight: '800' as const },
   cancelarTexto: { ...textStyles.h5, color: '#FFFFFF', fontWeight: '800' as const },
   desabilitado: { opacity: 0.6 },
+  travada: { ...textStyles.h5, color: '#FFFFFF', fontWeight: '800' as const, textAlign: 'center', marginTop: spacing.base },
   // Botão vermelho sólido, mesma fonte do Confirmar presença e um pouco mais baixo.
   cancelar: {
     flexDirection: 'row',

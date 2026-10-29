@@ -184,6 +184,18 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
   const emAndamento = todayTrip?.status_viagem === 'EM_ANDAMENTO';
 
+  // Resposta "Desci" do diálogo do mini mapa: usa o cancelamento de presença de sempre.
+  const desci = async (): Promise<boolean> => {
+    if (!todayTrip?.id) return false;
+    try {
+      await alunoService.alterarPresencaViagem(todayTrip.id, false);
+      setTodayTrip((prev) => (prev ? { ...prev, status_confirmacao: false } : prev));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Com a viagem em andamento, o mapa mostra ela; senão mostra a próxima.
   const abrirLocalizacao = () => {
     const viagem = emAndamento ? todayTrip : proximaViagem;
@@ -344,6 +356,9 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
               rotaId={todayTrip.rota_id}
               viagemId={todayTrip.id}
               embarqueId={todayTrip.ponto_embarque_id}
+              confirmada={!!todayTrip.status_confirmacao}
+              statusViagem={todayTrip.status_viagem}
+              aoDesci={desci}
               onPress={abrirLocalizacao}
             />
           </AgoraCard>
