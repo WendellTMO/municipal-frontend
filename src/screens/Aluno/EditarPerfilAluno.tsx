@@ -19,7 +19,7 @@ import { useToast } from '../../components/Toast';
 import { borderRadius, colors, fontWeight, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { confirmAction } from '../../utils/confirm';
-import { formatPhone, formatCep, onlyDigits } from '../../utils/masks';
+import { formatPhone, formatCep, formatCpf, onlyDigits } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
@@ -239,7 +239,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.readOnlyGroup}>
               <Text style={styles.label}>CPF (não editável)</Text>
-              <Text style={styles.readOnlyText}>{(user?.cpf as string) ?? '—'}</Text>
+              <Text style={styles.readOnlyText}>{user?.cpf ? formatCpf(user.cpf as string) : '—'}</Text>
             </View>
           </View>
 
