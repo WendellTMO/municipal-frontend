@@ -24,6 +24,7 @@ import Tappable from '../../components/Tappable';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import EscolhaPontoSheet, { LinhaDosPontos } from '../../components/EscolhaPontoSheet';
 import { usePresencaViagem } from '../../hooks/usePresencaViagem';
+import { presencaTravada } from '../../utils/aBordo';
 import { aceitaPresenca } from '../../utils/presenca';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
@@ -260,7 +261,11 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
               <LinhaDosPontos texto={linhaPontos} onAlterar={alterar} />
             )}
 
-            {aceitaPresenca(statusViagem) && presencaConfirmada && (
+            {presencaTravada(presencaConfirmada, statusViagem) && (
+              <Text style={styles.presencaTravada}>Presença confirmada</Text>
+            )}
+
+            {aceitaPresenca(statusViagem) && presencaConfirmada && !presencaTravada(presencaConfirmada, statusViagem) && (
               <Tappable
                 style={styles.cancelarPresenca}
                 onPress={() => setCancelarVisivel(true)}
@@ -546,6 +551,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     ...shadows.xs,
   },
+  presencaTravada: { ...textStyles.button, color: colors.success.main, textAlign: 'center', marginTop: spacing.sm },
   cancelarPresencaTexto: { ...textStyles.button, color: '#FFFFFF' },
   presencaText: { ...textStyles.h5 },
   confirmarButton: {

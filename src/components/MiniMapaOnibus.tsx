@@ -5,6 +5,9 @@
  */
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import DialogoConfirmacao from './DialogoConfirmacao';
+import { useABordo } from '../hooks/useABordo';
 import { colors, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
 import { LocationMap } from '../features/map/index';
@@ -19,15 +22,38 @@ type Props = {
   rotaId?: string;
   viagemId?: string;
   embarqueId?: string;
+  confirmada?: boolean;
+  statusViagem?: string;
+  // Cancela a presença (resposta "Desci" do diálogo). Devolve true quando deu certo.
+  aoDesci?: () => Promise<boolean>;
   altura?: number;
   onPress: () => void;
 };
 
 type LatLng = { latitude: number; longitude: number };
 
-const MiniMapaOnibus = ({ rotaId, viagemId, embarqueId, altura = 220, onPress }: Props) => {
+const MiniMapaOnibus = ({
+  rotaId,
+  viagemId,
+  embarqueId,
+  confirmada = false,
+  statusViagem,
+  aoDesci,
+  altura = 220,
+  onPress,
+}: Props) => {
   const [pontos, setPontos] = useState<PontoFlatResponse[]>([]);
   const [posicao, setPosicao] = useState<LatLng | null>(null);
+  const emFoco = useIsFocused();
+  const { aBordo, posicaoAluno, dialogoProps } = useABordo({
+    viagemId,
+    confirmada,
+    statusViagem,
+    ativo: emFoco,
+    aoDesci: aoDesci ?? (async () => false),
+  });
+  // A bordo o ônibus segue o GPS do aluno e o polling do motorista para.
+  const posicaoMapa = aBordo ? posicaoAluno : posicao;
 
   useEffect(() => {
     if (!rotaId) return;
@@ -45,7 +71,7 @@ const MiniMapaOnibus = ({ rotaId, viagemId, embarqueId, altura = 220, onPress }:
   }, [rotaId]);
 
   useEffect(() => {
-    if (!viagemId) return;
+    if (!viagemId || aBordo) return;
     let ativo = true;
     const buscar = async () => {
       try {
@@ -62,9 +88,9 @@ const MiniMapaOnibus = ({ rotaId, viagemId, embarqueId, altura = 220, onPress }:
       ativo = false;
       clearInterval(intervalo);
     };
-  }, [viagemId]);
+  }, [viagemId, aBordo]);
 
-  if (!posicao) {
+  if (!posicaoMapa) {
     return (
       <TouchableOpacity
         style={[styles.caixa, styles.espera, { height: altura }]}
@@ -85,11 +111,12 @@ const MiniMapaOnibus = ({ rotaId, viagemId, embarqueId, altura = 220, onPress }:
       accessibilityLabel="Mapa do ônibus, toque para abrir, pinça para dar zoom">
       <LocationMap
         pontosRota={pontos}
-        posicaoOnibus={posicao}
+        posicaoOnibus={posicaoMapa}
         proximaParadaId={embarqueId ?? null}
         previa
         onToque={onPress}
       />
+      <DialogoConfirmacao {...dialogoProps} />
     </View>
   );
 };

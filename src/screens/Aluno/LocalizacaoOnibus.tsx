@@ -16,7 +16,9 @@ import SubHeader from '../../components/SubHeader';
 import { motoristaService } from '../../services/motoristaService';
 import { alunoService } from '../../services';
 import { LocationMap } from '../../features/map/index';
-import { requestLocationPermission } from '../../features/map/hooks/useLocationPermission';
+import DialogoConfirmacao from '../../components/DialogoConfirmacao';
+import { usePresencaViagem } from '../../hooks/usePresencaViagem';
+import { useABordo } from '../../hooks/useABordo';
 import { distanciaMetros as haversineMetros, posicaoMudou } from '../../utils/coordenadas';
 import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
@@ -40,25 +42,16 @@ interface LatLng {
   longitude: number;
 }
 
-let Geolocation: typeof navigator.geolocation | null = null;
-try {
-  Geolocation = require('@react-native-community/geolocation').default;
-} catch {
-  if (typeof navigator !== 'undefined' && navigator.geolocation) {
-    Geolocation = navigator.geolocation;
-  }
-}
-
-type EstadoOnibus = 'movimento' | 'parado' | 'semSinal';
+type EstadoOnibus = 'movimento' | 'parado' | 'semSinal' | 'aBordo';
 
 // Distância mínima entre duas leituras para o ônibus contar como andando. Abaixo
 // disso é ruído de GPS: a viagem da demonstração anda uns 16 m entre leituras.
 const PARADO_M = 5;
 const SEM_SINAL_S = 60;
 // Posições que andam menos que isso não redesenham o marcador nem reenviam comando ao mapa.
-const TOLERANCIA_ALUNO_M = 5;
 const TOLERANCIA_ONIBUS_M = 1;
-const GPS_ALUNO_INTERVALO_MS = 30_000;
+// Enquanto não confirmou, a tela relê a agenda nesse intervalo para ver a confirmação automática.
+const RELER_AGENDA_MS = 60_000;
 
 export function estadoPorLeitura(
   anterior: LatLng | null,
@@ -80,6 +73,7 @@ const ESTADOS: Record<EstadoOnibus, { texto: string; cor: string }> = {
   movimento: { texto: 'Em movimento', cor: colors.success.main },
   parado: { texto: 'Ônibus parado', cor: colors.warning.main },
   semSinal: { texto: 'Sem sinal do ônibus', cor: colors.text.disabled },
+  aBordo: { texto: 'Você está a bordo', cor: colors.success.main },
 };
 
 function etaMinutos(distanciaMetros: number): number {
@@ -96,7 +90,6 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   const [alturaPainel, setAlturaPainel] = useState(0);
 
   const [posicaoMotorista, setPosicaoMotorista] = useState<LatLng | null>(null);
-  const [posicaoAluno, setPosicaoAluno] = useState<LatLng | null>(null);
   const [loading, setLoading] = useState(true);
   const [distanciaMetros, setDistanciaMetros] = useState<number | null>(null);
   const [pontosRota, setPontosRota] = useState<PontoFlatResponse[]>([]);
@@ -137,9 +130,44 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
       .catch(() => setPontosRota([]));
   }, [rotaId]);
 
+  const statusViagem = viagem?.status_viagem as string | undefined;
+  const presenca = usePresencaViagem(
+    viagem as { id?: string; rota_id?: string },
+    !!viagem?.status_confirmacao,
+  );
+  const { confirmada, setConfirmada, cancelar } = presenca;
+
+  // A confirmação automática acontece depois que a tela abriu: relê a agenda até confirmar.
+  useEffect(() => {
+    if (confirmada || statusViagem !== 'EM_ANDAMENTO' || !viagemId) return;
+    const reler = () => {
+      alunoService
+        .listarViagens()
+        .then((lista) => {
+          for (const v of lista) {
+            if (v.id === viagemId && v.status_confirmacao) setConfirmada(true);
+          }
+        })
+        .catch(() => {});
+    };
+    reler();
+    const intervalo = setInterval(reler, RELER_AGENDA_MS);
+    return () => clearInterval(intervalo);
+  }, [confirmada, statusViagem, viagemId, setConfirmada]);
+
+  const { aBordo, posicaoAluno, dialogoProps } = useABordo({
+    viagemId,
+    confirmada,
+    statusViagem,
+    gpsSempre: true,
+    aoDesci: cancelar,
+  });
+  // A bordo o ônibus é desenhado na posição do próprio aluno e o ponto azul some.
+  const posicaoOnibusMapa = aBordo ? posicaoAluno : posicaoMotorista;
+
   // Derive next stop from bus position
   useEffect(() => {
-    if (!posicaoMotorista || pontosRota.length === 0) {
+    if (!posicaoOnibusMapa || pontosRota.length === 0) {
       setProximoPonto(null);
       return;
     }
@@ -151,7 +179,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
         if (lat == null || lon == null) return null;
         return {
           ponto: p,
-          dist: haversineMetros(posicaoMotorista.latitude, posicaoMotorista.longitude, lat, lon),
+          dist: haversineMetros(posicaoOnibusMapa.latitude, posicaoOnibusMapa.longitude, lat, lon),
         };
       })
       .filter(Boolean) as { ponto: PontoFlatResponse; dist: number }[];
@@ -159,40 +187,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
     if (withDist.length === 0) return;
     const nearest = withDist.reduce((a, b) => (a.dist < b.dist ? a : b));
     setProximoPonto(nearest.ponto);
-  }, [posicaoMotorista, pontosRota]);
-
-  const localizacaoPermitida = useRef(false);
-
-  const obterMinhaPosicao = useCallback((precisa: boolean) => {
-    if (!Geolocation || !localizacaoPermitida.current) return;
-    const guardar = (pos: { coords: { latitude: number; longitude: number } }) => {
-      const nova = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-      // Mesmo lugar devolve o objeto antigo e o React não renderiza de novo.
-      setPosicaoAluno((atual) => (posicaoMudou(atual, nova, TOLERANCIA_ALUNO_M) ? nova : atual));
-    };
-    Geolocation.getCurrentPosition(
-      guardar,
-      // Alta precisão depende do GPS, que não fixa dentro de prédio. A rede
-      // responde nesse caso, com precisão menor.
-      () =>
-        Geolocation!.getCurrentPosition(guardar, () => {}, {
-          enableHighAccuracy: false,
-          timeout: 15_000,
-          maximumAge: 60_000,
-        }),
-      // Precisão alta só na abertura. Depois a leitura é balanceada (rede e GPS em cache).
-      { enableHighAccuracy: precisa, timeout: 10_000, maximumAge: precisa ? 5_000 : 20_000 },
-    );
-  }, []);
-
-  useEffect(() => {
-    requestLocationPermission().then((ok) => {
-      localizacaoPermitida.current = ok;
-      obterMinhaPosicao(true);
-    });
-    const gps = setInterval(() => obterMinhaPosicao(false), GPS_ALUNO_INTERVALO_MS);
-    return () => clearInterval(gps);
-  }, [obterMinhaPosicao]);
+  }, [posicaoOnibusMapa, pontosRota]);
 
   const buscarLocalizacao = useCallback(async () => {
     if (!viagemId) return;
@@ -216,14 +211,16 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
     }
   }, [viagemId]);
 
+  // A bordo a posição vem do GPS local e o polling do motorista para (economiza requisições).
   useEffect(() => {
+    if (aBordo) return;
     buscarLocalizacao();
     const interval = setInterval(buscarLocalizacao, 5_000);
     return () => clearInterval(interval);
-  }, [buscarLocalizacao]);
+  }, [buscarLocalizacao, aBordo]);
 
   useEffect(() => {
-    if (!posicaoMotorista || !posicaoAluno) return;
+    if (aBordo || !posicaoMotorista || !posicaoAluno) return;
     const metros = haversineMetros(
       posicaoAluno.latitude,
       posicaoAluno.longitude,
@@ -231,7 +228,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
       posicaoMotorista.longitude,
     );
     setDistanciaMetros(metros);
-  }, [posicaoMotorista, posicaoAluno]);
+  }, [aBordo, posicaoMotorista, posicaoAluno]);
 
   if (!rota || !viagem) {
     return (
@@ -245,16 +242,17 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
+  const estadoExibido: EstadoOnibus = aBordo ? 'aBordo' : estadoOnibus;
   const etaParaOnibus =
     distanciaMetros != null ? etaMinutos(distanciaMetros) : null;
   const etaParaProximoPonto =
-    posicaoMotorista && proximoPonto
+    posicaoOnibusMapa && proximoPonto
       ? (() => {
           const pp = proximoPonto as Record<string, unknown>;
           const lat = pp.latitude as number | undefined;
           const lon = pp.longitude as number | undefined;
           if (lat == null || lon == null) return null;
-          const d = haversineMetros(posicaoMotorista.latitude, posicaoMotorista.longitude, lat, lon);
+          const d = haversineMetros(posicaoOnibusMapa.latitude, posicaoOnibusMapa.longitude, lat, lon);
           return etaMinutos(d);
         })()
       : null;
@@ -271,11 +269,11 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
         ) : (
           <LocationMap
             pontosRota={pontosRota}
-            posicaoOnibus={posicaoMotorista}
+            posicaoOnibus={posicaoOnibusMapa}
             proximaParadaId={
               proximoPonto ? ((proximoPonto as Record<string, unknown>).id as string) : null
             }
-            posicaoAluno={posicaoAluno}
+            posicaoAluno={aBordo ? null : posicaoAluno}
             margemSuperior={alturaCabecalho}
             margemInferior={alturaPainel}
             centralizarTick={centralizarTick}
@@ -288,18 +286,18 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
         style={[styles.bolhaEstado, { top: alturaCabecalho + 12 }]}
         onPress={() => setMostrarEstado((v) => !v)}
         accessibilityRole="button"
-        accessibilityLabel={`Estado: ${ESTADOS[estadoOnibus].texto}`}>
-        <View style={[styles.bolhaPonto, { backgroundColor: ESTADOS[estadoOnibus].cor }]} />
-        {mostrarEstado && <Text style={styles.bolhaTexto}>{ESTADOS[estadoOnibus].texto}</Text>}
+        accessibilityLabel={`Estado: ${ESTADOS[estadoExibido].texto}`}>
+        <View style={[styles.bolhaPonto, { backgroundColor: ESTADOS[estadoExibido].cor }]} />
+        {mostrarEstado && <Text style={styles.bolhaTexto}>{ESTADOS[estadoExibido].texto}</Text>}
       </TouchableOpacity>
 
       {/* Minha posição: centraliza o mapa no ônibus e volta a seguí-lo */}
       <TouchableOpacity
-        style={[styles.minhaPosicao, { bottom: alturaPainel + spacing.base }, !posicaoMotorista && styles.minhaPosicaoApagada]}
+        style={[styles.minhaPosicao, { bottom: alturaPainel + spacing.base }, !posicaoOnibusMapa && styles.minhaPosicaoApagada]}
         onPress={() => setCentralizarTick((n) => n + 1)}
-        disabled={!posicaoMotorista}
+        disabled={!posicaoOnibusMapa}
         accessibilityRole="button"
-        accessibilityState={{ disabled: !posicaoMotorista }}
+        accessibilityState={{ disabled: !posicaoOnibusMapa }}
         accessibilityLabel="Centralizar no ônibus">
         <Icon name={IconNames.myLocation} size="lg" color="#FFFFFF" />
       </TouchableOpacity>
@@ -361,6 +359,9 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
         )}
 
         {/* Distance & ETA to the bus */}
+        {aBordo ? (
+          <Text style={styles.aBordoTexto}>Você está a bordo. O ônibus segue a sua posição.</Text>
+        ) : (
         <View style={styles.infoRow}>
           <View
             style={styles.infoItem}
@@ -408,9 +409,11 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
         </View>
+        )}
           </>
         )}
       </View>
+      <DialogoConfirmacao {...dialogoProps} />
     </TelaSegura>
   );
 };
@@ -534,6 +537,7 @@ const styles = StyleSheet.create({
   },
   infoLabel: { ...textStyles.caption, color: colors.text.secondary, marginBottom: spacing.xxs },
   infoValue: { ...textStyles.h3, color: colors.primary.main },
+  aBordoTexto: { ...textStyles.body, color: colors.success.main, fontWeight: '600', textAlign: 'center' },
   infoDivider: { width: 1, backgroundColor: colors.border.light, marginHorizontal: spacing.base },
 
   minhaPosicao: {
