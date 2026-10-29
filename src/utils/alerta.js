@@ -1,9 +1,10 @@
 import { Alert, Platform } from 'react-native';
 
 /**
- * Alert.alert do react-native-web é um stub vazio: na web a confirmação nunca aparecia.
- * alertar tem a mesma assinatura do Alert.alert. No celular usa o alerta do sistema; na
- * web abre o diálogo do app (AlertaProvider), sem o popup do navegador.
+ * Alert.alert do react-native-web é um stub vazio e, no Android, abre a janela do sistema.
+ * alertar tem a mesma assinatura do Alert.alert e abre sempre o diálogo do app
+ * (AlertaProvider). Sem o provider montado cai no alerta do sistema (celular) ou no confirm
+ * do navegador (web).
  */
 let abrir = null;
 
@@ -15,13 +16,13 @@ export const registrarAlerta = fn => {
 };
 
 export const alertar = (titulo, mensagem, botoes) => {
-  if (Platform.OS !== 'web') {
-    Alert.alert(titulo, mensagem, botoes);
-    return;
-  }
   const lista = botoes && botoes.length > 0 ? botoes : [{ text: 'OK' }];
   if (abrir) {
     abrir({ titulo, mensagem, botoes: lista });
+    return;
+  }
+  if (Platform.OS !== 'web') {
+    Alert.alert(titulo, mensagem, botoes);
     return;
   }
   // Sem o provider montado (testes, tela isolada): confirma pelo navegador.

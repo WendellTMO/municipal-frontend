@@ -1,9 +1,10 @@
 // src/components/map/RouteMap.native.tsx
 import React, { useEffect, useMemo, useRef } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import type { RouteMapProps } from '../types';
+import { alertar } from '../../../utils/alerta';
 import { useLocationPermission } from '../hooks/useLocationPermissionWrapper';
 import { useCurrentLocation } from '../hooks/useCurrentLocation';
 import { useArrivalDetection } from '../hooks/useArrivalDetection';
@@ -88,7 +89,7 @@ export default function RouteMap({ pontosRota, onPontoChegado }: RouteMapProps) 
 
   useEffect(() => {
     if (permissionError) {
-      Alert.alert(
+      alertar(
         'Permissão negada',
         'Sem acesso à localização, não é possível mostrar a rota.'
       );

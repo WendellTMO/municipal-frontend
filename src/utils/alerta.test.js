@@ -9,7 +9,17 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-test('no celular usa o alerta do sistema', () => {
+test('no celular com o provider montado abre o diálogo do app', () => {
+  Platform.OS = 'android';
+  const abrir = jest.fn();
+  const desfazer = registrarAlerta(abrir);
+  alertar('Sair da conta', 'Tem certeza?', [{ text: 'Sair' }]);
+  expect(abrir).toHaveBeenCalledTimes(1);
+  expect(Alert.alert).not.toHaveBeenCalled();
+  desfazer();
+});
+
+test('no celular sem o provider usa o alerta do sistema', () => {
   Platform.OS = 'android';
   const espiao = Alert.alert;
   const botoes = [{ text: 'OK' }];
