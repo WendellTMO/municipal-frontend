@@ -19,6 +19,13 @@ interface RoutePoint {
 
 interface StaticRouteMapProps {
   pontosRota: RoutePoint[];
+  // Tela cheia com a folha de pontos: altura própria, pinos 1..N, pino dourado e toque longo.
+  altura?: number | '100%';
+  numerar?: boolean;
+  pino?: { latitude: number; longitude: number } | null;
+  aoTocarLongo?: (local: { latitude: number; longitude: number }) => void;
+  margemTopo?: number;
+  margemBase?: number;
 }
 
 interface PreparedPoint {
@@ -33,7 +40,7 @@ interface PreparedPoint {
  * Same visual contract as StaticRouteMap.native (A/B pins + dashed line),
  * drawn with the Leaflet DOM API instead of a WebView + HTML string.
  */
-function preparePoints(points: RoutePoint[]): PreparedPoint[] {
+function preparePoints(points: RoutePoint[], numerar?: boolean): PreparedPoint[] {
   const validPoints = [...points]
     .filter((p) => {
       const lat = Number(p.latitude);
@@ -45,9 +52,16 @@ function preparePoints(points: RoutePoint[]): PreparedPoint[] {
   return validPoints.map((p, i) => ({
     lat: Number(p.latitude),
     lng: Number(p.longitude),
-    label: i === 0 ? 'A' : i === validPoints.length - 1 ? 'B' : String(i + 1),
+    label:
+      numerar ? String(i + 1) : i === 0 ? 'A' : i === validPoints.length - 1 ? 'B' : String(i + 1),
     color:
-      i === 0 ? '#34A853' : i === validPoints.length - 1 ? '#EA4335' : '#4285F4',
+      numerar
+        ? '#4285F4'
+        : i === 0
+          ? '#34A853'
+          : i === validPoints.length - 1
+            ? '#EA4335'
+            : '#4285F4',
     name: p.nome || p.apelido || `Ponto ${i + 1}`,
   }));
 }
@@ -74,13 +88,30 @@ function pinHtml(point: PreparedPoint): string {
   ].join('');
 }
 
-export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
+const PINO_DOURADO = [
+  '<div style="display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.35))">',
+  '<div style="width:30px;height:30px;border-radius:50%;background:#F5A623;border:3px solid white"></div>',
+  '<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #F5A623;margin-top:-1px"></div>',
+  '</div>',
+].join('');
+
+export default function StaticRouteMap({
+  pontosRota,
+  altura,
+  numerar,
+  pino,
+  aoTocarLongo,
+  margemTopo = 40,
+  margemBase = 0,
+}: StaticRouteMapProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<LeafletMap | null>(null);
   const LRef = useRef<LeafletModule | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const longoRef = useRef(aoTocarLongo);
+  longoRef.current = aoTocarLongo;
 
-  const points = useMemo(() => preparePoints(pontosRota ?? []), [pontosRota]);
+  const points = useMemo(() => preparePoints(pontosRota ?? [], numerar), [pontosRota, numerar]);
   const paradas = useMemo(() => {
     const lista: { latitude: number; longitude: number }[] = [];
     for (const p of points) {
@@ -103,7 +134,7 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
       if (!mounted || !mapRef.current) return;
 
       LRef.current = L;
-      const map = L.map(mapRef.current, { zoomControl: true }).setView(
+      const map = L.map(mapRef.current, { zoomControl: !numerar }).setView(
         [-15.78, -47.93],
         5,
       );
@@ -112,6 +143,11 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
         attribution: TILE_ATTRIBUTION,
         maxZoom: TILE_MAX_ZOOM,
       }).addTo(map);
+
+      // Toque longo no celular e botão direito no computador.
+      map.on('contextmenu', (e: LeafletNS.LeafletMouseEvent) => {
+        longoRef.current?.({ latitude: e.latlng.lat, longitude: e.latlng.lng });
+      });
 
       mapInstance.current = map;
       setMapReady(true);
@@ -172,7 +208,10 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
           }).addTo(map),
         );
       }
-      map.fitBounds(L.latLngBounds(latLngs.concat(ruas)), { padding: [40, 40] });
+      map.fitBounds(L.latLngBounds(latLngs.concat(ruas)), {
+        paddingTopLeft: [40, margemTopo],
+        paddingBottomRight: [40, 40 + margemBase],
+      });
     } else if (latLngs.length === 1) {
       map.setView(latLngs[0], 15);
     }
@@ -182,9 +221,33 @@ export default function StaticRouteMap({ pontosRota }: StaticRouteMapProps) {
       if (mapInstance.current !== map) return;
       layers.forEach((layer) => map.removeLayer(layer));
     };
-  }, [mapReady, points, trajeto]);
+  }, [mapReady, points, trajeto, margemTopo, margemBase]);
 
-  return <div ref={mapRef} style={styles.container as React.CSSProperties} />;
+  // Pino dourado do ponto que ainda vai ser adicionado.
+  useEffect(() => {
+    if (!mapReady || !mapInstance.current || !LRef.current || !pino) return;
+    const map = mapInstance.current;
+    const L = LRef.current;
+    const icon = L.divIcon({
+      className: 'custom-pin',
+      html: PINO_DOURADO,
+      iconSize: [30, 45],
+      iconAnchor: [15, 45],
+    });
+    const marcador = L.marker([pino.latitude, pino.longitude], { icon }).addTo(map);
+    map.panTo([pino.latitude, pino.longitude]);
+    return () => {
+      if (mapInstance.current !== map) return;
+      map.removeLayer(marcador);
+    };
+  }, [mapReady, pino]);
+
+  const estilo = { ...(styles.container as React.CSSProperties) };
+  if (altura !== undefined) {
+    estilo.height = altura;
+    estilo.borderRadius = 0;
+  }
+  return <div ref={mapRef} style={estilo} />;
 }
 
 const styles = StyleSheet.create({
