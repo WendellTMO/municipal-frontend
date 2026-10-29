@@ -4,6 +4,10 @@
         <!-- Prevents NullPointerException in ReactTextInputShadowNode when creating EditText.
              React Native's TextInput handles its own styling, so the Android background is unused. -->
         <item name="android:editTextBackground">@null</item>
+        <!-- Tela de abertura nativa, antes de o JS carregar. -->
+        <item name="android:windowBackground">@drawable/launch_screen</item>
+        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>
 

@@ -1,78 +1,77 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  StatusBar,
-  Image,
-  Animated,
-  ActivityIndicator,
-  useWindowDimensions,
-  type ImageResizeMode,
-  Pressable,
-  Text,
-} from 'react-native';
-import { spacing, textStyles } from '../theme';
+import { Animated, Easing, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { AuthBackground, AuthLogo } from '../components';
+import { colors, spacing, textStyles } from '../theme';
 
 type SplashScreenProps = {
   onContinue: () => void;
 };
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onContinue }) => {
-  const { width, height } = useWindowDimensions();
+const CORES_PONTOS = [colors.primary.main, colors.accent.main, colors.primary.main];
+const ATRASO_PONTO_MS = 160;
 
+const SplashScreen: React.FC<SplashScreenProps> = ({ onContinue }) => {
   const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.98)).current;
-  const translateY = useRef(new Animated.Value(12)).current;
+  const scale = useRef(new Animated.Value(0.92)).current;
+  const pontos = useRef(CORES_PONTOS.map(() => new Animated.Value(0.3))).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 700,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 7,
-        tension: 50,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 700,
-        useNativeDriver: true,
-      }),
+      Animated.timing(opacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, friction: 7, tension: 50, useNativeDriver: true }),
     ]).start();
-  }, [opacity, scale, translateY]);
 
-  const screenRatio = height / width;
-  const shouldUseCover = screenRatio >= 1.75;
-  const imageResizeMode: ImageResizeMode = shouldUseCover ? 'cover' : 'contain';
+    const animacoes = pontos.map((ponto, i) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(i * ATRASO_PONTO_MS),
+          Animated.timing(ponto, {
+            toValue: 1,
+            duration: 380,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(ponto, {
+            toValue: 0.3,
+            duration: 380,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.delay((CORES_PONTOS.length - 1 - i) * ATRASO_PONTO_MS),
+        ]),
+      ),
+    );
+    animacoes.forEach(a => a.start());
+    return () => animacoes.forEach(a => a.stop());
+  }, [opacity, scale, pontos]);
 
   return (
     <Pressable style={styles.pressable} onPress={onContinue}>
       <View style={styles.container}>
-        <StatusBar backgroundColor="#0347D0" barStyle="light-content" />
+        <StatusBar backgroundColor={colors.background.paper} barStyle="dark-content" />
+        <AuthBackground />
 
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.artworkWrapper,
-            {
-              opacity,
-              transform: [{ scale }, { translateY }],
-            },
-          ]}
-        >
-          <Image
-            source={require('../../assets/splash_screen.png')}
-            style={styles.artwork}
-            resizeMode={imageResizeMode}
-          />
+        <Animated.View style={[styles.centro, { opacity, transform: [{ scale }] }]}>
+          <AuthLogo width={230} />
         </Animated.View>
 
-        <View pointerEvents="none" style={styles.loaderOverlay}>
-          <ActivityIndicator size="small" color="#FFFFFFCC" />
+        <View style={styles.carregando} pointerEvents="none">
+          <View style={styles.pontos}>
+            {pontos.map((ponto, i) => (
+              <Animated.View
+                key={i}
+                style={[
+                  styles.ponto,
+                  {
+                    backgroundColor: CORES_PONTOS[i],
+                    opacity: ponto,
+                    transform: [{ scale: ponto }],
+                  },
+                ]}
+              />
+            ))}
+          </View>
+          <Text style={styles.texto}>Preparando sua rota</Text>
         </View>
 
         {__DEV__ && (
@@ -86,29 +85,23 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onContinue }) => {
 };
 
 const styles = StyleSheet.create({
-  pressable: {
-    flex: 1,
-  },
+  pressable: { flex: 1 },
   container: {
     flex: 1,
-    backgroundColor: '#0347D0',
+    backgroundColor: colors.background.paper,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  artworkWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  artwork: {
-    width: '100%',
-    height: '100%',
-  },
-  loaderOverlay: {
+  centro: { alignItems: 'center', marginBottom: spacing.xxl },
+  carregando: {
     position: 'absolute',
-    bottom: spacing.xl,
-    alignSelf: 'center',
+    bottom: 96,
+    alignItems: 'center',
+    gap: spacing.md,
   },
+  pontos: { flexDirection: 'row', gap: spacing.sm },
+  ponto: { width: 12, height: 12, borderRadius: 6 },
+  texto: { ...textStyles.bodySmall, color: colors.text.secondary },
   devHint: {
     position: 'absolute',
     top: spacing.xl,
