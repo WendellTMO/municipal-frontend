@@ -432,7 +432,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             accessibilityLabel="Centralizar na minha posição">
             <Icon name={IconNames.myLocation} size="lg" color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.minhaPosicaoLegenda} numberOfLines={1}>Minha posição</Text>
         </View>
 
         {/* Cabeçalho no padrão do app: voltar desabilitado, rota e cronômetro */}
@@ -604,7 +603,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         <DialogoConfirmacao
           visible={finalizarVisivel}
           titulo="Finalizar a viagem?"
-          resumo={`${formatarTempo(tempoDecorrido)} · paradas feitas ${Math.min(concluidas, paradas.length)} de ${paradas.length}`}
+          resumo="Tem certeza que deseja finalizar?"
           onCancelar={() => setFinalizarVisivel(false)}
           principal={{ texto: 'Continuar viagem', cor: colors.success.main, onPress: () => setFinalizarVisivel(false) }}
           secundario={{ texto: 'Sim, finalizar', cor: colors.error.main, carregando: loading, onPress: confirmarFinalizar }}
@@ -1011,15 +1010,6 @@ const styles = StyleSheet.create({
   instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
   instituicaoQtd: { ...textStyles.h5, color: colors.primary.main },
   minhaPosicaoWrap: { position: 'absolute', right: spacing.base, alignItems: 'center', gap: 4, zIndex: 15 },
-  minhaPosicaoLegenda: {
-    ...textStyles.caption,
-    color: colors.text.primary,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    overflow: 'hidden',
-  },
   minhaPosicao: {
     width: 52,
     height: 52,
