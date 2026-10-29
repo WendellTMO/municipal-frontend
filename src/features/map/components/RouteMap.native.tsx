@@ -154,7 +154,7 @@ export default function RouteMap({ pontosRota, onPontoChegado }: RouteMapProps) 
 
   const overlayError =
     mapError
-      ? 'Verifique sua conexão com a internet'
+      ? 'Tente novamente em instantes'
       : permissionError || locationError || routeError;
 
   const overlayLoading = loadingMap || permissionLoading || locationLoading || routeLoading;

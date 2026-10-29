@@ -173,7 +173,7 @@ const DefinirPontosRota = ({navigation, route}) => {
       }
     } catch (error) {
       console.error('Erro na busca:', error);
-      if (minha === buscaAtual.current) toast.error('Erro ao buscar. Verifique sua conexão.');
+      if (minha === buscaAtual.current) toast.error('Não foi possível buscar o endereço agora. Tente novamente.');
     } finally {
       if (minha === buscaAtual.current) setBuscandoEndereco(false);
     }

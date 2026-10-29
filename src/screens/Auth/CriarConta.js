@@ -355,7 +355,7 @@ const CriarConta = ({navigation}) => {
         setErrors(prev => ({...prev, cep: 'CEP não encontrado'}));
       }
     } catch (error) {
-      setGeneralError('Não foi possível buscar o CEP. Verifique sua conexão.');
+      setGeneralError('Não foi possível buscar o CEP agora. Tente novamente ou preencha o endereço.');
     } finally {
       setLoadingCep(false);
     }
@@ -567,7 +567,7 @@ const CriarConta = ({navigation}) => {
         setGeneralError(error || 'Preencha todos os campos obrigatórios.');
         break;
       case ErrorCode.NETWORK_ERROR:
-        setGeneralError('Sem conexão. Verifique sua internet e tente novamente.');
+        setGeneralError('Não foi possível conectar ao servidor. Tente novamente em instantes.');
         break;
       case ErrorCode.SERVICE_UNAVAILABLE:
         setGeneralError(
