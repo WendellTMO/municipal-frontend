@@ -1,6 +1,7 @@
 import {
   ACIMA_DA_BARRA,
   decidirPosicao,
+  tamanhoDaArea,
   ehArraste,
   ladoMaisProximo,
   limitarPonto,
@@ -63,4 +64,14 @@ test('limitarPonto prende o botão à janela e à faixa vertical', () => {
 test('padrão barra deixa o botão no canto de baixo à direita, acima da barra grande', () => {
   const base = { guardada: null, altura: 800, tamanho: 56, rodape: 24 };
   expect(decidirPosicao({ ...base, padraoTela: 'barra' })).toEqual({ lado: 'dir', baixo: ACIMA_DA_BARRA });
+});
+
+test('usa o tamanho do container quando ele é confiável', () => {
+  expect(tamanhoDaArea({ width: 375, height: 780 }, { width: 1280, height: 800 })).toEqual({ width: 375, height: 780 });
+});
+
+test('sem medida ou com container minúsculo usa a janela', () => {
+  const janela = { width: 1280, height: 800 };
+  expect(tamanhoDaArea(null, janela)).toEqual(janela);
+  expect(tamanhoDaArea({ width: 0, height: 0 }, janela)).toEqual(janela);
 });

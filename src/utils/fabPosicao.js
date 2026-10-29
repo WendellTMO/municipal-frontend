@@ -27,6 +27,17 @@ export const posicaoGuardada = valor => {
   return { lado: valor.lado, baixo: valor.baixo };
 };
 
+// Tamanho em que o botão se posiciona: o do container que o contém (na web de computador é a
+// moldura do celular, bem menor que a janela). Sem medida confiável usa a janela.
+export const TAMANHO_MINIMO_AREA = 200;
+
+export const tamanhoDaArea = (area, janela) => {
+  if (area && area.width >= TAMANHO_MINIMO_AREA && area.height >= TAMANHO_MINIMO_AREA) {
+    return { width: area.width, height: area.height };
+  }
+  return { width: janela.width, height: janela.height };
+};
+
 // Altura do cabeçalho azul (SubHeader) mais uma folga: o botão por tela fica logo abaixo
 // da seta de voltar (canto superior esquerdo), longe dos botões + e - do mapa, à direita.
 export const ABAIXO_DO_CABECALHO = 121;
