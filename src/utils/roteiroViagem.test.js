@@ -2,7 +2,7 @@ import { montarParadas } from './paradasViagem';
 import { montarRoteiro } from './roteiroViagem';
 
 const ponto = (id, apelido, instituicao) => ({ id, apelido, latitude: 0, longitude: 0, instituicao });
-const escola = { id: 'i1', nome: 'UFCG', tipo: 'Universidade pública' };
+const escola = { id: 'i1', nome: 'UFCG', tipo: 'Universidade pública', endereco: 'Rua Aprígio Veloso, 882' };
 const aluno = (nome, embarque, destino, confirmacao = true) => ({
   nome,
   confirmacao,
@@ -32,7 +32,7 @@ test('IDA tem Embarque e Instituição, esta só com Descem', () => {
   expect(r[0].total).toBe(2);
   const inst = r[1].itens[0];
   expect(inst.etiquetas.map(e => e.texto)).toEqual(['Descem 2']);
-  expect(inst.detalhe).toBe('Universidade pública');
+  expect(inst.detalhe).toBe('Rua Aprígio Veloso, 882');
   expect(r[1].total).toBeNull();
 });
 
