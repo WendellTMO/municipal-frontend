@@ -7,44 +7,44 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { colors, spacing, textStyles } from '../theme';
 import ModalApp from './ModalApp';
 
-const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, secundario }) => (
-  <ModalApp visible={visible} transparent animationType="fade" onRequestClose={onCancelar} accessibilityViewIsModal>
-    <View style={styles.fundo}>
-      <TouchableOpacity
-        style={StyleSheet.absoluteFillObject}
-        activeOpacity={1}
-        onPress={onCancelar}
-        accessibilityRole="button"
-        accessibilityLabel="Cancelar"
-      />
-      <View style={styles.cartao}>
-        <Text style={styles.titulo} accessibilityRole="header">
-          {titulo}
-        </Text>
-        {resumo ? <Text style={styles.resumo}>{resumo}</Text> : null}
+// botoes (lista) tem prioridade sobre principal e secundario. O primeiro botão é o maior.
+const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, secundario, botoes }) => {
+  const lista = botoes || [principal, secundario];
+  return (
+    <ModalApp visible={visible} transparent animationType="fade" onRequestClose={onCancelar} accessibilityViewIsModal>
+      <View style={styles.fundo}>
         <TouchableOpacity
-          style={[styles.botao, { backgroundColor: principal.cor }]}
-          onPress={principal.onPress}
+          style={StyleSheet.absoluteFillObject}
+          activeOpacity={1}
+          onPress={onCancelar}
           accessibilityRole="button"
-          accessibilityLabel={principal.texto}>
-          <Text style={[styles.botaoTexto, principal.corTexto ? { color: principal.corTexto } : null]}>{principal.texto}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.botao, styles.botaoSecundario, { backgroundColor: secundario.cor }]}
-          onPress={secundario.onPress}
-          disabled={secundario.carregando}
-          accessibilityRole="button"
-          accessibilityLabel={secundario.texto}>
-          {secundario.carregando ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={[styles.botaoTexto, secundario.corTexto ? { color: secundario.corTexto } : null]}>{secundario.texto}</Text>
-          )}
-        </TouchableOpacity>
+          accessibilityLabel="Cancelar"
+        />
+        <View style={styles.cartao}>
+          <Text style={styles.titulo} accessibilityRole="header">
+            {titulo}
+          </Text>
+          {resumo ? <Text style={styles.resumo}>{resumo}</Text> : null}
+          {lista.map((botao, i) => (
+            <TouchableOpacity
+              key={`${i}-${botao.texto}`}
+              style={[styles.botao, i > 0 && styles.botaoSecundario, { backgroundColor: botao.cor }]}
+              onPress={botao.onPress}
+              disabled={botao.carregando}
+              accessibilityRole="button"
+              accessibilityLabel={botao.texto}>
+              {botao.carregando ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={[styles.botaoTexto, botao.corTexto ? { color: botao.corTexto } : null]}>{botao.texto}</Text>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
-    </View>
-  </ModalApp>
-);
+    </ModalApp>
+  );
+};
 
 const styles = StyleSheet.create({
   fundo: {

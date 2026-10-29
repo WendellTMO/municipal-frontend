@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
@@ -27,6 +26,7 @@ import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import { alertar } from '../../utils/alerta';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const SEGMENT = { MOTORISTAS: 0, ALUNOS: 1 };
@@ -153,7 +153,7 @@ const EquipeGestor = ({ navigation }) => {
   // ─── Delete motorista ────────────────────────────────────────────────────
 
   const handleExcluirMotorista = (motorista) => {
-    Alert.alert(
+    alertar(
       'Remover Motorista',
       `Deseja remover ${motorista.nome} da equipe? Esta ação não pode ser desfeita.`,
       [

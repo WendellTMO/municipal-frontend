@@ -7,8 +7,6 @@ import {
   StyleSheet,
   ScrollView,
   Switch,
-  Alert,
-  Platform,
 } from 'react-native';
 import TelaSegura from '../components/TelaSegura';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,6 +17,8 @@ import Icon, { IconNames } from '../components/Icon';
 import { withFabSpace } from '../config/feedback';
 import SubHeader from '../components/SubHeader';
 import { rotuloAtual } from '../services/biometria';
+import { alertar } from '../utils/alerta';
+import { confirmAction } from '../utils/confirm';
 
 const roleLabel = (role?: string) => {
   const map: Record<string, string> = {
@@ -48,31 +48,22 @@ const ConfigNotificacoes = ({ navigation }) => {
     return 'Notificações e conta';
   }, [isAluno]);
 
-  const handleLogout = async () => {
-    if (Platform.OS === 'web') {
-      const shouldLogout = window.confirm('Tem certeza que deseja sair?');
-      if (shouldLogout) {
-        await performLogout();
-      }
-      return;
-    }
-
-    Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja encerrar a sessão?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', style: 'destructive', onPress: performLogout },
-      ],
-      { cancelable: true }
-    );
+  const handleLogout = () => {
+    confirmAction({
+      title: 'Sair da conta',
+      message: 'Tem certeza que deseja encerrar a sessão?',
+      confirmText: 'Sair',
+      destructive: true,
+      onConfirm: performLogout,
+      onCancel: undefined,
+    });
   };
 
   const performLogout = async () => {
     try {
       await logout();
     } catch {
-      Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
+      alertar('Erro', 'Não foi possível sair. Tente novamente.');
     }
   };
 

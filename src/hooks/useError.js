@@ -4,7 +4,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import {
   parseApiError,
   getErrorMessageFromError,
@@ -14,6 +13,7 @@ import {
   ErrorCategory,
 } from '../utils/errors';
 import { useAuth } from '../contexts/AuthContext';
+import { alertar } from '../utils/alerta';
 
 /**
  * Hook for handling errors with automatic parsing and display
@@ -54,7 +54,7 @@ export function useError() {
       if (onAuthError) {
         onAuthError(parsedError);
       } else {
-        Alert.alert(
+        alertar(
           'Sessão Expirada',
           'Sua sessão expirou. Por favor, faça login novamente.',
           [
@@ -70,7 +70,7 @@ export function useError() {
     
     // Show alert if requested
     if (showAlert) {
-      Alert.alert('Erro', parsedError.message);
+      alertar('Erro', parsedError.message);
     }
     
     return parsedError;
@@ -142,7 +142,7 @@ export function useError() {
    */
   const showErrorAlert = useCallback((title = 'Erro') => {
     if (error) {
-      Alert.alert(title, error.message);
+      alertar(title, error.message);
     }
   }, [error]);
 

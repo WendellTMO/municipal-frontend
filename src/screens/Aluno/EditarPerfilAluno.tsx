@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -23,6 +22,7 @@ import { formatPhone, formatCep, formatCpf, onlyDigits } from '../../utils/masks
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
+import { alertar } from '../../utils/alerta';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -178,7 +178,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleAlterarSenha = () => {
-    Alert.alert(
+    alertar(
       'Alterar Senha',
       'Para alterar sua senha, acesse a tela de configurações.',
     );
