@@ -361,6 +361,13 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
               aoDesci={desci}
               onPress={abrirLocalizacao}
             />
+            {/* Quem ainda não confirmou precisa poder confirmar com a viagem já em andamento. */}
+            <PresencaAcoes
+              key={`${todayTrip.id}-${!!todayTrip.status_confirmacao}`}
+              viagem={todayTrip}
+              confirmadaInicial={!!todayTrip.status_confirmacao}
+              onMudou={(c) => setTodayTrip((prev) => (prev ? { ...prev, status_confirmacao: c } : prev))}
+            />
           </AgoraCard>
         )}
 
