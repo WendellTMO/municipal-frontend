@@ -9,10 +9,20 @@ import { borderRadius, colors, shadows, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
 import ModalApp from './ModalApp';
 import Tappable from './Tappable';
-import { escolhaCompleta, pedeDesembarque, pedeEmbarque, tituloEscolha } from '../utils/presenca';
+import {
+  escolhaCompleta,
+  instituicaoDiferente,
+  pedeDesembarque,
+  pedeEmbarque,
+  pedeInstituicao,
+  tituloEscolha,
+} from '../utils/presenca';
+import { confirmAction } from '../utils/confirm';
 
-export type PontoEscolha = { id: string; apelido: string };
+export type PontoEscolha = { id: string; apelido: string; instituicao?: unknown };
 export type Escolha = { embarqueId: string | null; desembarqueId: string | null };
+
+export type InstituicaoDaRota = { id: string; nome: string; pontoId: string };
 
 export type EscolhaPontoSheetProps = {
   visible: boolean;
@@ -21,11 +31,15 @@ export type EscolhaPontoSheetProps = {
   /** Ponto da instituição: fica fora da lista, pois o aluno não embarca nem desce nele por escolha */
   fixoId: string | null;
   instituicaoNome: string;
+  /** Instituições da rota: o aluno pode usar uma que não é a dele */
+  instituicoes: InstituicaoDaRota[];
+  instituicaoPropriaId: string | null;
+  instituicaoAtualId: string | null;
   inicial: Escolha;
   erro: string;
   salvando: boolean;
   onClose: () => void;
-  onConfirmar: (escolha: Escolha, lembrar: boolean) => void;
+  onConfirmar: (escolha: Escolha, lembrar: boolean, instituicaoId: string | null) => void;
 };
 
 const Lista = ({
@@ -70,6 +84,9 @@ const EscolhaPontoSheet = ({
   pontos,
   fixoId,
   instituicaoNome,
+  instituicoes,
+  instituicaoPropriaId,
+  instituicaoAtualId,
   inicial,
   erro,
   salvando,
@@ -78,26 +95,62 @@ const EscolhaPontoSheet = ({
 }: EscolhaPontoSheetProps) => {
   const [escolha, setEscolha] = useState<Escolha>(inicial);
   const [lembrar, setLembrar] = useState(false);
+  const [instituicaoId, setInstituicaoId] = useState<string | null>(instituicaoAtualId);
+  const [trocando, setTrocando] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setEscolha(inicial);
       setLembrar(false);
+      setInstituicaoId(instituicaoAtualId);
+      setTrocando(false);
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // As instituições só chegam depois da lista de pontos; sem escolha ainda, usa a atual.
+  useEffect(() => {
+    if (visible && instituicaoId === null && instituicaoAtualId) setInstituicaoId(instituicaoAtualId);
+  }, [instituicaoAtualId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const circular = sentido === 'CIRCULAR';
+  const comInstituicao = pedeInstituicao(sentido) && instituicoes.length > 0;
+  const escolhida = instituicoes.find((i) => i.id === instituicaoId) ?? null;
+  const propria = instituicoes.find((i) => i.id === instituicaoPropriaId) ?? null;
+  // O ponto da instituição escolhida não é ponto de embarque ou descida por escolha.
+  const pontoDaInstituicao = escolhida ? escolhida.pontoId : fixoId;
+  // Na ida e na volta as instituições da rota se escolhem no bloco de cima, não na lista de pontos.
   const lista: PontoEscolha[] = [];
   for (const ponto of pontos ?? []) {
-    if (circular || ponto.id !== fixoId) lista.push(ponto);
+    if (circular) {
+      lista.push(ponto);
+    } else if (ponto.id !== pontoDaInstituicao && !(comInstituicao && ponto.instituicao)) {
+      lista.push(ponto);
+    }
   }
-  const completa = escolhaCompleta(sentido, escolha);
+  const completa = escolhaCompleta(sentido, escolha) && (!comInstituicao || escolhida !== null);
+  const verbo = sentido === 'IDA' ? 'desce' : 'embarca';
   const linhaInstituicao =
-    instituicaoNome && sentido === 'IDA'
+    !comInstituicao && instituicaoNome && sentido === 'IDA'
       ? `Você desce na ${instituicaoNome}`
-      : instituicaoNome && sentido === 'VOLTA'
+      : !comInstituicao && instituicaoNome && sentido === 'VOLTA'
         ? `Você embarca na ${instituicaoNome}`
         : '';
+
+  const confirmar = () => {
+    const outra = instituicaoDiferente(instituicaoId, instituicaoPropriaId);
+    if (!outra) {
+      onConfirmar(escolha, lembrar, instituicaoId);
+      return;
+    }
+    const nomePropria = propria ? ` (${propria.nome})` : '';
+    confirmAction({
+      title: 'Outra instituição',
+      message: `Você ${verbo === 'desce' ? 'vai descer' : 'vai embarcar'} em ${escolhida?.nome ?? 'outra instituição'}, que não é a sua instituição${nomePropria}. Confirma?`,
+      confirmText: 'Sim, confirmar',
+      onConfirm: () => onConfirmar(escolha, lembrar, instituicaoId),
+      onCancel: undefined,
+    });
+  };
 
   return (
     <ModalApp visible={visible} transparent animationType="slide" onRequestClose={onClose} accessibilityViewIsModal>
@@ -118,9 +171,40 @@ const EscolhaPontoSheet = ({
             <ActivityIndicator color={colors.primary.main} style={styles.carregando} />
           ) : (
             <ScrollView style={styles.lista} nestedScrollEnabled>
+              {comInstituicao ? (
+                <View style={styles.instituicaoBloco}>
+                  <Text style={styles.blocoTitulo}>
+                    {sentido === 'IDA' ? 'Você desce em' : 'Você embarca em'}
+                  </Text>
+                  {escolhida && !trocando ? (
+                    <View style={styles.instituicaoAtual}>
+                      <Icon name={IconNames.school} size="md" color={colors.primary.main} />
+                      <Text style={styles.instituicaoNome}>{escolhida.nome}</Text>
+                      {instituicoes.length > 1 ? (
+                        <Tappable
+                          onPress={() => setTrocando(true)}
+                          sombra={false}
+                          accessibilityLabel="Trocar instituição">
+                          <Text style={styles.linhaAlterar}>Trocar</Text>
+                        </Tappable>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <Lista
+                      titulo=""
+                      pontos={instituicoes.map((i) => ({ id: i.id, apelido: i.nome }))}
+                      marcado={instituicaoId}
+                      onMarcar={(id) => {
+                        setInstituicaoId(id);
+                        setTrocando(false);
+                      }}
+                    />
+                  )}
+                </View>
+              ) : null}
               {pedeEmbarque(sentido) ? (
                 <Lista
-                  titulo={circular ? 'Onde você vai embarcar?' : ''}
+                  titulo={circular ? 'Onde você vai embarcar?' : comInstituicao ? 'Onde você embarca' : ''}
                   pontos={lista}
                   marcado={escolha.embarqueId}
                   onMarcar={(id) => setEscolha((atual) => ({ ...atual, embarqueId: id }))}
@@ -128,7 +212,7 @@ const EscolhaPontoSheet = ({
               ) : null}
               {pedeDesembarque(sentido) ? (
                 <Lista
-                  titulo={circular ? 'Onde você vai descer?' : ''}
+                  titulo={circular ? 'Onde você vai descer?' : comInstituicao ? 'Onde você desce' : ''}
                   pontos={lista}
                   marcado={escolha.desembarqueId}
                   onMarcar={(id) => setEscolha((atual) => ({ ...atual, desembarqueId: id }))}
@@ -160,7 +244,7 @@ const EscolhaPontoSheet = ({
 
           <Tappable
             style={[styles.confirmar, (!completa || salvando) && styles.confirmarDesabilitado]}
-            onPress={() => onConfirmar(escolha, lembrar)}
+            onPress={confirmar}
             disabled={!completa || salvando}
             accessibilityLabel="Confirmar presença"
             accessibilityState={{ disabled: !completa || salvando }}>
@@ -241,6 +325,17 @@ const styles = StyleSheet.create({
   opcaoTexto: { ...textStyles.body, flex: 1, color: colors.text.primary },
   opcaoTextoAtiva: { color: '#FFFFFF', fontWeight: '700' as const },
   instituicao: { ...textStyles.body, color: colors.text.secondary, marginTop: spacing.sm },
+  instituicaoBloco: { marginBottom: spacing.sm },
+  instituicaoAtual: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 52,
+    paddingHorizontal: spacing.base,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary.lighter,
+  },
+  instituicaoNome: { ...textStyles.body, flex: 1, color: colors.text.primary, fontWeight: '700' as const },
   lembrarLinha: {
     flexDirection: 'row',
     alignItems: 'center',

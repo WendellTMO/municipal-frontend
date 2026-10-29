@@ -8,6 +8,7 @@ import { getErrorMessageFromError } from '../utils/errors';
 import {
   erroDeCampoPonto,
   instituicaoDoSentido,
+  instituicoesDaRota,
   linhaDosPontos,
   mensagemDeErroPonto,
   montarCorpoConfirmacao,
@@ -45,6 +46,7 @@ export function usePresencaViagem(
   const [folha, setFolha] = useState<ModoFolha>(null);
   const [erroFolha, setErroFolha] = useState('');
   const [pontos, setPontos] = useState<PontoApi[] | null>(null);
+  const [instituicaoPropriaId, setInstituicaoPropriaId] = useState<string | null>(null);
   const [pedirEscolha, setPedirEscolha] = useState(precisaEscolher(viagem));
   const [escolha, setEscolha] = useState<Escolha>({
     embarqueId: viagem?.ponto_embarque_id ?? null,
@@ -57,6 +59,13 @@ export function usePresencaViagem(
     try {
       const lista = (await alunoService.listarPontosRota(viagem.rota_id).then(unwrapItems)) as PontoApi[];
       setPontos(lista);
+      // Instituição do cadastro: é a sugerida na folha e a que não pede confirmação extra.
+      try {
+        const perfil = await alunoService.obterPerfil();
+        setInstituicaoPropriaId((perfil as { instituicao_id?: string | null }).instituicao_id ?? null);
+      } catch {
+        setInstituicaoPropriaId(null);
+      }
     } catch (e) {
       setErroFolha(`Não foi possível buscar os pontos da rota: ${getErrorMessageFromError(e)}`);
       setPontos([]);
@@ -111,7 +120,7 @@ export function usePresencaViagem(
     return enviar(true, {});
   };
 
-  const confirmarEscolha = async (nova: Escolha, lembrar: boolean) => {
+  const confirmarEscolha = async (nova: Escolha, lembrar: boolean, instituicaoId: string | null) => {
     if (!viagem?.rota_id) return;
     setErroFolha('');
     // Em Alterar o aluno já está confirmado: o padrão é gravado antes e a confirmação segue o novo ponto.
@@ -122,10 +131,10 @@ export function usePresencaViagem(
         setErroFolha(mensagemDeErroPonto(e, getErrorMessageFromError(e) || 'Não foi possível salvar a escolha.'));
         return;
       }
-      await enviar(true, montarCorpoConfirmacao(sentido, nova, false), nova);
+      await enviar(true, montarCorpoConfirmacao(sentido, nova, false, instituicaoId), nova);
       return;
     }
-    await enviar(true, montarCorpoConfirmacao(sentido, nova, lembrar), nova);
+    await enviar(true, montarCorpoConfirmacao(sentido, nova, lembrar, instituicaoId), nova);
   };
 
   const instituicao = instituicaoDoSentido(sentido, viagem ?? {}, pontos);
@@ -149,6 +158,9 @@ export function usePresencaViagem(
       pontos,
       fixoId: instituicao.pontoId,
       instituicaoNome: instituicao.nome,
+      instituicoes: instituicoesDaRota(pontos),
+      instituicaoPropriaId,
+      instituicaoAtualId: instituicao.id ?? instituicaoPropriaId,
       inicial: escolha,
       erro: erroFolha,
       salvando,

@@ -3,6 +3,8 @@ import {
   erroDeCampoPonto,
   escolhaCompleta,
   instituicaoDoSentido,
+  instituicaoDiferente,
+  instituicoesDaRota,
   linhaDosPontos,
   mensagemDeErroPonto,
   montarCorpoConfirmacao,
@@ -73,11 +75,39 @@ test('acha o nome da instituição e dos pontos, e omite quando a API não dá',
     {id: 'p1', apelido: 'Praça', instituicao: null},
     {id: 'p2', apelido: 'Campus', instituicao: {nome: 'UFCG'}},
   ];
-  expect(instituicaoDoSentido('IDA', {ponto_destino_id: 'p2'}, pontos)).toEqual({pontoId: 'p2', nome: 'UFCG'});
+  expect(instituicaoDoSentido('IDA', {ponto_destino_id: 'p2'}, pontos)).toEqual({pontoId: 'p2', id: null, nome: 'UFCG'});
   expect(instituicaoDoSentido('VOLTA', {ponto_embarque_id: 'p2'}, pontos).nome).toBe('UFCG');
   expect(instituicaoDoSentido('IDA', {ponto_destino_id: 'p1'}, pontos).nome).toBe('');
   expect(instituicaoDoSentido('CIRCULAR', {}, pontos).pontoId).toBeNull();
   expect(nomeDoPonto(pontos, 'p1')).toBe('Praça');
   expect(nomeDoPonto(pontos, 'zz')).toBe('');
   expect(nomeDoPonto(null, 'p1')).toBe('');
+});
+
+test('instituicoesDaRota lista cada instituição uma vez, com o ponto dela', () => {
+  const pontos = [
+    {id: 'p1', apelido: 'Praça', instituicao: null},
+    {id: 'p2', apelido: 'Campus', instituicao: {id: 'i1', nome: 'UFCG'}},
+    {id: 'p3', apelido: 'Portão', instituicao: {id: 'i1', nome: 'UFCG'}},
+    {id: 'p4', apelido: 'Escola', instituicao: {id: 'i2', nome: 'Escola Municipal'}},
+  ];
+  expect(instituicoesDaRota(pontos)).toEqual([
+    {id: 'i1', nome: 'UFCG', pontoId: 'p2'},
+    {id: 'i2', nome: 'Escola Municipal', pontoId: 'p4'},
+  ]);
+  expect(instituicoesDaRota(null)).toEqual([]);
+});
+
+test('instituicaoDiferente só vale com as duas conhecidas e distintas', () => {
+  expect(instituicaoDiferente('i2', 'i1')).toBe(true);
+  expect(instituicaoDiferente('i1', 'i1')).toBe(false);
+  expect(instituicaoDiferente('i1', null)).toBe(false);
+  expect(instituicaoDiferente(null, 'i1')).toBe(false);
+});
+
+test('o corpo da confirmação leva a instituição só fora da circular', () => {
+  expect(montarCorpoConfirmacao('IDA', {embarqueId: 'p1'}, false, 'i2').instituicao_id).toBe('i2');
+  expect(montarCorpoConfirmacao('VOLTA', {desembarqueId: 'p1'}, false, 'i2').instituicao_id).toBe('i2');
+  expect(montarCorpoConfirmacao('CIRCULAR', {embarqueId: 'a', desembarqueId: 'b'}, false, 'i2').instituicao_id).toBeUndefined();
+  expect(montarCorpoConfirmacao('IDA', {embarqueId: 'p1'}, false).instituicao_id).toBeUndefined();
 });

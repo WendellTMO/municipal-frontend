@@ -17,6 +17,26 @@ export const tituloEscolha = sentido => {
 export const pedeEmbarque = sentido => sentido !== 'VOLTA';
 export const pedeDesembarque = sentido => sentido !== 'IDA';
 
+// Na IDA o aluno desce numa instituição e na VOLTA embarca nela; na circular não há instituição fixa.
+export const pedeInstituicao = sentido => sentido !== 'CIRCULAR';
+
+// Instituições da rota: cada uma tem um ponto na rota. `pontos` é a lista da API, com `instituicao`.
+export const instituicoesDaRota = pontos => {
+  const lista = [];
+  const vistas = {};
+  for (const ponto of pontos || []) {
+    const instituicao = ponto.instituicao;
+    if (!instituicao || !instituicao.id || vistas[instituicao.id]) continue;
+    vistas[instituicao.id] = true;
+    lista.push({id: instituicao.id, nome: instituicao.nome, pontoId: ponto.id});
+  }
+  return lista;
+};
+
+// A instituição escolhida não é a do aluno: o app pede uma confirmação antes de enviar.
+export const instituicaoDiferente = (escolhidaId, propriaId) =>
+  !!escolhidaId && !!propriaId && escolhidaId !== propriaId;
+
 export const escolhaCompleta = (sentido, escolha) => {
   if (pedeEmbarque(sentido) && !escolha.embarqueId) return false;
   if (pedeDesembarque(sentido) && !escolha.desembarqueId) return false;
@@ -31,9 +51,10 @@ export const montarPontosDaEscolha = (sentido, escolha) => {
   return campos;
 };
 
-export const montarCorpoConfirmacao = (sentido, escolha, lembrar) => {
+export const montarCorpoConfirmacao = (sentido, escolha, lembrar, instituicaoId) => {
   const campos = montarPontosDaEscolha(sentido, escolha);
   if (lembrar) campos.lembrar_escolha = true;
+  if (instituicaoId && pedeInstituicao(sentido)) campos.instituicao_id = instituicaoId;
   return campos;
 };
 
@@ -67,13 +88,17 @@ export const instituicaoDoSentido = (sentido, viagem, pontos) => {
   let pontoId = null;
   if (sentido === 'IDA') pontoId = viagem.ponto_destino_id;
   if (sentido === 'VOLTA') pontoId = viagem.ponto_embarque_id;
-  if (!pontoId || !pontos) return {pontoId: null, nome: ''};
+  if (!pontoId || !pontos) return {pontoId: null, id: null, nome: ''};
   for (const ponto of pontos) {
     if (ponto.id === pontoId) {
-      return {pontoId, nome: ponto.instituicao ? ponto.instituicao.nome : ''};
+      return {
+        pontoId,
+        id: ponto.instituicao ? ponto.instituicao.id || null : null,
+        nome: ponto.instituicao ? ponto.instituicao.nome : '',
+      };
     }
   }
-  return {pontoId, nome: ''};
+  return {pontoId, id: null, nome: ''};
 };
 
 export const nomeDoPonto = (pontos, id) => {
