@@ -44,6 +44,8 @@ import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { agruparConfirmadosPorInstituicao, montarParadas } from '../../utils/paradasViagem';
 import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
+import { limparEnvio, registrarEnvio } from '../../utils/demandaLocalizacao';
+import { escutarDemandaPrimeiroPlano, iniciarServicoViagem, pararServicoViagem } from '../../services/servicoViagem';
 import { horaCurta } from '../../utils/viagemPainel';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
@@ -207,27 +209,46 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       timer = setTimeout(sendPos, ms);
     };
 
-    const sendPos = () => {
-      Geolocation!.getCurrentPosition(
-        (pos) => {
-          setPosMotorista({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-          motoristaService
-            .enviarLocalizacao(viagemIdRef.current!, {
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-            })
-            .then((resp) => agendar(proximoIntervaloMs(resp, GPS_SEND_INTERVAL_MS)))
-            .catch(() => agendar(GPS_SEND_INTERVAL_MS));
-        },
-        () => agendar(GPS_SEND_INTERVAL_MS),
-        { enableHighAccuracy: true, timeout: 10_000, maximumAge: 5_000 },
-      );
+    // Uma leitura de GPS + POST. Devolve a resposta, ou null se o GPS ou o POST falharem.
+    const lerEEnviar = () =>
+      new Promise<Record<string, unknown> | null>((resolve) => {
+        Geolocation!.getCurrentPosition(
+          (pos) => {
+            setPosMotorista({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+            motoristaService
+              .enviarLocalizacao(viagemIdRef.current!, {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+              })
+              .then((resp) => resolve(resp as unknown as Record<string, unknown>))
+              .catch(() => resolve(null));
+          },
+          () => resolve(null),
+          { enableHighAccuracy: true, timeout: 10_000, maximumAge: 5_000 },
+        );
+      });
+
+    const sendPos = async () => {
+      const resp = await lerEEnviar();
+      agendar(resp ? proximoIntervaloMs(resp, GPS_SEND_INTERVAL_MS) : GPS_SEND_INTERVAL_MS);
     };
+
+    // Push "demanda": envia agora, sem mexer no ciclo do intervalo adaptativo.
+    registrarEnvio(viagemIdRef.current, async () => {
+      await lerEEnviar();
+    });
+    iniciarServicoViagem();
+
+    // Primeiro plano: o handler de segundo plano fica em index.js.
+    const cancelarOnMessage = escutarDemandaPrimeiroPlano();
 
     sendPos();
     return () => {
       parado = true;
+      cancelarOnMessage();
       if (timer) clearTimeout(timer);
+      limparEnvio();
+      pararServicoViagem();
     };
   }, [viagemIniciada]);
 
