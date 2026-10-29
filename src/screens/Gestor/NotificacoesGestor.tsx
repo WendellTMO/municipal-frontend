@@ -16,7 +16,6 @@ import { borderRadius, colors, shadows, spacing, textStyles, fontWeight } from '
 import { Icon, IconNames, LoadingSpinner, EmptyState } from '../../components';
 import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
-import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 
@@ -119,7 +118,6 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
           keyExtractor={item => String(item.id)}
           renderItem={renderItem}
           contentContainerStyle={withFabSpace(styles.listContent)}
-          ListFooterComponent={<SairDaConta />}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
