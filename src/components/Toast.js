@@ -3,7 +3,7 @@
  * 
  * Accessible toast notifications for user feedback
  */
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { colors, spacing, textStyles, borderRadius, shadows } from '../theme';
 import Icon, { IconNames } from './Icon';
@@ -88,7 +88,12 @@ export const ToastProvider = ({ children }) => {
     showToast({ type: 'info', message, duration });
   }, [showToast]);
 
-  const contextValue = { showToast, success, error, warning, info };
+  // Estável: telas usam o toast como dependência de efeito. Objeto novo a cada render fazia a
+  // tela recarregar, falhar e mostrar o toast de novo, sem fim.
+  const contextValue = useMemo(
+    () => ({ showToast, success, error, warning, info }),
+    [showToast, success, error, warning, info],
+  );
 
   // Cleanup on unmount
   useEffect(() => {
