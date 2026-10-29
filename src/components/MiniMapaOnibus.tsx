@@ -10,7 +10,7 @@ import DialogoConfirmacao from './DialogoConfirmacao';
 import { useABordo } from '../hooks/useABordo';
 import { colors, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
-import { LocationMap } from '../features/map/index';
+import { LocationMap, useRotaPlanejada, paradasRestantesPorProximidade } from '../features/map/index';
 import { motoristaService } from '../services/motoristaService';
 import { alunoService } from '../services';
 import { unwrapItems } from '../types';
@@ -54,6 +54,11 @@ const MiniMapaOnibus = ({
   });
   // A bordo o ônibus segue o GPS do aluno e o polling do motorista para.
   const posicaoMapa = aBordo ? posicaoAluno : posicao;
+  const rotaPlanejada = useRotaPlanejada(
+    posicaoMapa,
+    paradasRestantesPorProximidade(pontos, posicaoMapa),
+    statusViagem === 'EM_ANDAMENTO',
+  );
 
   useEffect(() => {
     if (!rotaId) return;
@@ -113,6 +118,7 @@ const MiniMapaOnibus = ({
         pontosRota={pontos}
         posicaoOnibus={posicaoMapa}
         proximaParadaId={embarqueId ?? null}
+        rotaCoordenadas={rotaPlanejada}
         previa
         onToque={onPress}
       />
