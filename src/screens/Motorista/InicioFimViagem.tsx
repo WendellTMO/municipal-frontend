@@ -38,7 +38,7 @@ import {
 import Icon, { IconNames } from '../../components/Icon';
 import { ReportSheet } from '../../components';
 import { CHIPS } from '../../components/ReportSheet';
-import { LocationMap, StaticRouteMap, useArrivalDetection, useRotaPlanejada, normalizeRoutePoints } from '../../features/map/index';
+import { LocationMap, useArrivalDetection, useRotaPlanejada, normalizeRoutePoints } from '../../features/map/index';
 import SubHeader from '../../components/SubHeader';
 import ConfirmacaoTelaCheia from '../../components/ConfirmacaoTelaCheia';
 import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
@@ -47,7 +47,10 @@ import { agruparConfirmadosPorInstituicao, montarParadas } from '../../utils/par
 import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
 import { horaCurta } from '../../utils/viagemPainel';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
-import ListaReordenavel from '../../components/ListaReordenavel';
+import RoteiroLista from '../../components/RoteiroLista';
+import RoteiroViagem from './RoteiroViagem';
+import { montarRoteiro } from '../../utils/roteiroViagem';
+import { subtituloRoteiro } from '../../utils/subtituloRoteiro';
 import { motoristaService } from '../../services/motoristaService';
 import { createNotificacao } from '../../services/notificacaoService';
 import { useToast } from '../../components/Toast';
@@ -102,16 +105,15 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
   const [concluidas, setConcluidas] = useState(0);
-  const [listaAberta, setListaAberta] = useState(false);
+  const [roteiroAberto, setRoteiroAberto] = useState(false);
   const [novaParadaVisivel, setNovaParadaVisivel] = useState(false);
   // Durante a viagem o botão de feedback fica no alto, fora do painel de baixo.
-  useFeedbackPadrao(viagemIniciada ? 'topo' : null);
+  useFeedbackPadrao(viagemIniciada && !roteiroAberto ? 'topo' : null);
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
   const [iniciarVisivel, setIniciarVisivel] = useState(false);
   const [ordemSalva, setOrdemSalva] = useState<OrdemInstituicao[]>([]);
   const [gruposOrdenados, setGruposOrdenados] = useState<GrupoConfirmado[]>([]);
   const [gruposIniciais, setGruposIniciais] = useState<GrupoConfirmado[]>([]);
-  const [arrastando, setArrastando] = useState(false);
   const [avisoTexto, setAvisoTexto] = useState('');
   const [tipoProblema, setTipoProblema] = useState<TipoOcorrencia | null>(null);
   const [posMotorista, setPosMotorista] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -244,6 +246,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const gruposConfirmados = agruparConfirmadosPorInstituicao(
     (currentViagem?.alunos as Record<string, unknown>[] | undefined) ?? [],
   );
+  const grupos = montarRoteiro(currentViagem?.tipo, paradas, currentViagem?.alunos as Record<string, unknown>[] | undefined);
   const todasFeitas = pontosValidos.length > 0 && concluidas >= pontosValidos.length;
 
   const marcarChegada = () => {
@@ -265,22 +268,22 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   }
   const trajeto = useRotaPlanejada(posMotorista, paradasRestantes, viagemIniciada);
 
-  // Escape (web) e voltar do sistema (Android) fecham a lista de paradas.
+  // Escape (web) e voltar do sistema (Android) fecham o Roteiro.
   useEffect(() => {
-    if (!listaAberta) return;
+    if (!roteiroAberto) return;
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setListaAberta(false);
+      if (e.key === 'Escape') setRoteiroAberto(false);
     };
     if (Platform.OS === 'web') {
       window.addEventListener('keydown', aoTeclar);
       return () => window.removeEventListener('keydown', aoTeclar);
     }
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      setListaAberta(false);
+      setRoteiroAberto(false);
       return true;
     });
     return () => sub.remove();
-  }, [listaAberta]);
+  }, [roteiroAberto]);
 
   const formatarTempo = (s: number) => {
     const h = Math.floor(s / 3600);
@@ -453,73 +456,25 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           />
         </View>
 
-        {/* Floating bottom: secondary actions + finalizar */}
-        {/* Folha de paradas: fundo escurecido fecha, X fecha, Paradas alterna, Escape/voltar fecham */}
-        {listaAberta ? (
-          <View style={[styles.listaCamada, { bottom: alturaPainel }]}>
-            <TouchableOpacity
-              style={StyleSheet.absoluteFillObject}
-              activeOpacity={1}
-              onPress={() => setListaAberta(false)}
-              accessibilityRole="button"
-              accessibilityLabel="Fechar lista de paradas"
-            />
-            <View style={styles.listaFolha}>
-              <View style={styles.listaCabecalho}>
-                <Text style={styles.listaTitulo} accessibilityRole="header">
-                  Paradas ({Math.min(concluidas, paradas.length)} de {paradas.length})
-                </Text>
+        {/* Roteiro em tela cheia sobre o mapa; InicioFimViagem segue montada (GPS e paradas feitas) */}
+        {roteiroAberto ? (
+          <View style={styles.roteiroCamada}>
+            <RoteiroViagem
+              viagem={currentViagem}
+              pontosRota={pontosValidos}
+              concluidas={concluidas}
+              instituicoes={instituicoes}
+              onBack={() => setRoteiroAberto(false)}
+              direita={
                 <TouchableOpacity
                   style={styles.novaParada}
                   onPress={() => setNovaParadaVisivel(true)}
                   accessibilityRole="button"
                   accessibilityLabel="Nova parada">
-                  <Icon name={IconNames.add} size="md" color={colors.primary.main} />
-                  <Text style={styles.novaParadaTexto}>Nova parada</Text>
+                  <Icon name={IconNames.add} size="lg" color="#FFFFFF" />
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.listaFechar}
-                  onPress={() => setListaAberta(false)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Fechar">
-                  <Icon name={IconNames.close} size="md" color={colors.text.secondary} />
-                </TouchableOpacity>
-              </View>
-              <ScrollView style={styles.listaRolagem} contentContainerStyle={styles.listaConteudo}>
-                {paradas.map((p) => (
-                  <View key={p.ponto.id ?? p.numero} style={styles.paradaLinha}>
-                    <View
-                      style={[
-                        styles.paradaNumero,
-                        p.estado === 'feita' && { backgroundColor: colors.success.main },
-                        p.estado === 'proxima' && { backgroundColor: '#1565C0' },
-                      ]}>
-                      {p.estado === 'feita' ? (
-                        <Icon name={IconNames.check} size="xs" color="#FFFFFF" />
-                      ) : (
-                        <Text style={styles.paradaNumeroTexto}>{p.numero}</Text>
-                      )}
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={[styles.paradaNome, p.estado === 'feita' && styles.paradaFeita]}
-                        numberOfLines={2}>
-                        {p.ponto.apelido}
-                      </Text>
-                      {p.instituicao ? (
-                        <View style={styles.instituicaoLinha}>
-                          <Icon name={IconNames.school} size="xs" color={colors.primary.main} />
-                          <Text style={styles.instituicaoTexto} numberOfLines={2}>
-                            {p.instituicao.nome}
-                            {p.instituicao.tipo ? ` · ${p.instituicao.tipo}` : ''}
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
+              }
+            />
           </View>
         ) : null}
 
@@ -547,13 +502,12 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.acaoItem}>
               <TouchableOpacity
                 style={[styles.acaoIcone, { backgroundColor: colors.solid.teal }]}
-                onPress={() => setListaAberta(!listaAberta)}
+                onPress={() => setRoteiroAberto(true)}
                 accessibilityRole="button"
-                accessibilityState={{ expanded: listaAberta }}
-                accessibilityLabel="Paradas">
+                accessibilityLabel="Roteiro">
                 <Icon name={IconNames.route} size="xl" color="#FFFFFF" />
               </TouchableOpacity>
-              <Text style={styles.acaoLegenda} numberOfLines={1}>Ver paradas</Text>
+              <Text style={styles.acaoLegenda} numberOfLines={1}>Roteiro</Text>
             </View>
             <View style={styles.acaoItem}>
               <TouchableOpacity
@@ -735,85 +689,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <TelaSegura style={styles.container}>
-      <SubHeader
-        titulo="Iniciar Viagem"
-        subtitulo={`${formatarSentido(currentViagem.tipo as string)} · ${horaCurta(currentViagem.horario_inicio as string)}`}
-        onBack={() => navigation.goBack()}
-      />
+      <SubHeader titulo="Roteiro" subtitulo={subtituloRoteiro(currentViagem)} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={withFabSpace(styles.preContent)} showsVerticalScrollIndicator={false}>
-        {/* Route summary card */}
-        <View style={styles.card}>
-          <View style={styles.routeRow}>
-            <View style={styles.routePoint}>
-              <View style={[styles.routeDot, { backgroundColor: colors.success.main }]} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.routeLabel}>Origem</Text>
-                <Text style={styles.routeName}>{(currentViagem.origem as string) || '—'}</Text>
-              </View>
-            </View>
-            <View style={styles.routeLine} />
-            <View style={styles.routePoint}>
-              <View style={[styles.routeDot, { backgroundColor: colors.error.main }]} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.routeLabel}>Destino</Text>
-                <Text style={styles.routeName}>{(currentViagem.destino as string) || '—'}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Icon name={IconNames.group} size="sm" color={colors.primary.dark} />
-              <Text style={styles.infoValue}>
-                {(currentViagem.alunos_confirmados_count as number) ?? 0}
-                {' / '}
-                {(currentViagem.total_alunos as number) ?? 0}
-              </Text>
-              <Text style={styles.infoLabel}>alunos</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Icon name={IconNames.location} size="sm" color={colors.primary.dark} />
-              <Text style={styles.infoValue}>{pontosRota.length}</Text>
-              <Text style={styles.infoLabel}>paradas</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Static map preview */}
-        {pontosRota.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Rota</Text>
-            <StaticRouteMap pontosRota={pontosOrdenados} />
-          </View>
-        )}
-
-        {/* Stops list */}
-        {pontosRota.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Paradas ({pontosRota.length})</Text>
-            {pontosOrdenados.map((ponto, index) => (
-              <View key={ponto.id ?? index} style={styles.stopItem}>
-                <View
-                  style={[
-                    styles.stopDot,
-                    index === 0 && { backgroundColor: colors.success.main },
-                    index === pontosRota.length - 1 && { backgroundColor: colors.error.main },
-                  ]}
-                >
-                  <Text style={styles.stopDotText}>{index + 1}</Text>
-                </View>
-                {index < pontosRota.length - 1 && <View style={styles.stopLine} />}
-                <View style={styles.stopInfo}>
-                  <Text style={styles.stopName}>{ponto.apelido ?? `Ponto ${index + 1}`}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
+        <RoteiroLista grupos={grupos} />
       </ScrollView>
 
       {/* Barra fixa embaixo: Iniciar Viagem sempre visível, perto da seta de voltar */}
@@ -831,7 +710,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             ) : (
               <>
                 <Icon name={IconNames.play} size="xl" color={colors.text.inverse} />
-                <Text style={styles.iniciarButtonText}>Iniciar Viagem</Text>
+                <Text style={styles.iniciarButtonText}>Iniciar viagem</Text>
               </>
             )}
           </TouchableOpacity>
@@ -839,45 +718,16 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
       <ConfirmacaoTelaCheia
         visible={iniciarVisivel}
-        titulo="Instituições de ensino com alunos confirmados"
+        titulo="Iniciar a viagem agora?"
         onCancelar={() => setIniciarVisivel(false)}
-        rolagem={!arrastando}
-        principal={{ texto: 'Iniciar viagem', cor: colors.success.main, onPress: handleIniciarViagem }}
+        principal={{ texto: 'Sim, iniciar viagem', cor: colors.success.dark, onPress: handleIniciarViagem }}
         secundario={{
           texto: 'Voltar',
           cor: colors.neutral[200],
           corTexto: colors.text.primary,
           onPress: () => setIniciarVisivel(false),
-        }}>
-        {gruposOrdenados.length === 0 ? (
-          <Text style={styles.semInstituicao}>Nenhum aluno confirmou ainda</Text>
-        ) : (
-          <>
-            {gruposOrdenados.length > 1 ? (
-              <Text style={styles.dicaOrdem}>Segure e arraste para mudar a ordem</Text>
-            ) : null}
-            <ListaReordenavel
-              itens={gruposOrdenados}
-              chaveDe={(g: GrupoConfirmado) => g.nome}
-              onMudar={(lista: GrupoConfirmado[]) => setGruposOrdenados(lista)}
-              onArrastando={setArrastando}
-              renderItem={(g: GrupoConfirmado) => (
-                <View style={styles.instituicaoCard}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.instituicaoNome} numberOfLines={2}>
-                      {g.nome}
-                    </Text>
-                    {g.tipo ? <Text style={styles.instituicaoDetalhe}>{g.tipo}</Text> : null}
-                  </View>
-                  <Text style={styles.instituicaoQtd}>
-                    {g.quantidade} {g.quantidade === 1 ? 'aluno' : 'alunos'}
-                  </Text>
-                </View>
-              )}
-            />
-          </>
-        )}
-      </ConfirmacaoTelaCheia>
+        }}
+      />
 
       {/* Broadcast Modal */}
       <ModalApp
@@ -938,6 +788,7 @@ const styles = StyleSheet.create({
 
   // ── Map (active trip) layout ───────────────────────────────────────────
   mapScreen: { flex: 1, backgroundColor: '#000' },
+  roteiroCamada: { ...StyleSheet.absoluteFillObject, zIndex: 30 },
 
   floatingTop: {
     position: 'absolute',
@@ -946,30 +797,6 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(3, 71, 208, 0.92)',
-    marginHorizontal: spacing.md,
-    marginTop: spacing.sm,
-    borderRadius: borderRadius.xl,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.base,
-    gap: spacing.sm,
-    ...shadows.lg,
-  },
-  topBarLeft: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  backButtonDisabled: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  topBarTitle: { ...textStyles.body, color: '#fff', fontWeight: '700' as const },
-  topBarSub: { ...textStyles.caption, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   timerChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1007,28 +834,6 @@ const styles = StyleSheet.create({
   proximaRotulo: { ...textStyles.caption, color: colors.text.secondary, letterSpacing: 1 },
   proximaNome: { ...textStyles.h5, color: colors.text.primary },
   proximaInstituicao: { ...textStyles.caption, color: colors.primary.main, fontWeight: '700' as const },
-  chegueiBtn: {
-    minHeight: 48,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 14,
-    backgroundColor: colors.success.main,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chegueiTexto: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' as const },
-  semInstituicao: { ...textStyles.body, color: colors.text.secondary },
-  instituicaoCard: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.base,
-    paddingLeft: spacing.base,
-  },
-  dicaOrdem: { ...textStyles.bodySmall, color: colors.text.secondary },
-  instituicaoNome: { ...textStyles.h5, color: colors.text.primary },
-  instituicaoDetalhe: { ...textStyles.bodySmall, color: colors.text.secondary },
-  instituicaoQtd: { ...textStyles.h5, color: colors.primary.main },
   minhaPosicaoWrap: { position: 'absolute', right: spacing.base, alignItems: 'center', gap: 4, zIndex: 15 },
   minhaPosicao: {
     width: 52,
@@ -1052,46 +857,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   acaoDesabilitada: { opacity: 0.4 },
-  listaCamada: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 20,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(15,23,42,0.45)',
-  },
-  listaFolha: {
-    maxHeight: '65%',
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: borderRadius.xxl,
-    borderTopRightRadius: borderRadius.xxl,
-    padding: spacing.base,
-  },
-  listaCabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  listaTitulo: { ...textStyles.h4, color: colors.text.primary },
   novaParada: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    minHeight: 44,
-    marginLeft: 'auto',
-    marginRight: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    borderRadius: 22,
-    backgroundColor: colors.primary.lighter,
-  },
-  novaParadaTexto: { ...textStyles.bodySmall, fontWeight: '700' as const, color: colors.primary.main },
-  listaFechar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.neutral[100],
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  listaRolagem: { flexShrink: 1 },
-  listaConteudo: { paddingBottom: spacing.base },
   modalSecao: { ...textStyles.h5, color: colors.text.primary, marginTop: spacing.base, marginBottom: spacing.sm },
   problemaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   problemaChip: {
@@ -1106,131 +879,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral[50],
   },
   problemaChipTexto: { ...textStyles.body, color: colors.text.primary, fontWeight: '600' as const },
-  listaToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.xs,
-  },
-  listaToggleTexto: { ...textStyles.body, color: colors.text.primary, fontWeight: '700' as const },
-  listaParadas: { maxHeight: 200 },
-  paradaLinha: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
-  paradaNumero: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.neutral[400],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  paradaNumeroTexto: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' as const },
-  paradaNome: { ...textStyles.body, color: colors.text.primary },
-  paradaFeita: { color: colors.text.secondary },
-  instituicaoLinha: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: 2 },
-  instituicaoTexto: { ...textStyles.caption, color: colors.primary.main, fontWeight: '700' as const },
-  secondaryRow: { flexDirection: 'row', gap: spacing.md },
-  secondaryBtn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.background.default,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border.light,
-    minHeight: 60,
-  },
-  secondaryBtnReport: { borderColor: colors.warning.main },
-  secondaryBtnText: {
-    ...textStyles.caption,
-    color: colors.primary.dark,
-    fontWeight: '600' as const,
-  },
 
   // ── Pre-trip header ───────────────────────────────────────────────────
-  header: {
-    backgroundColor: colors.primary.dark,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.xl,
-    borderBottomLeftRadius: borderRadius.xxl,
-    borderBottomRightRadius: borderRadius.xxl,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerPre: { flexDirection: 'row', alignItems: 'center' },
-  backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary.main,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: { ...textStyles.h3, color: colors.primary.contrast },
-  headerSubtitle: { ...textStyles.bodySmall, color: 'rgba(255,255,255,0.75)', marginTop: spacing.xs },
-  headerIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary.main,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
 
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
   emptyText: { ...textStyles.h4, color: colors.text.secondary },
 
   preContent: { padding: spacing.base, paddingBottom: spacing.xxxl },
 
-  card: {
-    backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
-    marginBottom: spacing.base,
-    borderWidth: 1,
-    borderColor: colors.border.light,
-    ...shadows.sm,
-  },
-  cardTitle: { ...textStyles.h4, color: colors.text.primary, marginBottom: spacing.md },
 
   // Route summary
-  routeRow: { gap: spacing.sm },
-  routePoint: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
-  routeDot: { width: 14, height: 14, borderRadius: 7, marginTop: 4 },
-  routeLine: { width: 2, height: 20, backgroundColor: colors.border.light, marginLeft: 6 },
-  routeLabel: { ...textStyles.caption, color: colors.text.secondary },
-  routeName: { ...textStyles.body, color: colors.text.primary, fontWeight: '600' as const },
 
-  divider: { height: 1, backgroundColor: colors.border.light, marginVertical: spacing.md },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  infoItem: { alignItems: 'center', gap: spacing.xs },
-  infoValue: { ...textStyles.h4, color: colors.primary.dark },
-  infoLabel: { ...textStyles.caption, color: colors.text.secondary },
 
   // Stops list
-  stopItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 0 },
-  stopDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary.light,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  stopDotText: { ...textStyles.caption, color: '#fff', fontWeight: '700' as const },
-  stopLine: {
-    position: 'absolute',
-    left: 13,
-    top: 28,
-    width: 2,
-    height: spacing.xxl,
-    backgroundColor: colors.border.light,
-  },
-  stopInfo: { flex: 1, marginLeft: spacing.md, paddingBottom: spacing.xl },
-  stopName: { ...textStyles.body, color: colors.text.primary, paddingTop: spacing.xs },
 
   // Action buttons
   barraIniciar: {
@@ -1240,9 +901,9 @@ const styles = StyleSheet.create({
     ...shadows.xl,
   },
   iniciarButton: {
-    backgroundColor: colors.success.main,
+    backgroundColor: colors.success.dark,
     borderRadius: borderRadius.xl,
-    paddingVertical: spacing.xxl,
+    paddingVertical: spacing.xl,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -1254,7 +915,7 @@ const styles = StyleSheet.create({
   iniciarButtonText: {
     ...textStyles.button,
     color: colors.text.inverse,
-    fontSize: fontSize.h3,
+    fontSize: 24,
     fontWeight: '700' as const,
   },
   finalizarButton: {

@@ -212,6 +212,18 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
             </View>
           )}
 
+          {/* Roteiro antes de iniciar: paradas e alunos confirmados */}
+          {isMotorista && status === 'AGENDADA' && pontosRota.length > 0 && (
+            <TouchableOpacity
+              style={[styles.iniciarButton, { backgroundColor: colors.solid.teal }]}
+              onPress={() => navigation.navigate('RoteiroViagem', { viagem, pontosRota })}
+              accessibilityRole="button"
+              accessibilityLabel="Ver roteiro">
+              <Icon name={IconNames.route} size="lg" color={colors.text.inverse} />
+              <Text style={styles.iniciarButtonText}>Roteiro</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Iniciar CTA — only for motoristas when trip hasn't started yet */}
           {isMotorista && status === 'AGENDADA' && (
             <TouchableOpacity
