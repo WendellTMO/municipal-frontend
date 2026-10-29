@@ -80,7 +80,7 @@ const MotoristaNavigator = () => {
       initialRouteName="DashboardMotorista"
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: 'fade',
       }}>
       <Stack.Screen name="DashboardMotorista" component={DashboardMotorista} />
       <Stack.Screen name="RotaMotorista" component={RotaMotorista} />

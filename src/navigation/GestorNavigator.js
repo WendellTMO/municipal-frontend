@@ -79,7 +79,7 @@ function ViagensStack() {
   }
   const Stack = ViagensStackNavigator;
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Screen name="ViagensList" component={ViagensList} />
       <Stack.Screen name="DetalheViagemMotorista" component={DetalheViagemMotorista} />
       <Stack.Screen name="ListaAlunosConfirmados" component={ListaAlunosConfirmados} />
@@ -94,7 +94,7 @@ function RotasStack() {
   }
   const Stack = RotasStackNavigator;
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Screen name="RotaMotorista" component={RotaMotorista} />
       <Stack.Screen name="CriarRota" component={CriarRota} />
       <Stack.Screen name="DefinirPontosRota" component={DefinirPontosRota} />
@@ -114,7 +114,7 @@ function EquipeStack() {
   }
   const Stack = EquipeStackNavigator;
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Screen name="EquipeGestor" component={EquipeGestor} />
       <Stack.Screen name="DetalheAlunoGestor" component={DetalheAlunoGestor} />
       <Stack.Screen name="CadastrosPendentes" component={CadastrosPendentes} />
@@ -128,7 +128,7 @@ function PerfilStack() {
   }
   const Stack = PerfilStackNavigator;
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Screen name="ConfigNotificacoesGestor" component={ConfigNotificacoes} />
       <Stack.Screen name="NotificacoesGestor" component={NotificacoesGestor} />
       <Stack.Screen name="OcorrenciasGestor" component={OcorrenciasGestor} />
