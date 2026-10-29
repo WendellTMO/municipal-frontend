@@ -18,6 +18,7 @@ import { colors, spacing, borderRadius, shadows, textStyles, fontSize, lineHeigh
 import Icon, { IconNames } from '../components/Icon';
 import { withFabSpace } from '../config/feedback';
 import SubHeader from '../components/SubHeader';
+import { rotuloAtual } from '../services/biometria';
 
 const roleLabel = (role?: string) => {
   const map: Record<string, string> = {
@@ -123,9 +124,9 @@ const ConfigNotificacoes = ({ navigation }) => {
             <View style={styles.section}>
               <View style={styles.settingRowTopAligned}>
                 <View style={styles.settingInfo}>
-                  <Text style={styles.settingTitle}>Entrar com biometria</Text>
+                  <Text style={styles.settingTitle}>Entrar com {rotuloAtual()}</Text>
                   <Text style={styles.settingDescription}>
-                    Use digital ou rosto para abrir o app. Sua senha não é guardada.
+                    Use {rotuloAtual()} para abrir o app. Sua senha não é guardada.
                   </Text>
                 </View>
                 <Switch

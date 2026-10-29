@@ -21,6 +21,7 @@ import {
   gravarPreferencia,
   lerPreferencia,
   pedirBiometria,
+  rotuloAtual,
 } from './biometria';
 
 test('disponível só quando o sensor responde available', async () => {
@@ -30,6 +31,18 @@ test('disponível só quando o sensor responde available', async () => {
   expect(await biometriaDisponivel()).toBe(false);
   mockLeitor.isSensorAvailable.mockRejectedValueOnce(new Error('sem sensor'));
   expect(await biometriaDisponivel()).toBe(false);
+});
+
+test('o rótulo segue o tipo que o aparelho informa', async () => {
+  mockLeitor.isSensorAvailable.mockResolvedValueOnce({ available: true, biometryType: 'FaceID' });
+  await biometriaDisponivel();
+  expect(rotuloAtual()).toBe('Face ID');
+  mockLeitor.isSensorAvailable.mockResolvedValueOnce({ available: true, biometryType: 'TouchID' });
+  await biometriaDisponivel();
+  expect(rotuloAtual()).toBe('Touch ID');
+  mockLeitor.isSensorAvailable.mockResolvedValueOnce({ available: true, biometryType: 'Biometrics' });
+  await biometriaDisponivel();
+  expect(rotuloAtual()).toBe('a biometria do aparelho');
 });
 
 test('pedir biometria devolve false ao cancelar ou falhar', async () => {
