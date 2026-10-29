@@ -17,6 +17,7 @@ import { useFetch } from '../../hooks';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
 import type { AlunoResponse } from '../../types';
 import { withFabSpace } from '../../config/feedback';
+import { dataLocal } from '../../utils/dataLocal';
 import SubHeader from '../../components/SubHeader';
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -85,7 +86,7 @@ const DetalheAlunoGestor = ({ route, navigation }: any) => {
 
   const calcAge = (iso: string | null | undefined): number | null => {
     if (!iso) return null;
-    const birth = new Date(iso);
+    const birth = dataLocal(iso);
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     if (

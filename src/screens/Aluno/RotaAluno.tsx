@@ -23,6 +23,7 @@ import Tappable from '../../components/Tappable';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
+import { formatarData } from '../../utils/dataLocal';
 import { presencaTravada } from '../../utils/aBordo';
 
 type RootParamList = Record<string, object | undefined>;
@@ -248,9 +249,6 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
     return isConfirmed ? 'Confirmado' : 'Não confirmado';
   };
 
-  const formatDate = (d?: string) =>
-    d ? new Date(d).toLocaleDateString('pt-BR') : '';
-
   if (loading) {
     return (
       <TelaSegura style={styles.container}>
@@ -315,7 +313,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                   key={viagem.id}
                   style={styles.viagemCard}
                   accessible
-                  accessibilityLabel={`Viagem ${formatarSentido(viagem.tipo)} às ${formatarHora(viagem.horario_inicio)}, ${formatDate(viagem.data)}, ${status}`}>
+                  accessibilityLabel={`Viagem ${formatarSentido(viagem.tipo)} às ${formatarHora(viagem.horario_inicio)}, ${formatarData(viagem.data)}, ${status}`}>
                   <Tappable
                     navega
                     onPress={() => abrirDetalhe(viagem)}
@@ -334,7 +332,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                       </View>
                       <View style={styles.dateRow}>
                         <Icon name={IconNames.calendarToday} size="sm" color={colors.text.secondary} />
-                        <Text style={styles.viagemData}>{formatDate(viagem.data)}</Text>
+                        <Text style={styles.viagemData}>{formatarData(viagem.data)}</Text>
                       </View>
                       {isAllTrips && viagem.rota_nome && (
                         <View style={styles.dateRow}>
