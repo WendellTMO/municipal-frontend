@@ -1,6 +1,6 @@
 /**
- * Linha que o usuário arrasta para a esquerda para excluir (como no e-mail do celular).
- * Passou do limite e soltou: a linha sai da tela e onExcluir é chamado. Senão, volta ao lugar.
+ * Linha que o usuário arrasta para qualquer um dos lados para excluir (como no e-mail do celular).
+ * Passou do limite e soltou: a linha sai da tela pelo mesmo lado e onExcluir é chamado. Senão, volta ao lugar.
  * Funciona com dedo e mouse (PanResponder).
  */
 import React, { useRef } from 'react';
@@ -22,14 +22,14 @@ const DeslizarParaExcluir = ({ onExcluir, children }) => {
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => ehSwipeHorizontal(g.dx, g.dy),
-      onPanResponderMove: (_, g) => x.setValue(Math.min(0, g.dx)),
+      onPanResponderMove: (_, g) => x.setValue(g.dx),
       onPanResponderRelease: (_, g) => {
         if (!deveExcluir(g.dx)) {
           voltar();
           return;
         }
         Animated.timing(x, {
-          toValue: -larguraRef.current,
+          toValue: g.dx < 0 ? -larguraRef.current : larguraRef.current,
           duration: 180,
           useNativeDriver: true,
         }).start(() => onExcluirRef.current());
@@ -41,6 +41,7 @@ const DeslizarParaExcluir = ({ onExcluir, children }) => {
   return (
     <View style={styles.wrap}>
       <View style={styles.fundo} accessibilityElementsHidden importantForAccessibility="no">
+        <Icon name={IconNames.delete} size="lg" color={colors.primary.contrast} />
         <Icon name={IconNames.delete} size="lg" color={colors.primary.contrast} />
       </View>
       <Animated.View style={{ transform: [{ translateX: x }] }} {...pan.panHandlers}>
@@ -55,9 +56,10 @@ const styles = StyleSheet.create({
   fundo: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.error.main,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    paddingRight: spacing.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
   },
 });
 
