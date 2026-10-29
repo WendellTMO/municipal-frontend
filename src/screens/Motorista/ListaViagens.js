@@ -19,6 +19,7 @@ import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
+import { formatarData, dataLocal } from '../../utils/dataLocal';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -46,8 +47,8 @@ const ListaViagens = ({navigation, route}) => {
     
     // Ordenar por data (mais recentes primeiro)
     return (viagensData || []).sort((a, b) => {
-      const dataA = new Date(a.data);
-      const dataB = new Date(b.data);
+      const dataA = dataLocal(a.data);
+      const dataB = dataLocal(b.data);
       return dataB - dataA;
     });
   }, [isGestor, rotaFiltro?.id]);
@@ -88,15 +89,6 @@ const ListaViagens = ({navigation, route}) => {
       default:
         return colors.text.hint;
     }
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
   };
 
   return (
@@ -153,7 +145,7 @@ const ListaViagens = ({navigation, route}) => {
                         {formatarSentido(viagem.tipo || 'IDA')} - {viagem.rota_nome || 'Rota'}
                       </Text>
                       <Text style={styles.viagemData}>
-                        {viagem.data ? formatDate(viagem.data) : 'Data não disponível'}
+                        {viagem.data ? formatarData(viagem.data) : 'Data não disponível'}
                       </Text>
                       <Text style={styles.viagemHorario}>
                         {formatarHora(viagem.horario_inicio)}

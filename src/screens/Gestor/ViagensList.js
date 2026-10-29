@@ -21,10 +21,12 @@ import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import { formatarHora } from '../../utils/formatarHora';
+import { dataLocal } from '../../utils/dataLocal';
+import { isoLocal } from '../../utils/saudacao';
 
 const GESTOR_COLOR = colors.roles.gestor;
 
-const today = () => new Date().toISOString().split('T')[0];
+const today = () => isoLocal(new Date());
 
 const FILTERS = [
   { key: 'TODAS',       label: 'Todas' },
@@ -63,7 +65,7 @@ const ViagensList = ({ navigation }) => {
       params.status = filtroAtivo;
     }
     const data = await gestorService.listarViagens(params).then(unwrapItems);
-    return (data ?? []).sort((a, b) => new Date(b.data) - new Date(a.data));
+    return (data ?? []).sort((a, b) => dataLocal(b.data) - dataLocal(a.data));
   }, [filtroAtivo]);
 
   const { data: viagens, isLoading, isError, error, refetch } = useFetch(
