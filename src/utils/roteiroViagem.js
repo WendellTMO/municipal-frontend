@@ -54,7 +54,7 @@ const itemInstituicao = (parada, alunos, mostraDescem, mostraSobem) => {
   }
   const inst = parada.instituicao;
   let detalhe = null;
-  if (inst) detalhe = inst.tipo || inst.endereco || null;
+  if (inst) detalhe = inst.endereco || null;
   let total = 0;
   for (const lista of listas) total += lista.nomes.length;
   return {

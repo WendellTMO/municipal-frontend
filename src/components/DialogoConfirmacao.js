@@ -27,7 +27,7 @@ const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, se
           onPress={principal.onPress}
           accessibilityRole="button"
           accessibilityLabel={principal.texto}>
-          <Text style={styles.botaoTexto}>{principal.texto}</Text>
+          <Text style={[styles.botaoTexto, principal.corTexto ? { color: principal.corTexto } : null]}>{principal.texto}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.botao, styles.botaoSecundario, { backgroundColor: secundario.cor }]}
@@ -38,7 +38,7 @@ const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, se
           {secundario.carregando ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.botaoTexto}>{secundario.texto}</Text>
+            <Text style={[styles.botaoTexto, secundario.corTexto ? { color: secundario.corTexto } : null]}>{secundario.texto}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -61,12 +61,12 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: spacing.lg,
   },
-  titulo: { ...textStyles.h3, color: colors.text.primary, textAlign: 'center' },
+  titulo: { ...textStyles.h3, fontSize: 24, lineHeight: 30, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.md },
   resumo: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.xs, marginBottom: spacing.md },
-  // Mesma fonte nos dois botões; a diferença fica na altura e na cor.
-  botao: { minHeight: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  botaoTexto: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
-  botaoSecundario: { minHeight: 48, marginTop: 14 },
+  // Botões grandes para motoristas idosos: mesma fonte nos dois, a diferença fica na altura e na cor.
+  botao: { minHeight: 72, borderRadius: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.md },
+  botaoTexto: { color: '#FFFFFF', fontSize: 22, fontWeight: '700', textAlign: 'center' },
+  botaoSecundario: { minHeight: 64, marginTop: 16 },
 });
 
 export default DialogoConfirmacao;

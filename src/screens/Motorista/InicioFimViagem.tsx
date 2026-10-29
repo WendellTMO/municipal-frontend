@@ -40,7 +40,6 @@ import { ReportSheet } from '../../components';
 import { CHIPS } from '../../components/ReportSheet';
 import { LocationMap, useArrivalDetection, useRotaPlanejada, normalizeRoutePoints } from '../../features/map/index';
 import SubHeader from '../../components/SubHeader';
-import ConfirmacaoTelaCheia from '../../components/ConfirmacaoTelaCheia';
 import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { agruparConfirmadosPorInstituicao, montarParadas } from '../../utils/paradasViagem';
@@ -721,7 +720,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
       </View>
 
-      <ConfirmacaoTelaCheia
+      <DialogoConfirmacao
         visible={iniciarVisivel}
         titulo="Iniciar a viagem agora?"
         onCancelar={() => setIniciarVisivel(false)}
