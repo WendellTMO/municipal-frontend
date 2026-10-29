@@ -86,6 +86,26 @@ const testes = [
     await espera(2000);
     assert((await texto(page)).includes('Entrar'), 'não voltou ao login');
   }],
+  ['botão de feedback aparece dentro da janela em celular e em computador, e não no login', async browser => {
+    for (const largura of [390, 1280]) {
+      const { page } = await abrirLogin(browser, largura);
+      const botao = () =>
+        page.evaluate(() => {
+          const el = Array.from(document.querySelectorAll('[aria-label]')).find(e => /feedback/i.test(e.getAttribute('aria-label')));
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { x: r.x, y: r.y, w: r.width, h: r.height, janela: [innerWidth, innerHeight] };
+        });
+      assert.strictEqual(await botao(), null, 'botão de feedback apareceu no login');
+      await entrar(page, EMAIL, SENHA);
+      await clicarTexto(page, 'Entendi, vamos testar');
+      await espera(1000);
+      const r = await botao();
+      assert(r, `sem botão de feedback a ${largura} px`);
+      const dentro = r.x >= 0 && r.y >= 0 && r.x + r.w <= r.janela[0] && r.y + r.h <= r.janela[1];
+      assert(dentro, `botão fora da janela a ${largura} px: x=${Math.round(r.x)} y=${Math.round(r.y)} janela=${r.janela}`);
+    }
+  }],
   ['sem rolagem horizontal a 320 px no login e no painel', async browser => {
     const { page } = await abrirLogin(browser, 320);
     const sobra = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

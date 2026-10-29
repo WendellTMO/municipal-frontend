@@ -14,6 +14,7 @@ import {
   encaixar,
   limitarBaixo,
   limitarPonto,
+  tamanhoDaArea,
   xDoLado,
 } from '../utils/fabPosicao';
 
@@ -40,7 +41,10 @@ const MARGEM = 18;
 const TAMANHO = 56;
 
 const FeedbackButton = ({ onPress }) => {
-  const { width, height } = useWindowDimensions();
+  const janela = useWindowDimensions();
+  // O botão é absoluto dentro do container que o contém; a medida vem dele, não da janela.
+  const [area, setArea] = useState(null);
+  const { width, height } = tamanhoDaArea(area, janela);
   const padraoTela = useFeedbackPadraoAtual();
   // Posição única compartilhada por todas as instâncias do botão (raiz e Modais).
   const guardada = useSyncExternalStore(assinarPosicao, lerPosicao, lerPosicao);
@@ -152,6 +156,7 @@ const FeedbackButton = ({ onPress }) => {
   }, []);
 
   return (
+    <View style={styles.camada} pointerEvents="box-none" onLayout={e => setArea(e.nativeEvent.layout)}>
     <View
       style={[styles.container, { left: arrasto ? arrasto.x : x, top: arrasto ? arrasto.y : y }]}
       ref={noRef}
@@ -163,13 +168,17 @@ const FeedbackButton = ({ onPress }) => {
       onAccessibilityAction={() => onPress()}>
       <FeedbackBadge size={TAMANHO} />
     </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  camada: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 50,
+  },
   container: {
     position: 'absolute',
-    zIndex: 50,
     ...(Platform.OS === 'web' ? { touchAction: 'none', cursor: 'grab', userSelect: 'none' } : {}),
   },
   circle: {
