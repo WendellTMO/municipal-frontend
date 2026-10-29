@@ -10,6 +10,7 @@ import ListaAlunosConfirmados from '../screens/Motorista/ListaAlunosConfirmados'
 import DefinirPontosRota from '../screens/Motorista/DefinirPontosRota';
 import DefinirHorariosRota from '../screens/Motorista/DefinirHorariosRota';
 import InicioFimViagem from '../screens/Motorista/InicioFimViagem';
+import RoteiroViagem from '../screens/Motorista/RoteiroViagem';
 import NotificacoesInbox from '../screens/Aluno/NotificacoesAluno';
 import ConfigNotificacoes from '../screens/ConfigNotificacoes';
 import {
@@ -56,6 +57,7 @@ const MotoristaNavigator = () => {
           <Screen name="DefinirPontosRota" component={DefinirPontosRota} />
           <Screen name="DefinirHorariosRota" component={DefinirHorariosRota} />
           <Screen name="InicioFimViagem" component={InicioFimViagem} />
+          <Screen name="RoteiroViagem" component={RoteiroViagem} />
           <Screen
             name="ConfigNotificacoesMotorista"
             component={ConfigNotificacoes}
@@ -96,6 +98,7 @@ const MotoristaNavigator = () => {
       <Stack.Screen name="DefinirPontosRota" component={DefinirPontosRota} />
       <Stack.Screen name="DefinirHorariosRota" component={DefinirHorariosRota} />
       <Stack.Screen name="InicioFimViagem" component={InicioFimViagem} />
+      <Stack.Screen name="RoteiroViagem" component={RoteiroViagem} />
       <Stack.Screen
         name="ConfigNotificacoesMotorista"
         component={ConfigNotificacoes}
