@@ -56,6 +56,7 @@ import type { OrdemInstituicao } from '../../services/motoristaService';
 import type { InstituicaoResponse, PontoFlatResponse, TipoOcorrencia } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import ModalApp from '../../components/ModalApp';
+import AdicionarParadaSheet from '../../components/AdicionarParadaSheet';
 import { formatarSentido } from '../../utils/formatarSentido';
 
 type GrupoConfirmado = { id: string | null; nome: string; tipo: string | null; quantidade: number; semInstituicao: boolean };
@@ -102,6 +103,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
   const [concluidas, setConcluidas] = useState(0);
   const [listaAberta, setListaAberta] = useState(false);
+  const [novaParadaVisivel, setNovaParadaVisivel] = useState(false);
   // Durante a viagem o botão de feedback fica no alto, fora do painel de baixo.
   useFeedbackPadrao(viagemIniciada ? 'topo' : null);
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
@@ -470,6 +472,14 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                   Paradas ({Math.min(concluidas, paradas.length)} de {paradas.length})
                 </Text>
                 <TouchableOpacity
+                  style={styles.novaParada}
+                  onPress={() => setNovaParadaVisivel(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Nova parada">
+                  <Icon name={IconNames.add} size="md" color={colors.primary.main} />
+                  <Text style={styles.novaParadaTexto}>Nova parada</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={styles.listaFechar}
                   onPress={() => setListaAberta(false)}
                   accessibilityRole="button"
@@ -599,6 +609,18 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             )}
           </TouchableOpacity>
         </View>
+
+        <AdicionarParadaSheet
+          visible={novaParadaVisivel}
+          viagemId={viagemId}
+          idsNaViagem={pontosRota.map((p) => String(p.id))}
+          onClose={() => setNovaParadaVisivel(false)}
+          onAdicionada={(paradasNovas) => {
+            setPontosRota(paradasNovas as PontoFlatResponse[]);
+            setNovaParadaVisivel(false);
+            toast.success('Parada adicionada.');
+          }}
+        />
 
         <DialogoConfirmacao
           visible={finalizarVisivel}
@@ -1050,6 +1072,18 @@ const styles = StyleSheet.create({
   },
   listaCabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   listaTitulo: { ...textStyles.h4, color: colors.text.primary },
+  novaParada: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 44,
+    marginLeft: 'auto',
+    marginRight: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 22,
+    backgroundColor: colors.primary.lighter,
+  },
+  novaParadaTexto: { ...textStyles.bodySmall, fontWeight: '700' as const, color: colors.primary.main },
   listaFechar: {
     width: 44,
     height: 44,

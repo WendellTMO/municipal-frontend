@@ -23,6 +23,12 @@ import {confirmAction} from '../../utils/confirm';
 import {topoDoCabecalho} from '../../utils/topoCabecalho';
 import {alturaVisivel} from '../../utils/folhaInferior';
 import {
+  buscarEnderecos,
+  nomeSugeridoEndereco,
+  ESPERA_BUSCA_MS,
+  MIN_LETRAS_ENDERECO,
+} from '../../utils/enderecoNominatim';
+import {
   filtrarPontos,
   textoContagem,
   textoContinuar,
@@ -35,8 +41,6 @@ import {
 
 const ALTURA_RODAPE = 76;
 const ALTURA_CARTAO_TOPO = 58;
-const ESPERA_BUSCA_MS = 900;
-const MIN_LETRAS_ENDERECO = 5;
 
 const Abas = ({itens, ativa, onMudar, pequena}) => (
   <View style={pequena ? styles.subAbas : styles.abas}>
@@ -149,36 +153,16 @@ const DefinirPontosRota = ({navigation, route}) => {
   };
 
   const escolherResultado = resultado => {
-    const endereco = resultado.address || {};
-    const nomeGuess =
-      endereco.road ||
-      endereco.pedestrian ||
-      endereco.suburb ||
-      endereco.neighbourhood ||
-      resultado.display_name.split(',')[0];
     setResultadoEscolhido(resultado);
     setPino({latitude: parseFloat(resultado.lat), longitude: parseFloat(resultado.lon)});
-    sugerirNome(nomeGuess || '');
+    sugerirNome(nomeSugeridoEndereco(resultado));
   };
 
   const buscarEndereco = async texto => {
     const minha = ++buscaAtual.current;
     try {
       setBuscandoEndereco(true);
-      const query = encodeURIComponent(texto);
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&countrycodes=br&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'BusKa/1.0.0-beta (React Native; contact: contato.buska@gmail.com)',
-            Accept: 'application/json',
-          },
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const data = await response.json();
+      const data = await buscarEnderecos(texto);
       if (minha !== buscaAtual.current) return;
       if (data && data.length > 0) {
         setResultadosEndereco(data);
