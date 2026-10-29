@@ -23,6 +23,7 @@ import {
 } from '../../components';
 import { dayLabel } from '../../utils/dayLabel';
 import { escolherViagemDeHoje } from '../../utils/viagemAluno';
+import { proximaViagemDoPainel, saidaAtrasada } from '../../utils/proximaViagemPainel';
 import { formatarHora } from '../../utils/formatarHora';
 import { horaCurta } from '../../utils/viagemPainel';
 import AgoraCard from '../../components/AgoraCard';
@@ -96,30 +97,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
       const todasViagens = await alunoService.listarViagens();
 
       if (todasViagens.length > 0) {
-        const now = new Date();
-        const upcoming = todasViagens
-          .filter((v) => {
-            try {
-              const dt = v.horario_inicio
-                ? new Date(`${v.data}T${v.horario_inicio}`)
-                : new Date(v.data ?? '');
-              return dt >= now;
-            } catch {
-              return false;
-            }
-          })
-          .sort((a, b) => {
-            try {
-              return (
-                new Date(`${a.data}T${a.horario_inicio ?? '00:00'}`).getTime() -
-                new Date(`${b.data}T${b.horario_inicio ?? '00:00'}`).getTime()
-              );
-            } catch {
-              return 0;
-            }
-          });
-
-        const next = upcoming[0] ?? null;
+        const next = proximaViagemDoPainel(todasViagens);
         setProximaViagem(
           next
             ? {
@@ -384,6 +362,11 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
               proximaViagem.status === 'Confirmado' ? IconNames.checkCircle : IconNames.warning
             }
             title={proximaViagem.rota_nome ?? 'Rota'}
+            subtitle={
+              saidaAtrasada(proximaViagem)
+                ? `Saída prevista às ${proximaViagem.horario}`
+                : undefined
+            }
             accessibilityLabel={proximaViagemLabel}
             onPress={abrirDetalheViagem}>
             {aceitaPresenca(proximaViagem.status_viagem) ? (
