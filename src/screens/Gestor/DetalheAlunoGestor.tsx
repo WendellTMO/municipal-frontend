@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import type { AlunoResponse } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import { dataLocal } from '../../utils/dataLocal';
 import SubHeader from '../../components/SubHeader';
+import { alertar } from '../../utils/alerta';
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -43,7 +43,7 @@ const DetalheAlunoGestor = ({ route, navigation }: any) => {
   // ─── Actions ──────────────────────────────────────────────────────────────
 
   const handleAprovar = () => {
-    Alert.alert(
+    alertar(
       'Aprovar cadastro',
       `Deseja aprovar o cadastro de ${aluno?.nome}? O aluno será notificado.`,
       [

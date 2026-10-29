@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
@@ -17,6 +16,7 @@ import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import { alertar } from '../../utils/alerta';
 
 const SelecaoRotas = ({navigation}) => {
   const [busca, setBusca] = useState('');
@@ -35,7 +35,7 @@ const SelecaoRotas = ({navigation}) => {
       setRotasInscritas(rotasInscritasData);
     } catch (error) {
       console.error('Error loading routes:', error);
-      Alert.alert('Erro', 'Não foi possível carregar as rotas. Tente novamente.');
+      alertar('Erro', 'Não foi possível carregar as rotas. Tente novamente.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,19 +62,19 @@ const SelecaoRotas = ({navigation}) => {
       const rotasInscritasAtualizadas = await alunoService.listarMinhasRotas().then(unwrapItems);
       setRotasInscritas(rotasInscritasAtualizadas || []);
       setRotasDisponiveis(rotasDisponiveis.filter((r) => r.id !== rota.id));
-      Alert.alert('Sucesso', 'Você foi cadastrado nesta rota!', [
+      alertar('Sucesso', 'Você foi cadastrado nesta rota!', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
       console.error('Error subscribing to route:', error);
-      Alert.alert('Erro', error?.message || 'Não foi possível cadastrar na rota. Tente novamente.');
+      alertar('Erro', error?.message || 'Não foi possível cadastrar na rota. Tente novamente.');
     } finally {
       setSubscribing(null);
     }
   };
 
   const handleSairDaRota = (rota) => {
-    Alert.alert(
+    alertar(
       'Sair da rota',
       `Deseja sair da rota "${rota.nome}"? Você poderá se inscrever novamente depois.`,
       [
@@ -88,9 +88,9 @@ const SelecaoRotas = ({navigation}) => {
               await alunoService.gerenciarInscricaoRota(rota.id, 'desinscrever');
               setRotasInscritas(prev => prev.filter(r => r.id !== rota.id));
               setRotasDisponiveis(prev => [...prev, rota]);
-              Alert.alert('Pronto', 'Você saiu da rota com sucesso.');
+              alertar('Pronto', 'Você saiu da rota com sucesso.');
             } catch (error) {
-              Alert.alert('Erro', error?.message || 'Não foi possível sair da rota.');
+              alertar('Erro', error?.message || 'Não foi possível sair da rota.');
             } finally {
               setUnsubscribing(null);
             }

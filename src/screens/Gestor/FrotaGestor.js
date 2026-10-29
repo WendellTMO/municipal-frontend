@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
@@ -24,6 +23,7 @@ import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import { alertar } from '../../utils/alerta';
 
 const GESTOR_COLOR = colors.roles.gestor;
 const INFO_COLOR = colors.info.main;
@@ -141,7 +141,7 @@ const FrotaGestor = ({ navigation }) => {
   // ─── Delete ──────────────────────────────────────────────────────────────
 
   const handleExcluir = (onibusItem) => {
-    Alert.alert(
+    alertar(
       'Remover Ônibus',
       `Deseja remover o ônibus ${onibusItem.placa}?`,
       [

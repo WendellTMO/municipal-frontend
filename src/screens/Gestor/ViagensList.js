@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -23,6 +22,7 @@ import Tappable from '../../components/Tappable';
 import { formatarHora } from '../../utils/formatarHora';
 import { dataLocal } from '../../utils/dataLocal';
 import { isoLocal } from '../../utils/saudacao';
+import { alertar } from '../../utils/alerta';
 
 const GESTOR_COLOR = colors.roles.gestor;
 
@@ -77,7 +77,7 @@ const ViagensList = ({ navigation }) => {
   const [cancelando, setCancelando] = useState(null);
 
   const handleCancelarViagem = (v) => {
-    Alert.alert(
+    alertar(
       'Cancelar viagem',
       `Cancelar a viagem da rota "${v.rota_nome ?? 'Rota'}" em ${formatDate(v.data)}?`,
       [

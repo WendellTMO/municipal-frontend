@@ -14,6 +14,7 @@ import { navigationRef } from './src/navigation/currentRoute';
 import { Platform, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AvisoAtualizacao from './src/components/AvisoAtualizacao';
+import AlertaProvider from './src/components/AlertaProvider';
 import { limparUrl } from './src/navigation/rotaDaUrl';
 
 const Root: React.FC = () => {
@@ -59,7 +60,9 @@ export const App: React.FC = () => {
               `BusKá - ${options?.title ?? route?.name ?? 'Transporte Escolar'}`,
           }}
         >
-          <Root />
+          <AlertaProvider>
+            <Root />
+          </AlertaProvider>
           <AvisoAtualizacao />
         </NavigationContainer>
         </FeedbackPadraoProvider>
