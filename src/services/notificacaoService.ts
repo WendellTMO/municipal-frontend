@@ -40,6 +40,11 @@ export const deleteNotificacao = async (
   return response.data;
 };
 
+export const deleteTodasNotificacoes = async (): Promise<{ message: string }> => {
+  const response = await api.delete<{ message: string }>('/notificacoes');
+  return response.data;
+};
+
 export const updateNotificacaoSettings = async (
   usuarioId: string,
   settings: Record<string, unknown>,
@@ -57,6 +62,7 @@ const notificacaoService = {
   createNotificacao,
   markNotificacaoAsSent,
   deleteNotificacao,
+  deleteTodasNotificacoes,
   updateNotificacaoSettings,
 };
 
