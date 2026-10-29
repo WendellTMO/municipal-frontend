@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {ActivityIndicator, ScrollView, Text, TextInput, View, StyleSheet} from 'react-native';
+import {ActivityIndicator, Platform, ScrollView, Text, TextInput, View, StyleSheet} from 'react-native';
 import {useAuth} from '../../contexts/AuthContext';
 import {Icon, IconNames} from '../../components';
 import Tappable from '../../components/Tappable';
@@ -15,7 +15,10 @@ import {
   montarPayloadAceite,
   validarCadastro,
 } from '../../utils/convite';
+import CadastroConcluido from './CadastroConcluido';
 import ConviteShell, {ConviteEncerrado, styles} from './ConviteShell';
+
+const MSG_ENTRE = 'Cadastro concluído. Entre com o seu e-mail e a senha que você acabou de criar.';
 
 const FORM_VAZIO = {
   senha: '',
@@ -48,6 +51,7 @@ const CompletarCadastro = ({navigation, route}) => {
   const [loading, setLoading] = useState(false);
   const [erroGeral, setErroGeral] = useState('');
   const [encerrado, setEncerrado] = useState('');
+  const [concluidoNoNavegador, setConcluidoNoNavegador] = useState(false);
   const [consultandoCep, setConsultandoCep] = useState(false);
   const [avisoCep, setAvisoCep] = useState({tipo: '', texto: ''});
   const camposEditados = useRef({}); // campos digitados à mão: o CEP não sobrescreve
@@ -104,6 +108,17 @@ const CompletarCadastro = ({navigation, route}) => {
     );
   }
 
+  if (concluidoNoNavegador) {
+    return (
+      <ConviteShell>
+        <CadastroConcluido
+          onContinuarNavegador={entrarPeloNavegador}
+          onIrParaLogin={() => irParaLogin(MSG_ENTRE)}
+          entrando={loading} />
+      </ConviteShell>
+    );
+  }
+
   const pedeTelefone = !convite.telefone;
   const menor = ehMenor(form.dataNascimento);
 
@@ -112,6 +127,16 @@ const CompletarCadastro = ({navigation, route}) => {
     setForm(atual => ({...atual, [campo]: valor}));
     if (erros[campo]) setErros(atual => ({...atual, [campo]: undefined}));
     if (erroGeral) setErroGeral('');
+  };
+
+  const entrarPeloNavegador = async () => {
+    if (loading) return;
+    setLoading(true);
+    const resultado = await login({email: convite.email, password: form.senha});
+    if (!resultado || !resultado.success) {
+      setLoading(false);
+      irParaLogin(MSG_ENTRE);
+    }
   };
 
   const concluir = async () => {
@@ -126,10 +151,14 @@ const CompletarCadastro = ({navigation, route}) => {
     try {
       const resposta = await conviteService.aceitar(token, montarPayloadAceite(pin, formCompleto));
       const destino = destinoPosAceite(resposta.status, resposta.requer_consentimento_responsavel);
+      if (destino.loginAutomatico && Platform.OS === 'web') {
+        setConcluidoNoNavegador(true); // o APK é a entrada oficial; o login fica por conta do aluno
+        return;
+      }
       if (destino.loginAutomatico) {
         const resultado = await login({email: convite.email, password: form.senha});
         if (!resultado || !resultado.success) {
-          irParaLogin('Cadastro concluído. Entre com o seu e-mail e a senha que você acabou de criar.');
+          irParaLogin(MSG_ENTRE);
         }
         return;
       }
