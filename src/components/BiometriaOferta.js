@@ -5,10 +5,10 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
-import Icon, { IconNames } from './Icon';
+import Icon from './Icon';
 import { useAuth } from '../contexts/AuthContext';
 import ModalApp from './ModalApp';
-import { rotuloAtual } from '../services/biometria';
+import { iconeAtual, rotuloAtual } from '../services/biometria';
 
 const BiometriaOferta = () => {
   const { biometria } = useAuth();
@@ -22,7 +22,7 @@ const BiometriaOferta = () => {
       <View style={styles.fundo}>
         <View style={styles.caixa}>
           <View style={styles.icone}>
-            <Icon name={IconNames.fingerprint} size={32} color="#FFFFFF" />
+            <Icon name={iconeAtual()} size={32} color="#FFFFFF" />
           </View>
           <Text style={styles.titulo}>Entrar com {rotuloAtual()} nas próximas vezes?</Text>
           <Text style={styles.texto}>

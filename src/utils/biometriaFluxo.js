@@ -6,6 +6,9 @@ export const deveOferecer = ({ disponivel, preferencia }) => disponivel && prefe
 // Pede a biometria ao abrir o app com sessão salva.
 export const deveBloquear = ({ disponivel, preferencia }) => disponivel && preferencia === 'sim';
 
+// Ícone da biometria: rosto no Face ID, digital nos demais.
+export const iconeBiometria = tipo => (tipo === 'FaceID' ? 'face' : 'fingerprint');
+
 // Nome que o aparelho dá à biometria. O iOS informa Face ID ou Touch ID; o Android informa
 // só "Biometrics" (digital, rosto ou íris), então o texto fica genérico.
 export const rotuloBiometria = tipo => {

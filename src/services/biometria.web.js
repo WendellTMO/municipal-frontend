@@ -1,26 +1,39 @@
 /**
  * Na web não há biometria: tudo é no-op e a interface fica escondida.
  * Só em desenvolvimento, ?biometria=mock simula um aparelho com biometria
- * (?biometria=falha simula biometria que falha) para pré-visualizar as telas.
+ * (?biometria=falha simula biometria que falha, ?biometria=espera deixa a tela aguardando) para pré-visualizar as telas.
  * O bloco some do build de produção porque NODE_ENV é substituído no webpack.
  */
 const simulacao = () => {
   if (process.env.NODE_ENV === 'production') return null;
   if (typeof window === 'undefined') return null;
   const valor = new URLSearchParams(window.location.search).get('biometria');
-  if (valor === 'mock' || valor === 'falha') return valor;
+  if (valor === 'mock' || valor === 'falha' || valor === 'espera') return valor;
   return null;
 };
 
-import { rotuloBiometria } from '../utils/biometriaFluxo';
+import { iconeBiometria, rotuloBiometria } from '../utils/biometriaFluxo';
 
 const CHAVE = 'biometria_preferencia';
 
-export const rotuloAtual = () => rotuloBiometria(null);
+// Só em desenvolvimento, ?tipo=faceid ou ?tipo=touchid simula o tipo do iPhone.
+// Lido uma vez no carregamento, porque a navegação do app tira a query da URL.
+const tipoSimulado = (() => {
+  if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') return null;
+  const valor = new URLSearchParams(window.location.search).get('tipo');
+  if (valor === 'faceid') return 'FaceID';
+  if (valor === 'touchid') return 'TouchID';
+  return null;
+})();
+
+export const rotuloAtual = () => rotuloBiometria(tipoSimulado);
+export const iconeAtual = () => iconeBiometria(tipoSimulado);
 
 export const biometriaDisponivel = async () => simulacao() !== null;
 
-export const pedirBiometria = async () => simulacao() === 'mock';
+// espera: o prompt nunca responde, para ver a tela enquanto aguarda a biometria.
+export const pedirBiometria = () =>
+  simulacao() === 'espera' ? new Promise(() => {}) : Promise.resolve(simulacao() === 'mock');
 
 export const lerPreferencia = async () => {
   if (simulacao() === null) return null;
