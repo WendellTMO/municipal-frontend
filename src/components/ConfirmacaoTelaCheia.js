@@ -68,8 +68,8 @@ const styles = StyleSheet.create({
   principal: { minHeight: 80, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   principalTexto: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
   espaco: { height: spacing.base },
-  secundario: { minHeight: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  secundarioTexto: { fontSize: 17, fontWeight: '800' },
+  secundario: { minHeight: 64, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  secundarioTexto: { fontSize: 22, fontWeight: '800' },
 });
 
 export default ConfirmacaoTelaCheia;
