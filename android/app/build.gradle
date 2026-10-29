@@ -18,6 +18,9 @@ project.ext.vectoricons = [
 ]
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
+// Versão do app definida num só lugar: o campo "version" do package.json.
+def buskaVersionName = new groovy.json.JsonSlurper().parse(file("../../package.json")).version
+
 def enableProguardInReleaseBuilds = false
 def jscFlavor = 'org.webkit:android-jsc:+'
 
@@ -35,8 +38,8 @@ android {
         applicationId "br.edu.ufcg.projeto1.buska"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode System.getenv("GITHUB_RUN_NUMBER") ? System.getenv("GITHUB_RUN_NUMBER").toInteger() : 1
-        versionName "1.0.3-beta"
+        versionCode((System.getenv("BUSKA_VERSION_CODE") ?: System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger())
+        versionName buskaVersionName
         resValue "string", "build_config_package", "br.edu.ufcg.projeto1.buska"
     }
 
