@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tela nativa de abertura: igual à SplashScreen do app (fundo branco, logo centrada 230dp,
+     12 dp acima do centro), para não haver troca visível quando o JS carrega. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/white" />
+    <item android:bottom="32dp" android:width="230dp" android:height="242dp" android:gravity="center">
+        <bitmap android:src="@drawable/logo_splash" android:gravity="fill" />
+    </item>
+</layer-list>
