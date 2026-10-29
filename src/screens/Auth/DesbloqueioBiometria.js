@@ -8,6 +8,7 @@ import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 import { colors, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import { useAuth } from '../../contexts/AuthContext';
+import { rotuloAtual } from '../../services/biometria';
 
 const DesbloqueioBiometria = () => {
   const { biometria, logout } = useAuth();
@@ -39,7 +40,7 @@ const DesbloqueioBiometria = () => {
         <Text style={styles.texto}>
           {falhou
             ? 'Não foi possível confirmar. Tente de novo ou entre com a senha.'
-            : 'Use sua digital ou seu rosto para abrir o BusKá.'}
+            : `Use ${rotuloAtual()} para abrir o BusKá.`}
         </Text>
       </View>
       <View style={styles.botoes}>

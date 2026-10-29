@@ -155,7 +155,11 @@ const RotaMotorista = ({ navigation }) => {
       return (
         <View style={styles.noHorarios}>
           <Icon name={IconNames.info} size="sm" color={colors.text.hint} />
-          <Text style={styles.noHorariosText}>Sem horários definidos</Text>
+          <Text style={styles.noHorariosText}>
+            {isGestor
+              ? 'Sem horários definidos. Sem eles as viagens da semana não são criadas sozinhas. Toque em Horários.'
+              : 'Sem horários definidos. O gestor ainda não cadastrou os horários desta rota.'}
+          </Text>
         </View>
       );
     }
@@ -512,7 +516,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm,
     backgroundColor: colors.background.default, borderRadius: borderRadius.sm,
   },
-  noHorariosText: { ...textStyles.caption, color: colors.text.hint },
+  noHorariosText: { ...textStyles.caption, color: colors.text.hint, flex: 1 },
 
   // Actions
   actionsRow: {

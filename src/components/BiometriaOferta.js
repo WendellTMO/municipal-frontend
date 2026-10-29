@@ -1,6 +1,6 @@
 /**
- * Pergunta única depois de um login com senha: entrar com digital ou rosto nas
- * próximas vezes? Só aparece quando o aparelho tem biometria (nunca na web).
+ * Pergunta única depois de um login com senha: entrar com a biometria do aparelho
+ * nas próximas vezes? Só aparece quando o aparelho tem biometria (nunca na web).
  */
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -8,6 +8,7 @@ import { colors, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
 import { useAuth } from '../contexts/AuthContext';
 import ModalApp from './ModalApp';
+import { rotuloAtual } from '../services/biometria';
 
 const BiometriaOferta = () => {
   const { biometria } = useAuth();
@@ -23,9 +24,9 @@ const BiometriaOferta = () => {
           <View style={styles.icone}>
             <Icon name={IconNames.fingerprint} size={32} color="#FFFFFF" />
           </View>
-          <Text style={styles.titulo}>Entrar com digital ou rosto nas próximas vezes?</Text>
+          <Text style={styles.titulo}>Entrar com {rotuloAtual()} nas próximas vezes?</Text>
           <Text style={styles.texto}>
-            Sua senha não é guardada. A biometria só abre a sessão neste aparelho.
+            Sua senha não é guardada. Isso só abre a sessão neste aparelho.
           </Text>
           <TouchableOpacity
             style={styles.primario}

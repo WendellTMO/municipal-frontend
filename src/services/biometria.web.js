@@ -12,7 +12,11 @@ const simulacao = () => {
   return null;
 };
 
+import { rotuloBiometria } from '../utils/biometriaFluxo';
+
 const CHAVE = 'biometria_preferencia';
+
+export const rotuloAtual = () => rotuloBiometria(null);
 
 export const biometriaDisponivel = async () => simulacao() !== null;
 
