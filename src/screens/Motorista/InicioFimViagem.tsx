@@ -38,7 +38,7 @@ import {
 import Icon, { IconNames } from '../../components/Icon';
 import { ReportSheet } from '../../components';
 import { CHIPS } from '../../components/ReportSheet';
-import { LocationMap, StaticRouteMap, useArrivalDetection, useRoutePolyline, normalizeRoutePoints } from '../../features/map/index';
+import { LocationMap, StaticRouteMap, useArrivalDetection, useRotaPlanejada, normalizeRoutePoints } from '../../features/map/index';
 import SubHeader from '../../components/SubHeader';
 import ConfirmacaoTelaCheia from '../../components/ConfirmacaoTelaCheia';
 import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
@@ -256,14 +256,12 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     onArrive: marcarChegada,
   });
 
-  const { coordinates: trajeto } = useRoutePolyline({
-    origin: posMotorista,
-    destination: proxima
-      ? { latitude: proxima.ponto.latitude, longitude: proxima.ponto.longitude }
-      : null,
-    enabled: !!posMotorista && !!proxima,
-    minRefetchDistanceMeters: 20,
-  });
+  // Rota planejada pelas ruas ate o fim da lista; recalcula ao visitar parada e ao sair do traçado.
+  const paradasRestantes: { latitude: number; longitude: number }[] = [];
+  for (const ponto of pontosValidos.slice(concluidas)) {
+    paradasRestantes.push({ latitude: ponto.latitude, longitude: ponto.longitude });
+  }
+  const trajeto = useRotaPlanejada(posMotorista, paradasRestantes, viagemIniciada);
 
   // Escape (web) e voltar do sistema (Android) fecham a lista de paradas.
   useEffect(() => {

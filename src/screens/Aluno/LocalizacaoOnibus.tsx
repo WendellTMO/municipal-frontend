@@ -15,7 +15,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import SubHeader from '../../components/SubHeader';
 import { motoristaService } from '../../services/motoristaService';
 import { alunoService } from '../../services';
-import { LocationMap } from '../../features/map/index';
+import { LocationMap, useRotaPlanejada, paradasRestantesPorProximidade } from '../../features/map/index';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { usePresencaViagem } from '../../hooks/usePresencaViagem';
 import { useABordo } from '../../hooks/useABordo';
@@ -165,6 +165,13 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   // A bordo o ônibus é desenhado na posição do próprio aluno e o ponto azul some.
   const posicaoOnibusMapa = aBordo ? posicaoAluno : posicaoMotorista;
 
+  // Rota planejada calculada neste aparelho, a partir da posicao do onibus que ele ja recebe.
+  const rotaPlanejada = useRotaPlanejada(
+    posicaoOnibusMapa,
+    paradasRestantesPorProximidade(pontosRota, posicaoOnibusMapa),
+    statusViagem === 'EM_ANDAMENTO',
+  );
+
   // Derive next stop from bus position
   useEffect(() => {
     if (!posicaoOnibusMapa || pontosRota.length === 0) {
@@ -274,6 +281,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
               proximoPonto ? ((proximoPonto as Record<string, unknown>).id as string) : null
             }
             posicaoAluno={aBordo ? null : posicaoAluno}
+            rotaCoordenadas={rotaPlanejada}
             margemSuperior={alturaCabecalho}
             margemInferior={alturaPainel}
             centralizarTick={centralizarTick}
