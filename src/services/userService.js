@@ -91,7 +91,7 @@ export const userService = {
       };
     } else if (error.request) {
       return {
-        message: 'Erro de conexão. Verifique sua internet.',
+        message: 'Não foi possível conectar ao servidor. Tente novamente em instantes.',
         status: 0,
       };
     } else {

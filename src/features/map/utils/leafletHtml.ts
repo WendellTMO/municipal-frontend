@@ -46,7 +46,7 @@ export function buildLeafletHtml(): string {
     <div id="error-msg">
       <span style="font-size:32px">🗺️</span>
       <p style="margin:8px 0 4px">Mapa indisponível</p>
-      <small>Verifique sua conexão com a internet</small>
+      <small>Tente novamente em instantes</small>
     </div>
   
     <script>

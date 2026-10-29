@@ -135,7 +135,7 @@ export default function LocationMap({
         <View style={styles.errorOverlay}>
           <Text style={styles.errorIcon}>🗺️</Text>
           <Text style={styles.errorTitle}>Mapa indisponível</Text>
-          <Text style={styles.errorSubtitle}>Verifique sua conexão com a internet</Text>
+          <Text style={styles.errorSubtitle}>Tente novamente em instantes</Text>
           <TouchableOpacity style={styles.reloadButton} onPress={reloadMap}>
             <Text style={styles.reloadText}>Tentar novamente</Text>
           </TouchableOpacity>

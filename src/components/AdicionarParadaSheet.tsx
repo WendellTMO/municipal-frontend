@@ -139,7 +139,7 @@ const AdicionarParadaSheet = ({ visible, viagemId, idsNaViagem, onClose, onAdici
           setErro('Nenhum resultado. Tente um endereço mais específico.');
         }
       } catch {
-        if (minha === buscaAtual.current) setErro('Erro ao buscar o endereço. Verifique a conexão.');
+        if (minha === buscaAtual.current) setErro('Não foi possível buscar o endereço agora. Tente novamente.');
       } finally {
         if (minha === buscaAtual.current) setBuscando(false);
       }

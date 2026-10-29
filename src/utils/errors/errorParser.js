@@ -269,10 +269,12 @@ export function parseApiError(error) {
     if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
       return new NetworkError('A requisição demorou muito. Tente novamente.');
     }
-    if (error.message?.includes('Network Error') || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+    // Só diz "sem internet" quando o aparelho informa que está offline. No React Native
+    // navigator.onLine não existe, e servidor fora do ar ou bloqueio de CORS também chegam sem resposta.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
       return new NetworkError('Sem conexão com a internet. Verifique sua rede.');
     }
-    return new NetworkError('Não foi possível conectar ao servidor.');
+    return new NetworkError('Não foi possível conectar ao servidor. Tente novamente em instantes.');
   }
   
   const { status, data } = error.response;
