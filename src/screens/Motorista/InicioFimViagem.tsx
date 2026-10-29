@@ -47,6 +47,7 @@ import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
 import { horaCurta } from '../../utils/viagemPainel';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
+import CronometroViagem from '../../components/CronometroViagem';
 import RoteiroViagem from './RoteiroViagem';
 import { montarRoteiro } from '../../utils/roteiroViagem';
 import { subtituloRoteiro, tituloRoteiro } from '../../utils/subtituloRoteiro';
@@ -58,7 +59,6 @@ import type { OrdemInstituicao } from '../../services/motoristaService';
 import type { InstituicaoResponse, PontoFlatResponse, TipoOcorrencia } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import ModalApp from '../../components/ModalApp';
-import AdicionarParadaSheet from '../../components/AdicionarParadaSheet';
 import { formatarSentido } from '../../utils/formatarSentido';
 
 type GrupoConfirmado = { id: string | null; nome: string; tipo: string | null; quantidade: number; semInstituicao: boolean };
@@ -97,7 +97,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [viagemIniciada, setViagemIniciada] = useState(viagemParam?.status === 'EM_ANDAMENTO');
   const [loading, setLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(true);
-  const [tempoDecorrido, setTempoDecorrido] = useState(0);
+  const [inicioMs, setInicioMs] = useState<number | null>(null);
   const [pontosRota, setPontosRota] = useState<PontoFlatResponse[]>([]);
   const [reportVisible, setReportVisible] = useState(false);
   const [broadcastVisible, setBroadcastVisible] = useState(false);
@@ -105,7 +105,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
   const [concluidas, setConcluidas] = useState(0);
   const [roteiroAberto, setRoteiroAberto] = useState(false);
-  const [novaParadaVisivel, setNovaParadaVisivel] = useState(false);
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
   const [iniciarVisivel, setIniciarVisivel] = useState(false);
   // Antes de iniciar o botão de feedback fica logo acima da barra Iniciar viagem; na confirmação e
@@ -124,7 +123,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [alturaTopo, setAlturaTopo] = useState(0);
   const [centralizarTick, setCentralizarTick] = useState(0);
   const [alturaPainel, setAlturaPainel] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentViagem = (viagem ?? viagemParam) as Record<string, unknown>;
   const viagemId = (currentViagem?.id ?? viagemParam?.id) as string | undefined;
@@ -151,7 +149,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           setViagemIniciada(emAndamento);
           if (emAndamento && viagemAtual.inicio_real) {
             const inicioDate = new Date(viagemAtual.inicio_real as string);
-            setTempoDecorrido(Math.max(0, Math.floor((Date.now() - inicioDate.getTime()) / 1000)));
+            setInicioMs(inicioDate.getTime());
           }
         }
 
@@ -188,19 +186,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     };
     init();
   }, [viagemParam?.id]);
-
-  // Elapsed timer
-  useEffect(() => {
-    if (viagemIniciada) {
-      intervalRef.current = setInterval(() => setTempoDecorrido((p) => p + 1), 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [viagemIniciada]);
 
   // GPS broadcast to backend
   const viagemIdRef = useRef<string | undefined>(viagemId);
@@ -288,14 +273,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     });
     return () => sub.remove();
   }, [roteiroAberto]);
-
-  const formatarTempo = (s: number) => {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
-  };
 
   // Só o botão da tela de instituições chama o endpoint de iniciar.
   const abrirIniciar = () => {
@@ -448,14 +425,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             subtitulo={`${formatarSentido(currentViagem.tipo as string)} · ${horaCurta(currentViagem.horario_inicio as string)}`}
             voltarDesabilitado
             direita={
-              <View style={styles.timerChip}>
-                <Icon name={IconNames.schedule} size="sm" color={colors.success.contrast} />
-                <Text
-                  style={styles.timerText}
-                  accessibilityLabel={`Tempo decorrido: ${formatarTempo(tempoDecorrido)}`}>
-                  {formatarTempo(tempoDecorrido)}
-                </Text>
-              </View>
+              <CronometroViagem inicioMs={inicioMs} />
             }
           />
         </View>
@@ -469,15 +439,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               concluidas={concluidas}
               instituicoes={instituicoes}
               onBack={() => setRoteiroAberto(false)}
-              direita={
-                <TouchableOpacity
-                  style={styles.novaParada}
-                  onPress={() => setNovaParadaVisivel(true)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Nova parada">
-                  <Icon name={IconNames.add} size="lg" color="#FFFFFF" />
-                </TouchableOpacity>
-              }
             />
           </View>
         ) : null}
@@ -566,18 +527,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
 
-        <AdicionarParadaSheet
-          visible={novaParadaVisivel}
-          viagemId={viagemId}
-          idsNaViagem={pontosRota.map((p) => String(p.id))}
-          onClose={() => setNovaParadaVisivel(false)}
-          onAdicionada={(paradasNovas) => {
-            setPontosRota(paradasNovas as PontoFlatResponse[]);
-            setNovaParadaVisivel(false);
-            toast.success('Parada adicionada.');
-          }}
-        />
-
         <DialogoConfirmacao
           visible={finalizarVisivel}
           titulo="Finalizar a viagem?"
@@ -625,7 +574,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                       <Icon name={t.icon} size="lg" color={colors.primary.main} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.templateBtnLabel}>{t.label}</Text>
-                        <Text style={styles.templateBtnMsg} numberOfLines={1}>{t.msg}</Text>
+                        <Text style={styles.templateBtnMsg}>{t.msg}</Text>
                       </View>
                       <Icon name={IconNames.send} size="md" color={colors.primary.main} />
                     </>
@@ -767,7 +716,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                     <Icon name={t.icon} size="lg" color={colors.primary.main} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.templateBtnLabel}>{t.label}</Text>
-                      <Text style={styles.templateBtnMsg} numberOfLines={1}>{t.msg}</Text>
+                      <Text style={styles.templateBtnMsg}>{t.msg}</Text>
                     </View>
                     <Icon name={IconNames.send} size="md" color={colors.primary.main} />
                   </>
@@ -800,74 +749,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-  },
-  timerChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.success.main,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-  },
-  timerText: { ...textStyles.body, color: '#fff', fontWeight: '700' as const, fontFamily: 'monospace' },
-
-  floatingBottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: borderRadius.xxl,
-    borderTopRightRadius: borderRadius.xxl,
-    padding: spacing.base,
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
-    ...shadows.xl,
-  },
-  proximaCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  proximaIcone: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: colors.primary.lighter,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  proximaTextos: { flex: 1 },
-  proximaRotulo: { ...textStyles.caption, color: colors.text.secondary, letterSpacing: 1 },
-  proximaNome: { ...textStyles.h5, color: colors.text.primary },
-  proximaInstituicao: { ...textStyles.caption, color: colors.primary.main, fontWeight: '700' as const },
-  minhaPosicaoWrap: { position: 'absolute', right: spacing.base, alignItems: 'center', gap: 4, zIndex: 15 },
-  minhaPosicao: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.solid.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.lg,
-  },
-  // Quatro botões com flex igual e vão de 8 px: ocupam a largura do Finalizar Viagem, sem sobras.
-  acoesRow: { flexDirection: 'row', gap: spacing.sm },
-  acaoItem: { flex: 1, alignItems: 'center', gap: 4 },
-  // 12 px Inter, uma linha; "Confirmados" cabe em ~75 px (celular de 360 px dá ~78 px por botão)
-  acaoLegenda: { ...textStyles.caption, color: colors.text.secondary, textAlign: 'center' },
-  acaoIcone: {
-    alignSelf: 'stretch',
-    height: 64,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  acaoDesabilitada: { opacity: 0.4 },
-  novaParada: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   modalSecao: { ...textStyles.h5, color: colors.text.primary, marginTop: spacing.base, marginBottom: spacing.sm },
   problemaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
@@ -920,6 +801,7 @@ const styles = StyleSheet.create({
     ...textStyles.button,
     color: colors.text.inverse,
     fontSize: 24,
+    lineHeight: 32,
     fontWeight: '700' as const,
   },
   finalizarButton: {
@@ -937,6 +819,7 @@ const styles = StyleSheet.create({
     ...textStyles.button,
     color: colors.text.inverse,
     fontSize: fontSize.h3,
+    lineHeight: 32,
     fontWeight: '700' as const,
   },
   buttonDisabled: { opacity: 0.6 },
