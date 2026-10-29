@@ -49,6 +49,7 @@ import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao
 import RoteiroLista from '../../components/RoteiroLista';
 import CronometroViagem from '../../components/CronometroViagem';
 import RoteiroViagem from './RoteiroViagem';
+import ListaAlunosConfirmados from './ListaAlunosConfirmados';
 import { montarRoteiro } from '../../utils/roteiroViagem';
 import { subtituloRoteiro, tituloRoteiro } from '../../utils/subtituloRoteiro';
 import { motoristaService } from '../../services/motoristaService';
@@ -105,6 +106,9 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
   const [concluidas, setConcluidas] = useState(0);
   const [roteiroAberto, setRoteiroAberto] = useState(false);
+  // Confirmados abre como camada, sem trocar de tela: navegar com o mapa vivo atrás travava a transição.
+  const [alunosAberto, setAlunosAberto] = useState(false);
+  const camadaAberta = roteiroAberto || alunosAberto;
   const [finalizarVisivel, setFinalizarVisivel] = useState(false);
   const [iniciarVisivel, setIniciarVisivel] = useState(false);
   // Antes de iniciar o botão de feedback fica logo acima da barra Iniciar viagem; na confirmação e
@@ -112,7 +116,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   let padraoFeedback: string | null = 'topo';
   if (iniciarVisivel) padraoFeedback = 'topo';
   else if (!viagemIniciada) padraoFeedback = 'barra';
-  else if (roteiroAberto) padraoFeedback = null;
+  else if (camadaAberta) padraoFeedback = null;
   useFeedbackPadrao(padraoFeedback);
   const [ordemSalva, setOrdemSalva] = useState<OrdemInstituicao[]>([]);
   const [gruposOrdenados, setGruposOrdenados] = useState<GrupoConfirmado[]>([]);
@@ -257,22 +261,26 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   }
   const trajeto = useRotaPlanejada(posMotorista, paradasRestantes, viagemIniciada);
 
-  // Escape (web) e voltar do sistema (Android) fecham o Roteiro.
+  // Escape (web) e voltar do sistema (Android) fecham a camada aberta (Roteiro ou Confirmados).
   useEffect(() => {
-    if (!roteiroAberto) return;
+    if (!camadaAberta) return;
+    const fechar = () => {
+      setRoteiroAberto(false);
+      setAlunosAberto(false);
+    };
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setRoteiroAberto(false);
+      if (e.key === 'Escape') fechar();
     };
     if (Platform.OS === 'web') {
       window.addEventListener('keydown', aoTeclar);
       return () => window.removeEventListener('keydown', aoTeclar);
     }
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      setRoteiroAberto(false);
+      fechar();
       return true;
     });
     return () => sub.remove();
-  }, [roteiroAberto]);
+  }, [camadaAberta]);
 
   // Só o botão da tela de instituições chama o endpoint de iniciar.
   const abrirIniciar = () => {
@@ -443,6 +451,15 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           </View>
         ) : null}
 
+        {alunosAberto ? (
+          <View style={styles.roteiroCamada}>
+            <ListaAlunosConfirmados
+              navigation={{ goBack: () => setAlunosAberto(false) }}
+              route={{ params: { viagem: currentViagem } }}
+            />
+          </View>
+        ) : null}
+
         <View style={styles.floatingBottom} onLayout={(e) => setAlturaPainel(e.nativeEvent.layout.height)}>
           {/* Só a informação da próxima parada */}
           <View style={styles.proximaCard}>
@@ -500,7 +517,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.acaoItem}>
               <TouchableOpacity
                 style={[styles.acaoIcone, { backgroundColor: colors.solid.blue }]}
-                onPress={() => navigation.navigate('ListaAlunosConfirmados', { viagem: currentViagem })}
+                onPress={() => setAlunosAberto(true)}
                 accessibilityRole="button"
                 accessibilityLabel="Alunos">
                 <Icon name={IconNames.group} size="xl" color="#FFFFFF" />
