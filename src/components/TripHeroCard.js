@@ -17,7 +17,7 @@ const TripHeroCard = ({
   statusColor = colors.success.main,
   statusIcon = IconNames.checkCircle,
   title,
-  subtitle = undefined,
+  subtitle = '',
   onPress,
   accessibilityLabel,
   children = undefined,
