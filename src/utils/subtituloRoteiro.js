@@ -1,11 +1,15 @@
 import { formatarSentido } from './formatarSentido';
 import { horaCurta } from './viagemPainel';
 
-// "origem → destino · horário"; sem origem e destino, cai no sentido da viagem.
+// Título do cabeçalho do Roteiro: "Ida · 06:35". Sem horário, só o sentido.
+export const tituloRoteiro = viagem => {
+  const sentido = formatarSentido(viagem.tipo);
+  if (!viagem.horario_inicio) return sentido;
+  return `${sentido} · ${horaCurta(viagem.horario_inicio)}`;
+};
+
+// Subtítulo: "origem → destino". Sem os dois, não mostra subtítulo.
 export const subtituloRoteiro = viagem => {
-  const hora = horaCurta(viagem.horario_inicio);
-  let trecho = formatarSentido(viagem.tipo);
-  if (viagem.origem && viagem.destino) trecho = `${viagem.origem} → ${viagem.destino}`;
-  if (!hora) return trecho;
-  return `${trecho} · ${hora}`;
+  if (viagem.origem && viagem.destino) return `${viagem.origem} → ${viagem.destino}`;
+  return null;
 };

@@ -1,10 +1,17 @@
-import { subtituloRoteiro } from './subtituloRoteiro';
+import { subtituloRoteiro, tituloRoteiro } from './subtituloRoteiro';
 
-test('usa origem, destino e horário', () => {
-  const v = { origem: 'Galante', destino: 'UFCG', tipo: 'IDA', horario_inicio: '06:35:00' };
-  expect(subtituloRoteiro(v)).toBe('Galante → UFCG · 06:35');
+test('título traz o sentido e o horário', () => {
+  expect(tituloRoteiro({ tipo: 'IDA', horario_inicio: '06:35:00' })).toBe('Ida · 06:35');
 });
 
-test('sem origem e destino mostra o sentido', () => {
-  expect(subtituloRoteiro({ tipo: 'CIRCULAR', horario_inicio: '12:00:00' })).toBe('Circular · 12:00');
+test('título sem horário mostra só o sentido', () => {
+  expect(tituloRoteiro({ tipo: 'CIRCULAR' })).toBe('Circular');
+});
+
+test('subtítulo usa origem e destino', () => {
+  expect(subtituloRoteiro({ origem: 'Galante', destino: 'UFCG' })).toBe('Galante → UFCG');
+});
+
+test('sem origem e destino não há subtítulo', () => {
+  expect(subtituloRoteiro({ tipo: 'CIRCULAR' })).toBeNull();
 });
