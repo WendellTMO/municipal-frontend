@@ -5,7 +5,7 @@
  */
 import ReactNativeBiometrics from 'react-native-biometrics';
 import { Storage } from '../utils/storage';
-import { rotuloBiometria } from '../utils/biometriaFluxo';
+import { iconeBiometria, rotuloBiometria } from '../utils/biometriaFluxo';
 
 const CHAVE = 'biometria_preferencia';
 const criarLeitor = () => new ReactNativeBiometrics();
@@ -13,6 +13,7 @@ const criarLeitor = () => new ReactNativeBiometrics();
 // Guarda o tipo que o aparelho informou em biometriaDisponivel, que roda antes de qualquer tela.
 let tipoAtual = null;
 export const rotuloAtual = () => rotuloBiometria(tipoAtual);
+export const iconeAtual = () => iconeBiometria(tipoAtual);
 
 export const biometriaDisponivel = async () => {
   try {

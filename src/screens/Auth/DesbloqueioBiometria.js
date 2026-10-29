@@ -6,9 +6,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, spacing, textStyles } from '../../theme';
-import Icon, { IconNames } from '../../components/Icon';
+import Icon from '../../components/Icon';
 import { useAuth } from '../../contexts/AuthContext';
-import { rotuloAtual } from '../../services/biometria';
+import { iconeAtual, rotuloAtual } from '../../services/biometria';
 
 const DesbloqueioBiometria = () => {
   const { biometria, logout } = useAuth();
@@ -34,7 +34,7 @@ const DesbloqueioBiometria = () => {
       <View style={styles.conteudo}>
       <View style={styles.centro}>
         <View style={styles.icone}>
-          <Icon name={IconNames.fingerprint} size={44} color="#FFFFFF" />
+          <Icon name={iconeAtual()} size={44} color="#FFFFFF" />
         </View>
         <Text style={styles.titulo}>Confirme que é você</Text>
         <Text style={styles.texto}>

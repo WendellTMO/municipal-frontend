@@ -183,6 +183,7 @@ export const IconNames = {
   moreHoriz: 'more-horiz',
   logout: 'logout',
   fingerprint: 'fingerprint',
+  face: 'face',
   login: 'login',
   send: 'send',
   flag: 'flag',
