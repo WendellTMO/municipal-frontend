@@ -31,12 +31,18 @@ export const posicaoGuardada = valor => {
 // da seta de voltar (canto superior esquerdo), longe dos botões + e - do mapa, à direita.
 export const ABAIXO_DO_CABECALHO = 121;
 
-// A posição salva pelo usuário sempre vence. Sem ela, vale o padrão da tela ('topo') e,
-// sem padrão de tela, o canto de baixo à direita.
+// Distância ao rodapé que deixa o botão logo acima da barra grande Iniciar viagem.
+export const ACIMA_DA_BARRA = 124;
+
+// A posição salva pelo usuário sempre vence. Sem ela, vale o padrão da tela ('topo' ou 'barra')
+// e, sem padrão de tela, o canto de baixo à direita.
 export const decidirPosicao = ({ guardada, padraoTela, altura, tamanho, rodape }) => {
   if (guardada) return guardada;
   if (padraoTela === 'topo') {
     return { lado: 'esq', baixo: altura - tamanho - ABAIXO_DO_CABECALHO };
+  }
+  if (padraoTela === 'barra') {
+    return { lado: 'dir', baixo: ACIMA_DA_BARRA };
   }
   return { lado: 'dir', baixo: rodape };
 };
