@@ -9,6 +9,7 @@ import {
 import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
+  deleteNotificacao,
   getNotificacoes,
   markNotificacaoAsSent,
 } from '../../services/notificacaoService';
@@ -18,6 +19,7 @@ import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import DeslizarParaExcluir from '../../components/DeslizarParaExcluir';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -74,9 +76,20 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleExcluir = async (n: Notificacao) => {
+    const anteriores = notificacoes;
+    setNotificacoes(prev => prev.filter(item => item.id !== n.id));
+    try {
+      await deleteNotificacao(String(n.id));
+    } catch {
+      setNotificacoes(anteriores);
+    }
+  };
+
   const unreadCount = notificacoes.filter(n => !n.enviada).length;
 
   const renderItem = ({ item }: { item: Notificacao }) => (
+    <DeslizarParaExcluir onExcluir={() => handleExcluir(item)}>
     <Tappable
       style={[styles.card, !item.enviada && styles.cardUnread]}
       onPress={() => handleMarkRead(item)}
@@ -94,6 +107,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.cardDate}>{formatDate(item.data_envio)}</Text>
       </View>
     </Tappable>
+    </DeslizarParaExcluir>
   );
 
   return (
@@ -172,13 +186,13 @@ const styles = StyleSheet.create({
   listContent: {
     padding: spacing.base,
     paddingBottom: spacing.xxxl,
+    gap: spacing.sm,
   },
   card: {
     flexDirection: 'row',
     backgroundColor: colors.background.paper,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    marginBottom: spacing.sm,
     ...shadows.xs,
     gap: spacing.sm,
   },

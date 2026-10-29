@@ -9,6 +9,7 @@ import {
 import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
+  deleteNotificacao,
   getNotificacoes,
   markNotificacaoAsSent,
 } from '../../services/notificacaoService';
@@ -18,6 +19,7 @@ import type { Notificacao } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import DeslizarParaExcluir from '../../components/DeslizarParaExcluir';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -82,7 +84,18 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
     setNotificacoes((prev) => prev.map((n) => ({ ...n, enviada: true })));
   };
 
+  const handleExcluir = async (notificacao: Notificacao) => {
+    const anteriores = notificacoes;
+    setNotificacoes((prev) => prev.filter((n) => n.id !== notificacao.id));
+    try {
+      await deleteNotificacao(String(notificacao.id));
+    } catch {
+      setNotificacoes(anteriores);
+    }
+  };
+
   const renderItem = ({ item }: { item: Notificacao }) => (
+    <DeslizarParaExcluir onExcluir={() => handleExcluir(item)}>
     <Tappable
       style={[styles.card, !item.enviada && styles.cardUnread]}
       onPress={() => handleMarkAsRead(item)}
@@ -101,6 +114,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.cardMessage}>{item.mensagem}</Text>
       </View>
     </Tappable>
+    </DeslizarParaExcluir>
   );
 
   if (loading) {
