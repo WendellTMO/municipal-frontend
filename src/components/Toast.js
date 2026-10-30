@@ -7,6 +7,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useRe
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { colors, spacing, textStyles, borderRadius, shadows } from '../theme';
 import Icon, { IconNames } from './Icon';
+import { haptico } from '../utils/haptico';
 
 // Toast types configuration
 const TOAST_CONFIG = {
@@ -59,6 +60,8 @@ export const ToastProvider = ({ children }) => {
     }
 
     setToast({ type, message });
+    if (type === 'success') haptico('sucesso');
+    else if (type === 'error') haptico('erro');
     
     Animated.timing(fadeAnim, {
       toValue: 1,

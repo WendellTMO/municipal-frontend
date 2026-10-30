@@ -19,7 +19,7 @@ const BetaNoticeModal = ({ visible, onConfirm }) => (
         </Text>
         <Text style={styles.paragrafo}>
           Parte do seu trabalho aqui é nos avisar quando algo der errado, parecer estranho ou
-          estiver faltando. Use o botão amarelo no canto da tela, em qualquer momento.
+          estiver faltando. Segure o botão amarelo no canto da tela, em qualquer momento. Dá para arrastá-lo para outro lugar.
         </Text>
         <View style={styles.faixa}>
           <FeedbackBadge size={36} />

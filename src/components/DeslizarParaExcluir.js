@@ -8,6 +8,7 @@ import { Animated, PanResponder, StyleSheet, useWindowDimensions, View } from 'r
 import Icon, { IconNames } from './Icon';
 import { borderRadius, colors, spacing } from '../theme';
 import { deveExcluir, ehSwipeHorizontal } from '../utils/deslizarExcluir';
+import { haptico } from '../utils/haptico';
 
 const DeslizarParaExcluir = ({ onExcluir, children }) => {
   const { width } = useWindowDimensions();
@@ -17,13 +18,24 @@ const DeslizarParaExcluir = ({ onExcluir, children }) => {
   const larguraRef = useRef(width);
   larguraRef.current = width;
 
-  const voltar = () => Animated.spring(x, { toValue: 0, useNativeDriver: true }).start();
+  const passouRef = useRef(false);
+  const voltar = () => {
+    passouRef.current = false;
+    Animated.spring(x, { toValue: 0, useNativeDriver: true }).start();
+  };
 
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => ehSwipeHorizontal(g.dx, g.dy),
-      onPanResponderMove: (_, g) => x.setValue(g.dx),
+      onPanResponderMove: (_, g) => {
+        x.setValue(g.dx);
+        // Um toque quando o dedo passa do ponto em que soltar exclui.
+        const passou = deveExcluir(g.dx);
+        if (passou && !passouRef.current) haptico('pegar');
+        passouRef.current = passou;
+      },
       onPanResponderRelease: (_, g) => {
+        passouRef.current = false;
         if (!deveExcluir(g.dx)) {
           voltar();
           return;
