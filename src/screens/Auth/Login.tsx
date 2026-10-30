@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon, IconNames, AuthBackground, AuthLogo } from '../../components';
 import { colors } from '../../theme';
+import { Storage, STORAGE_KEYS } from '../../utils/storage';
 
 type LoginProps = {
   navigation: {
@@ -37,6 +38,17 @@ const Login: React.FC<LoginProps> = ({ navigation, route }) => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [senhaFocused, setSenhaFocused] = useState(false);
   const [lembrarMe, setLembrarMe] = useState(true);
+
+  // Depois de sair da conta, o e-mail usado por último volta preenchido (se Lembrar-me estava marcado).
+  useEffect(() => {
+    let ativo = true;
+    Storage.getItem(STORAGE_KEYS.ULTIMO_EMAIL).then((salvo: string | null) => {
+      if (ativo && salvo) setEmail((atual) => atual || salvo);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateAnim = useRef(new Animated.Value(26)).current;
@@ -141,8 +153,9 @@ const Login: React.FC<LoginProps> = ({ navigation, route }) => {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    autoComplete="email"
-                    textContentType="emailAddress"
+                    autoComplete="username"
+                    textContentType="username"
+                    importantForAutofill="yes"
                     onFocus={() => setEmailFocused(true)}
                     onBlur={() => setEmailFocused(false)}
                     testID="email-input"
@@ -178,8 +191,9 @@ const Login: React.FC<LoginProps> = ({ navigation, route }) => {
                     }}
                     secureTextEntry={!mostrarSenha}
                     autoCapitalize="none"
-                    autoComplete="password"
+                    autoComplete="current-password"
                     textContentType="password"
+                    importantForAutofill="yes"
                     onFocus={() => setSenhaFocused(true)}
                     onBlur={() => setSenhaFocused(false)}
                     testID="password-input"
