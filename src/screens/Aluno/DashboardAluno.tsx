@@ -34,17 +34,12 @@ import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
-import { useToast } from '../../components/Toast';
 import Tappable from '../../components/Tappable';
 
 type RootParamList = Record<string, object | undefined>;
-type Props = {
-  navigation: NativeStackNavigationProp<RootParamList>;
-  route?: { params?: { abrirLocalizacao?: number } };
-};
+type Props = { navigation: NativeStackNavigationProp<RootParamList> };
 
-const DashboardAluno: React.FC<Props> = ({ navigation, route }) => {
-  const toast = useToast();
+const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   const [rotasCadastradas, setRotasCadastradas] = useState<ViagemAgendaUI[]>([]);
   const [proximaViagem, setProximaViagem] = useState<
     (ViagemAgendaUI & { horario: string; status: string }) | null
@@ -181,25 +176,13 @@ const DashboardAluno: React.FC<Props> = ({ navigation, route }) => {
   // Com a viagem em andamento, o mapa mostra ela; senão mostra a próxima.
   const abrirLocalizacao = () => {
     const viagem = emAndamento ? todayTrip : proximaViagem;
-    if (!viagem) {
-      toast.info('Você não tem viagem para acompanhar agora.');
-      return;
-    }
+    if (!viagem) return;
     const rota =
       (rotasCadastradas as unknown[]).find(
         (r: unknown) => (r as Record<string, unknown>).id === viagem.rota_id,
       ) ?? { id: viagem.rota_id, nome: viagem.rota_nome };
     navigation.navigate('LocalizacaoOnibus', { rota, viagem });
   };
-
-  // A aba Localização da barra pede o mapa por parâmetro: abre assim que a home termina de carregar.
-  const pedidoLocalizacao = route?.params?.abrirLocalizacao;
-  const ultimoPedido = useRef<number | null>(null);
-  useEffect(() => {
-    if (!pedidoLocalizacao || loading || pedidoLocalizacao === ultimoPedido.current) return;
-    ultimoPedido.current = pedidoLocalizacao;
-    abrirLocalizacao();
-  }, [pedidoLocalizacao, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   let proximaViagemLabel = '';
   if (proximaViagem) {

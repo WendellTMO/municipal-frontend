@@ -82,7 +82,7 @@ const ConfigNotificacoes = ({ navigation }) => {
 
   return (
     <TelaSegura style={styles.container}>
-      <SubHeader titulo="Configurações" subtitulo={headerSubtitle} onBack={() => navigation.goBack()} />
+      <SubHeader titulo={isMotorista ? 'Meu perfil' : 'Configurações'} subtitulo={headerSubtitle} onBack={() => navigation.goBack()} />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={withFabSpace(styles.content)}>
         <AccountSection user={user} showProfileCard={isAluno} />
