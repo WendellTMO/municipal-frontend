@@ -7,6 +7,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { atrasoDoToque, escalaPressionado } from '../utils/toque';
+import { haptico } from '../utils/haptico';
 
 const PressableAnimado = Animated.createAnimatedComponent(Pressable);
 
@@ -37,6 +38,7 @@ const Tappable = ({
   accessibilityRole = 'button',
   activeOpacity, // do TouchableOpacity antigo; o feedback agora é escala e sombra
   sombra = true, // false quando o item não tem cantos arredondados próprios (ex.: ActionTile)
+  tato = true, // false para tirar a vibração curta do toque
   ...resto
 }) => {
   const reduzirMovimento = useReduzirMovimento();
@@ -64,6 +66,7 @@ const Tappable = ({
   };
   const aoTocar = evento => {
     if (!onPress) return;
+    if (tato) haptico('toque');
     const atraso = atrasoDoToque({ navega, reduzirMovimento });
     if (!atraso) {
       onPress(evento);

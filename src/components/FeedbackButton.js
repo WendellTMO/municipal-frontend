@@ -3,10 +3,12 @@
  * FeedbackBadge é o mesmo desenho sem posição, usado no aviso beta.
  */
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { PanResponder, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Animated, PanResponder, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { colors } from '../theme';
 import Icon, { IconNames } from './Icon';
 import { assinarPosicao, definirPosicao, lerPosicao } from '../utils/fabStore';
+import { haptico } from '../utils/haptico';
+import { criarSegurar } from '../utils/segurar';
 import { useFeedbackPadraoAtual } from './FeedbackPadraoContext';
 import {
   decidirPosicao,
@@ -39,6 +41,9 @@ const RODAPE = 24 + (Platform.OS === 'ios' ? 34 : 0);
 const TOPO = 48;
 const MARGEM = 18;
 const TAMANHO = 56;
+// Pegar o botão: ele cresce um pouco. Segurar parado por este tempo abre o feedback.
+const ESCALA_PEGO = 1.18;
+const SEGURAR_MS = 450;
 
 const FeedbackButton = ({ onPress }) => {
   const janela = useWindowDimensions();
@@ -56,6 +61,24 @@ const FeedbackButton = ({ onPress }) => {
   atual.current = { width, height, posicao, onPress };
   const inicio = useRef({ x: 0, y: 0 });
   const moveu = useRef(false);
+  const escala = useRef(new Animated.Value(1)).current;
+  const segurar = useRef(
+    criarSegurar({
+      esperaMs: SEGURAR_MS,
+      aoSegurar: () => {
+        haptico('pegar');
+        atual.current.onPress();
+      },
+    }),
+  ).current;
+
+  const aumentar = pego =>
+    Animated.spring(escala, {
+      toValue: pego ? ESCALA_PEGO : 1,
+      friction: 6,
+      tension: 180,
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
 
   const baixoValido = limitarBaixo(posicao.baixo, height, TAMANHO, TOPO, RODAPE);
   const x = xDoLado(posicao.lado, width, TAMANHO, MARGEM);
@@ -79,19 +102,29 @@ const FeedbackButton = ({ onPress }) => {
     const baixo = limitarBaixo(p.baixo, h, TAMANHO, TOPO, RODAPE);
     inicio.current = { x: xDoLado(p.lado, w, TAMANHO, MARGEM), y: h - TAMANHO - baixo };
     moveu.current = false;
+    haptico('toque');
+    aumentar(true);
+    segurar.iniciar();
   };
 
   const mexer = g => {
     if (!moveu.current && !ehArraste(g.dx, g.dy)) return;
     moveu.current = true;
+    segurar.cancelar();
     setArrasto(posicaoDoToque(g));
   };
 
+  const cancelarGesto = () => {
+    segurar.cancelar();
+    aumentar(false);
+    setArrasto(null);
+  };
+
   const soltar = g => {
-    if (!moveu.current) {
-      atual.current.onPress();
-      return;
-    }
+    segurar.cancelar();
+    aumentar(false);
+    // Toque rápido só devolve o botão ao tamanho normal; o feedback abre ao segurar.
+    if (!moveu.current) return;
     const solto = posicaoDoToque(g);
     const { width: w, height: h } = atual.current;
     definirPosicao(
@@ -107,7 +140,7 @@ const FeedbackButton = ({ onPress }) => {
       onPanResponderGrant: comecar,
       onPanResponderMove: (e, g) => mexer(g),
       onPanResponderRelease: (e, g) => soltar(g),
-      onPanResponderTerminate: () => setArrasto(null),
+      onPanResponderTerminate: cancelarGesto,
     }),
   ).current;
 
@@ -141,7 +174,7 @@ const FeedbackButton = ({ onPress }) => {
     const aoCancelar = e => {
       if (e.pointerId !== ponteiro) return;
       ponteiro = null;
-      setArrasto(null);
+      cancelarGesto();
     };
     no.addEventListener('pointerdown', aoDescer);
     no.addEventListener('pointermove', aoMover);
@@ -166,7 +199,9 @@ const FeedbackButton = ({ onPress }) => {
       accessibilityLabel="Enviar feedback"
       accessibilityActions={[{ name: 'activate' }]}
       onAccessibilityAction={() => onPress()}>
-      <FeedbackBadge size={TAMANHO} />
+      <Animated.View style={{ transform: [{ scale: escala }] }}>
+        <FeedbackBadge size={TAMANHO} />
+      </Animated.View>
     </View>
     </View>
   );
