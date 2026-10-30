@@ -34,14 +34,17 @@ import type { TripAlert } from '../../components/TripAlertBanner';
 import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
-import SairDaConta from '../../components/SairDaConta';
-import { BarraAluno } from '../../components/BarraInferior';
+import { useToast } from '../../components/Toast';
 import Tappable from '../../components/Tappable';
 
 type RootParamList = Record<string, object | undefined>;
-type Props = { navigation: NativeStackNavigationProp<RootParamList> };
+type Props = {
+  navigation: NativeStackNavigationProp<RootParamList>;
+  route?: { params?: { abrirLocalizacao?: number } };
+};
 
-const DashboardAluno: React.FC<Props> = ({ navigation }) => {
+const DashboardAluno: React.FC<Props> = ({ navigation, route }) => {
+  const toast = useToast();
   const [rotasCadastradas, setRotasCadastradas] = useState<ViagemAgendaUI[]>([]);
   const [proximaViagem, setProximaViagem] = useState<
     (ViagemAgendaUI & { horario: string; status: string }) | null
@@ -178,13 +181,25 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   // Com a viagem em andamento, o mapa mostra ela; senão mostra a próxima.
   const abrirLocalizacao = () => {
     const viagem = emAndamento ? todayTrip : proximaViagem;
-    if (!viagem) return;
+    if (!viagem) {
+      toast.info('Você não tem viagem para acompanhar agora.');
+      return;
+    }
     const rota =
       (rotasCadastradas as unknown[]).find(
         (r: unknown) => (r as Record<string, unknown>).id === viagem.rota_id,
       ) ?? { id: viagem.rota_id, nome: viagem.rota_nome };
     navigation.navigate('LocalizacaoOnibus', { rota, viagem });
   };
+
+  // A aba Localização da barra pede o mapa por parâmetro: abre assim que a home termina de carregar.
+  const pedidoLocalizacao = route?.params?.abrirLocalizacao;
+  const ultimoPedido = useRef<number | null>(null);
+  useEffect(() => {
+    if (!pedidoLocalizacao || loading || pedidoLocalizacao === ultimoPedido.current) return;
+    ultimoPedido.current = pedidoLocalizacao;
+    abrirLocalizacao();
+  }, [pedidoLocalizacao, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   let proximaViagemLabel = '';
   if (proximaViagem) {
@@ -257,7 +272,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <TelaSegura style={styles.container} edges={['left', 'right']}>
+    <TelaSegura style={styles.container}>
       <TripAlertBanner alert={alert} onDismiss={() => setAlert(null)} />
 
       <ScrollView
@@ -447,28 +462,8 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           )}
         </View>
 
-        {/* Settings */}
-        <Tappable navega
-          style={styles.configButton}
-          onPress={() => navigation.navigate('ConfigNotificacoesAluno')}
-          accessibilityRole="button"
-          accessibilityLabel="Configurações de notificações">
-          <Icon name={IconNames.settings} size="base" color={colors.text.secondary} accessibilityElementsHidden />
-          <Text style={styles.configButtonText}>Configurações</Text>
-          <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} accessibilityElementsHidden />
-        </Tappable>
-
-        <SairDaConta />
-
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
-
-      <BarraAluno
-        navigation={navigation}
-        ativo="inicio"
-        aoLocalizacao={abrirLocalizacao}
-        semViagem={!proximaViagem && !emAndamento}
-      />
     </TelaSegura>
   );
 };
@@ -551,16 +546,16 @@ const styles = StyleSheet.create({
   rotaCard: {
     backgroundColor: colors.background.paper,
     borderRadius: borderRadius.lg,
-    padding: spacing.base,
+    padding: spacing.lg,
     marginBottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     ...shadows.sm,
-    minHeight: 64,
+    minHeight: 84,
   },
   rotaIconContainer: {
-    width: 44,
-    height: 44,
+    width: 56,
+    height: 56,
     borderRadius: borderRadius.md,
     backgroundColor: colors.neutral[100],
     justifyContent: 'center',

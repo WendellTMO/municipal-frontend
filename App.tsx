@@ -11,7 +11,9 @@ import DesbloqueioBiometria from './src/screens/Auth/DesbloqueioBiometria';
 import { FeedbackPadraoProvider } from './src/components/FeedbackPadraoContext';
 import { FEEDBACK_ENABLED } from './src/config/feedback';
 import { navigationRef } from './src/navigation/currentRoute';
-import { Platform, StatusBar } from 'react-native';
+import { definirRotaAtual, registrarNavegador } from './src/navigation/rotaAtual';
+import BarraGlobal from './src/components/BarraGlobal';
+import { Platform, StatusBar, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AvisoAtualizacao from './src/components/AvisoAtualizacao';
 import AlertaProvider from './src/components/AlertaProvider';
@@ -40,7 +42,13 @@ const Root: React.FC = () => {
     <>
       {/* Android: desenha sob a barra de status; o inset dela vira o topo do cabeçalho. */}
       {isAuthenticated ? <StatusBar translucent backgroundColor="transparent" barStyle="light-content" /> : null}
-      <MainNavigator />
+      {/* A barra inferior é única e fica fora do navegador: só o conteúdo muda por cima. */}
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <MainNavigator />
+        </View>
+        {isAuthenticated ? <BarraGlobal /> : null}
+      </View>
       {isAuthenticated ? <BiometriaOferta /> : null}
       {isAuthenticated && FEEDBACK_ENABLED ? <FeedbackLayer /> : null}
     </>
@@ -55,6 +63,11 @@ export const App: React.FC = () => {
         <FeedbackPadraoProvider>
         <NavigationContainer
           ref={navigationRef}
+          onReady={() => {
+            registrarNavegador((nome, params) => navigationRef.navigate(nome as never, params as never));
+            definirRotaAtual(navigationRef.getCurrentRoute()?.name ?? null);
+          }}
+          onStateChange={() => definirRotaAtual(navigationRef.getCurrentRoute()?.name ?? null)}
           documentTitle={{
             formatter: (options, route) =>
               `BusKá - ${options?.title ?? route?.name ?? 'Transporte Escolar'}`,

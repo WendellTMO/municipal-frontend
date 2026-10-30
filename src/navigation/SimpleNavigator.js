@@ -1,3 +1,4 @@
+import {definirRotaAtual, registrarNavegador} from './rotaAtual';
 import React, {useState, createContext, useContext, useEffect} from 'react';
 import {AccessibilityInfo, Animated, View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 
@@ -45,12 +46,15 @@ export const NavigationProvider = ({children, initialRoute = 'Login', initialPar
   useEffect(() => {
     if (depth >= activeRoute.depth) {
       activeRoute = {depth, route: currentRoute};
+      definirRotaAtual(currentRoute);
+      registrarNavegador(navigate);
     }
-  }, [depth, currentRoute]);
+  }, [depth, currentRoute]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => () => {
     if (activeRoute.depth === depth) {
       activeRoute = {depth: depth - 1, route: null};
+      definirRotaAtual(null);
     }
   }, [depth]);
 

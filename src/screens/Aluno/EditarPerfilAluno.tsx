@@ -11,14 +11,12 @@ import {
   View,
 } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
-import { BarraAluno } from '../../components/BarraInferior';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { alunoService } from '../../services/alunoService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/Toast';
 import { borderRadius, colors, fontWeight, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
-import { confirmAction } from '../../utils/confirm';
 import { formatPhone, formatCep, formatCpf, onlyDigits } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
@@ -42,10 +40,9 @@ type FormState = {
 const ALUNO_COLOR = colors.roles?.aluno ?? colors.primary.main;
 
 const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
-  const { user, refreshUser, logout } = useAuth() as {
+  const { user, refreshUser } = useAuth() as {
     user: Record<string, unknown>;
     refreshUser?: () => Promise<void>;
-    logout: () => Promise<void>;
   };
   const toast = useToast();
 
@@ -166,18 +163,6 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleSair = () => {
-    confirmAction({
-      title: 'Sair da conta',
-      message: 'Deseja encerrar sua sessão?',
-      confirmText: 'Sair',
-      cancelText: 'Cancelar',
-      destructive: true,
-      onConfirm: () => logout(),
-      onCancel: undefined,
-    });
-  };
-
   const handleAlterarSenha = () => {
     alertar(
       'Alterar Senha',
@@ -186,7 +171,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <TelaSegura style={styles.container} edges={['left', 'right']}>
+    <TelaSegura style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -347,11 +332,11 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.changePasswordBtn}
-              onPress={handleSair}
+              onPress={() => navigation.navigate('ConfigNotificacoesAluno')}
               accessibilityRole="button"
-              accessibilityLabel="Sair da conta">
-              <Icon name={IconNames.logout} size="sm" color={colors.error.main} style={undefined} />
-              <Text style={styles.sairText}>Sair da conta</Text>
+              accessibilityLabel="Configurações de notificações e biometria">
+              <Icon name={IconNames.settings} size="sm" color={ALUNO_COLOR} />
+              <Text style={styles.changePasswordText}>Configurações</Text>
               <Icon name={IconNames.chevronRight} size="sm" color={colors.text.secondary} />
             </TouchableOpacity>
           </View>
@@ -375,18 +360,11 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
           <SairDaConta />
         </ScrollView>
       </KeyboardAvoidingView>
-      <BarraAluno navigation={navigation} ativo="perfil" />
     </TelaSegura>
   );
 };
 
 const styles = StyleSheet.create({
-  sairText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.error.main,
-  },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
