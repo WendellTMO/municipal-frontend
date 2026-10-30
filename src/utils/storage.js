@@ -36,5 +36,6 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',
   USER: 'user',
   SESSAO_TEMPORARIA: 'sessao_temporaria',
+  ULTIMO_EMAIL: 'ultimo_email',
 };
 

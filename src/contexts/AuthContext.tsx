@@ -201,6 +201,9 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       try {
         const { user: loggedInUser } = await authService.login(loginData);
         await Storage.setItem(STORAGE_KEYS.SESSAO_TEMPORARIA, !lembrar);
+        // Lembrar-me guarda também o e-mail, para a tela de login voltar preenchida depois de sair.
+        if (lembrar) await Storage.setItem(STORAGE_KEYS.ULTIMO_EMAIL, loginData.email);
+        else await Storage.removeItem(STORAGE_KEYS.ULTIMO_EMAIL);
 
         try {
           const fullUserData = await userService.getCurrentUser();
