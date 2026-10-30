@@ -35,6 +35,7 @@ import { unwrapItems } from '../../types';
 import type { ViagemAgendaUI } from '../../services/alunoService';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import { BarraAluno } from '../../components/BarraInferior';
 import Tappable from '../../components/Tappable';
 
 type RootParamList = Record<string, object | undefined>;
@@ -256,7 +257,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <TelaSegura style={styles.container}>
+    <TelaSegura style={styles.container} edges={['left', 'right']}>
       <TripAlertBanner alert={alert} onDismiss={() => setAlert(null)} />
 
       <ScrollView
@@ -384,39 +385,6 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           </TripHeroCard>
         )}
 
-        {/* Quick Actions */}
-        <View style={styles.botoesRapidos} accessibilityRole="toolbar">
-          <ActionTile
-            icon={IconNames.bus}
-            label="Viagens"
-            accessibilityLabel="Minhas Viagens"
-            color={colors.solid.blue}
-            onPress={() => navigation.navigate('RotaAluno')}
-          />
-          <ActionTile
-            icon={IconNames.location}
-            label="Localização"
-            accessibilityLabel="Localização do ônibus"
-            color={colors.solid.green}
-            disabled={!proximaViagem && !emAndamento}
-            onPress={abrirLocalizacao}
-          />
-          <ActionTile
-            icon={IconNames.route}
-            label="Rotas"
-            accessibilityLabel="Rotas disponíveis"
-            color={colors.solid.teal}
-            onPress={() => navigation.navigate('SelecaoRotas')}
-          />
-          <ActionTile
-            icon={IconNames.person}
-            label="Perfil"
-            accessibilityLabel="Editar meu perfil"
-            color={colors.neutral[600]}
-            onPress={() => navigation.navigate('EditarPerfilAluno')}
-          />
-        </View>
-
         {/* Enrolled Routes */}
         <View style={styles.rotasSection}>
           <View style={styles.sectionHeader}>
@@ -494,6 +462,13 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
+
+      <BarraAluno
+        navigation={navigation}
+        ativo="inicio"
+        aoLocalizacao={abrirLocalizacao}
+        semViagem={!proximaViagem && !emAndamento}
+      />
     </TelaSegura>
   );
 };

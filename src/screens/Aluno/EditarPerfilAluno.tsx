@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
+import { BarraAluno } from '../../components/BarraInferior';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { alunoService } from '../../services/alunoService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -185,7 +186,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <TelaSegura style={styles.container}>
+    <TelaSegura style={styles.container} edges={['left', 'right']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -374,6 +375,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
           <SairDaConta />
         </ScrollView>
       </KeyboardAvoidingView>
+      <BarraAluno navigation={navigation} ativo="perfil" />
     </TelaSegura>
   );
 };
