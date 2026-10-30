@@ -18,7 +18,6 @@ import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
-import { BarraMotorista } from '../../components/BarraInferior';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
@@ -186,7 +185,7 @@ const DashboardMotorista = ({navigation}) => {
   const ehGestor = user?.role?.toLowerCase() === 'gestor';
 
   return (
-    <TelaSegura style={styles.container} edges={ehGestor ? ['left', 'right', 'bottom'] : ['left', 'right']}>
+    <TelaSegura style={styles.container}>
       <ScrollView
         contentContainerStyle={withFabSpace()}
         style={styles.scrollView}
@@ -308,9 +307,8 @@ const DashboardMotorista = ({navigation}) => {
         </View>
         ) : null}
 
-        <SairDaConta />
+        {ehGestor ? <SairDaConta /> : null}
       </ScrollView>
-      {ehGestor ? null : <BarraMotorista navigation={navigation} ativo="inicio" />}
     </TelaSegura>
   );
 };

@@ -8,7 +8,6 @@ import {
   View,
 } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
-import { BarraAluno } from '../../components/BarraInferior';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { alunoService } from '../../services';
@@ -252,7 +251,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <TelaSegura style={styles.container} edges={isAllTrips ? ['left', 'right'] : ['left', 'right', 'bottom']}>
+      <TelaSegura style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary.main} />
         </View>
@@ -405,7 +404,6 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
           onPress: esquecerMeuPonto,
         }}
       />
-      {isAllTrips ? <BarraAluno navigation={navigation} ativo="viagens" /> : null}
     </TelaSegura>
   );
 };

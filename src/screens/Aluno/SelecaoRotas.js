@@ -9,7 +9,6 @@ import {
   RefreshControl,
 } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
-import { BarraAluno } from '../../components/BarraInferior';
 import { alunoService } from '../../services';
 import { colors, spacing, borderRadius, shadows, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
@@ -107,7 +106,7 @@ const SelecaoRotas = ({navigation}) => {
   };
 
   return (
-    <TelaSegura style={styles.container} edges={['left', 'right']}>
+    <TelaSegura style={styles.container}>
       <SubHeader titulo="Rotas" subtitulo="Encontre sua rota escolar" onBack={() => navigation.goBack()} />
 
       <View style={styles.searchContainer}>
@@ -248,7 +247,6 @@ const SelecaoRotas = ({navigation}) => {
           </View>
         </ScrollView>
       )}
-      <BarraAluno navigation={navigation} ativo="rotas" />
     </TelaSegura>
   );
 };
