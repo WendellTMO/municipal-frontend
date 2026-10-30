@@ -17,7 +17,6 @@ import {
   pedeInstituicao,
   tituloEscolha,
 } from '../utils/presenca';
-import { confirmAction } from '../utils/confirm';
 
 export type PontoEscolha = { id: string; apelido: string; instituicao?: unknown };
 export type Escolha = { embarqueId: string | null; desembarqueId: string | null };
@@ -97,6 +96,8 @@ const EscolhaPontoSheet = ({
   const [lembrar, setLembrar] = useState(false);
   const [instituicaoId, setInstituicaoId] = useState<string | null>(instituicaoAtualId);
   const [trocando, setTrocando] = useState(false);
+  // Pergunta de instituição diferente: vive dentro da folha, sem abrir outra janela por cima.
+  const [confirmandoOutra, setConfirmandoOutra] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -104,6 +105,7 @@ const EscolhaPontoSheet = ({
       setLembrar(false);
       setInstituicaoId(instituicaoAtualId);
       setTrocando(false);
+      setConfirmandoOutra(false);
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -142,15 +144,11 @@ const EscolhaPontoSheet = ({
       onConfirmar(escolha, lembrar, instituicaoId);
       return;
     }
-    const nomePropria = propria ? ` (${propria.nome})` : '';
-    confirmAction({
-      title: 'Outra instituição',
-      message: `Você ${verbo === 'desce' ? 'vai descer' : 'vai embarcar'} em ${escolhida?.nome ?? 'outra instituição'}, que não é a sua instituição${nomePropria}. Confirma?`,
-      confirmText: 'Sim, confirmar',
-      onConfirm: () => onConfirmar(escolha, lembrar, instituicaoId),
-      onCancel: undefined,
-    });
+    setConfirmandoOutra(true);
   };
+
+  const nomePropria = propria ? ` (${propria.nome})` : '';
+  const mensagemOutra = `Você ${verbo === 'desce' ? 'vai descer' : 'vai embarcar'} em ${escolhida?.nome ?? 'outra instituição'}, que não é a sua instituição${nomePropria}. Confirma?`;
 
   return (
     <ModalApp visible={visible} transparent animationType="slide" onRequestClose={onClose} accessibilityViewIsModal>
@@ -167,7 +165,30 @@ const EscolhaPontoSheet = ({
             </Tappable>
           </View>
 
-          {pontos === null ? (
+          {confirmandoOutra ? (
+            <View accessibilityRole="alert">
+              <Text style={styles.outraTitulo}>Outra instituição</Text>
+              <Text style={styles.outraTexto}>{mensagemOutra}</Text>
+              <Tappable
+                style={styles.confirmar}
+                onPress={() => onConfirmar(escolha, lembrar, instituicaoId)}
+                disabled={salvando}
+                accessibilityLabel="Sim, confirmar">
+                {salvando ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.confirmarTexto}>Sim, confirmar</Text>
+                )}
+              </Tappable>
+              <Tappable
+                style={styles.voltarBotao}
+                onPress={() => setConfirmandoOutra(false)}
+                sombra={false}
+                accessibilityLabel="Voltar e escolher de novo">
+                <Text style={styles.voltarTexto}>Voltar</Text>
+              </Tappable>
+            </View>
+          ) : pontos === null ? (
             <ActivityIndicator color={colors.primary.main} style={styles.carregando} />
           ) : (
             <ScrollView style={styles.lista} nestedScrollEnabled>
@@ -221,6 +242,8 @@ const EscolhaPontoSheet = ({
             </ScrollView>
           )}
 
+          {confirmandoOutra ? null : (
+            <>
           {linhaInstituicao ? <Text style={styles.instituicao}>{linhaInstituicao}</Text> : null}
 
           <View style={styles.lembrarLinha}>
@@ -254,6 +277,8 @@ const EscolhaPontoSheet = ({
               <Text style={styles.confirmarTexto}>Confirmar presença</Text>
             )}
           </Tappable>
+            </>
+          )}
         </View>
       </View>
     </ModalApp>
@@ -326,6 +351,10 @@ const styles = StyleSheet.create({
   opcaoTextoAtiva: { color: '#FFFFFF', fontWeight: '700' as const },
   instituicao: { ...textStyles.body, color: colors.text.secondary, marginTop: spacing.sm },
   instituicaoBloco: { marginBottom: spacing.sm },
+  outraTitulo: { ...textStyles.h4, color: colors.text.primary, marginBottom: spacing.sm },
+  outraTexto: { ...textStyles.body, color: colors.text.secondary, lineHeight: 24, marginBottom: spacing.base },
+  voltarBotao: { alignItems: 'center', justifyContent: 'center', minHeight: 52, marginTop: spacing.sm },
+  voltarTexto: { ...textStyles.h5, color: colors.primary.main, fontWeight: '700' as const },
   instituicaoAtual: {
     flexDirection: 'row',
     alignItems: 'center',
