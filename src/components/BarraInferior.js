@@ -13,29 +13,10 @@ import Icon, { IconNames } from './Icon';
 import Tappable from './Tappable';
 import { useFeedbackPadrao } from './FeedbackPadraoContext';
 
+const CORES = { inativa: colors.neutral[500], ativa: colors.primary.main, pilula: colors.primary.lighter };
+
 const LARGURA_PILULA = 56;
 const ALTURA_PILULA = 30;
-
-// Estilos para comparar no protótipo (web: ?barra=azul ou ?barra=colorido).
-const lerEstilo = () => {
-  if (Platform.OS !== 'web' || typeof window === 'undefined') return 'neutro';
-  return new URLSearchParams(window.location.search).get('barra') || 'neutro';
-};
-
-// Lido ao carregar o módulo: o app limpa a URL depois do login.
-const ESTILO = lerEstilo();
-
-const comAlfa = (hex, alfa) => hex + alfa;
-
-const coresDoItem = (estilo, item) => {
-  if (estilo === 'colorido' && item.cor) {
-    return { inativa: comAlfa(item.cor, '99'), ativa: item.cor, pilula: comAlfa(item.cor, '26'), iconeNaPilula: item.cor };
-  }
-  if (estilo === 'azul') {
-    return { inativa: comAlfa(colors.primary.main, '8C'), ativa: colors.primary.main, pilula: colors.primary.main, iconeNaPilula: '#FFFFFF' };
-  }
-  return { inativa: colors.neutral[500], ativa: colors.primary.main, pilula: colors.primary.lighter, iconeNaPilula: colors.primary.main };
-};
 
 const BarraInferior = ({ itens, ativo }) => {
   const insets = useSafeAreaInsets();
@@ -66,8 +47,6 @@ const BarraInferior = ({ itens, ativo }) => {
     ]).start();
   }, [largura, indiceAtivo]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const pilulaCor = indiceAtivo >= 0 ? coresDoItem(ESTILO, itens[indiceAtivo]).pilula : 'transparent';
-
   return (
     <View
       style={[styles.barra, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}
@@ -76,11 +55,11 @@ const BarraInferior = ({ itens, ativo }) => {
       {largura > 0 ? (
         <Animated.View
           pointerEvents="none"
-          style={[styles.pilula, { backgroundColor: pilulaCor, transform: [{ translateX: x }] }]}
+          style={[styles.pilula, { backgroundColor: CORES.pilula, transform: [{ translateX: x }] }]}
         />
       ) : null}
       {itens.map((item, i) => {
-        const cores = coresDoItem(ESTILO, item);
+        const cores = CORES;
         const p = progresso[i];
         const corRotulo = p.interpolate({ inputRange: [0, 1], outputRange: [cores.inativa, cores.ativa] });
         const salto = p.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.18, 1] });
@@ -100,7 +79,7 @@ const BarraInferior = ({ itens, ativo }) => {
                 <Icon name={item.icone} size="base" color={cores.inativa} />
               </Animated.View>
               <Animated.View style={[StyleSheet.absoluteFill, styles.areaIcone, { opacity: p }]}>
-                <Icon name={item.icone} size="base" color={cores.iconeNaPilula} />
+                <Icon name={item.icone} size="base" color={cores.ativa} />
               </Animated.View>
             </Animated.View>
             <Animated.Text style={[styles.rotulo, { color: corRotulo }]} numberOfLines={1}>

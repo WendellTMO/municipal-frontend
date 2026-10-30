@@ -6,24 +6,23 @@ import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { Keyboard, Platform } from 'react-native';
 import BarraInferior from './BarraInferior';
 import { IconNames } from './Icon';
-import { colors } from '../theme';
 import { useAuth } from '../contexts/AuthContext';
 import { assinarRotaAtual, lerRotaAtual, navegarGlobal } from '../navigation/rotaAtual';
 
+// O mapa do ônibus continua na home (mini mapa) e no detalhe da viagem; a última aba é o perfil,
+// onde ficam também as configurações e o Sair da conta (como o "You" do WhatsApp).
 const itensAluno = [
-  { id: 'inicio', rotulo: 'Início', icone: IconNames.home, cor: colors.primary.main, destino: 'DashboardAluno' },
-  { id: 'viagens', rotulo: 'Viagens', icone: IconNames.bus, cor: '#D98E04', acessibilidade: 'Minhas Viagens', destino: 'RotaAluno' },
-  // A home sabe qual é a viagem do dia: ela abre o mapa ao receber este pedido.
-  { id: 'localizacao', rotulo: 'Localização', icone: IconNames.location, cor: '#F2630D', acessibilidade: 'Localização do ônibus', destino: 'DashboardAluno', pedeLocalizacao: true },
-  { id: 'rotas', rotulo: 'Rotas', icone: IconNames.route, cor: '#16A34A', acessibilidade: 'Rotas disponíveis', destino: 'SelecaoRotas' },
-  { id: 'perfil', rotulo: 'Perfil', icone: IconNames.person, cor: '#0D3B8F', acessibilidade: 'Meu perfil', destino: 'EditarPerfilAluno' },
+  { id: 'inicio', rotulo: 'Início', icone: IconNames.home, destino: 'DashboardAluno' },
+  { id: 'viagens', rotulo: 'Viagens', icone: IconNames.bus, acessibilidade: 'Minhas Viagens', destino: 'RotaAluno' },
+  { id: 'rotas', rotulo: 'Rotas', icone: IconNames.route, acessibilidade: 'Rotas disponíveis', destino: 'SelecaoRotas' },
+  { id: 'perfil', rotulo: 'Perfil', icone: IconNames.person, acessibilidade: 'Meu perfil', destino: 'EditarPerfilAluno' },
 ];
 
 const itensMotorista = [
-  { id: 'inicio', rotulo: 'Início', icone: IconNames.home, cor: colors.primary.main, destino: 'DashboardMotorista' },
-  { id: 'rotas', rotulo: 'Rotas', icone: IconNames.bus, cor: '#D98E04', acessibilidade: 'Minhas Rotas', destino: 'RotaMotorista' },
-  { id: 'viagens', rotulo: 'Viagens', icone: IconNames.route, cor: '#16A34A', acessibilidade: 'Minhas Viagens', destino: 'ListaViagens' },
-  { id: 'ajustes', rotulo: 'Ajustes', icone: IconNames.settings, cor: '#0D3B8F', acessibilidade: 'Configurações', destino: 'ConfigNotificacoesMotorista' },
+  { id: 'inicio', rotulo: 'Início', icone: IconNames.home, destino: 'DashboardMotorista' },
+  { id: 'rotas', rotulo: 'Rotas', icone: IconNames.bus, acessibilidade: 'Minhas Rotas', destino: 'RotaMotorista' },
+  { id: 'viagens', rotulo: 'Viagens', icone: IconNames.route, acessibilidade: 'Minhas Viagens', destino: 'ListaViagens' },
+  { id: 'perfil', rotulo: 'Perfil', icone: IconNames.person, acessibilidade: 'Meu perfil e configurações', destino: 'ConfigNotificacoesMotorista' },
 ];
 
 // Telas que mostram a barra, com o item que fica ativo em cada uma.
@@ -34,7 +33,7 @@ const PAPEIS = {
   },
   MOTORISTA: {
     itens: itensMotorista,
-    rotas: { DashboardMotorista: 'inicio', RotaMotorista: 'rotas', ListaViagens: 'viagens', ConfigNotificacoesMotorista: 'ajustes' },
+    rotas: { DashboardMotorista: 'inicio', RotaMotorista: 'rotas', ListaViagens: 'viagens', ConfigNotificacoesMotorista: 'perfil' },
   },
 };
 
@@ -63,7 +62,7 @@ const BarraGlobal = () => {
 
   const itens = papel.itens.map(item => ({
     ...item,
-    onPress: () => navegarGlobal(item.destino, item.pedeLocalizacao ? { abrirLocalizacao: Date.now() } : {}),
+    onPress: () => navegarGlobal(item.destino, {}),
   }));
   return <BarraInferior itens={itens} ativo={ativo} />;
 };

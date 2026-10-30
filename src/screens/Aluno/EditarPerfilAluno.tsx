@@ -176,7 +176,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header */}
-        <SubHeader titulo="Editar Perfil" onBack={() => navigation.goBack()} />
+        <SubHeader titulo="Meu perfil" onBack={() => navigation.goBack()} />
 
         <ScrollView
           style={styles.scroll}
