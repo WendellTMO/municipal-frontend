@@ -18,6 +18,7 @@ import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import { BarraMotorista } from '../../components/BarraInferior';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
@@ -182,9 +183,10 @@ const DashboardMotorista = ({navigation}) => {
   }, [proximaViagem]);
 
   const emAndamento = proximaViagem?.status === 'Em andamento';
+  const ehGestor = user?.role?.toLowerCase() === 'gestor';
 
   return (
-    <TelaSegura style={styles.container}>
+    <TelaSegura style={styles.container} edges={ehGestor ? ['left', 'right', 'bottom'] : ['left', 'right']}>
       <ScrollView
         contentContainerStyle={withFabSpace()}
         style={styles.scrollView}
@@ -261,6 +263,7 @@ const DashboardMotorista = ({navigation}) => {
         )}
 
         {/* Ações rápidas */}
+        {ehGestor ? (
         <View style={styles.botoesRapidos}>
           <ActionTile
             icon={IconNames.bus}
@@ -303,9 +306,11 @@ const DashboardMotorista = ({navigation}) => {
             onPress={() => navigation.navigate('ConfigNotificacoesMotorista')}
           />
         </View>
+        ) : null}
 
         <SairDaConta />
       </ScrollView>
+      {ehGestor ? null : <BarraMotorista navigation={navigation} ativo="inicio" />}
     </TelaSegura>
   );
 };
