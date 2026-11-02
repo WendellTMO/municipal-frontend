@@ -23,6 +23,7 @@ import {
 import { deveBloquear, deveOferecer } from '../utils/biometriaFluxo';
 import { deveEncerrarSessao } from '../utils/lembrarMe';
 import { Storage, STORAGE_KEYS } from '../utils/storage';
+import { limparCache } from '../utils/cacheTela';
 import type { 
   AlunoResponse,
   AlunoSelfSignupRequest,
@@ -287,6 +288,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       await authService.logout();
       await Storage.removeItem(STORAGE_KEYS.SESSAO_TEMPORARIA);
       await desligarNoLogout();
+      limparCache();
       setBioAtiva(false);
       setBioBloqueado(false);
       setBioOferta(false);
@@ -300,6 +302,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       errorLogger.info('Logout completed');
     } catch (error: unknown) {
       errorLogger.error(error, { context: 'logout' });
+      limparCache();
       setUser(null);
       setIsAuthenticated(false);
     }

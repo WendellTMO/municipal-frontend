@@ -25,6 +25,8 @@ import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 import { formatarData } from '../../utils/dataLocal';
 import { presencaTravada } from '../../utils/aBordo';
+import { chaveDoCache, guardarCache, lerCache } from '../../utils/cacheTela';
+import { useAuth } from '../../contexts/AuthContext';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -141,32 +143,44 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
   const rota = route?.params?.rota;
   const toast = useToast();
 
-  const [viagens, setViagens] = useState<ViagemAgendaUI[]>([]);
-  const [presencasStatus, setPresencasStatus] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const chaveViagens = chaveDoCache((user as { id?: string } | null)?.id, 'viagens-aluno');
+  // Última lista vista: aparece na hora e a nova substitui por trás, sem spinner.
+  const emCache = lerCache(chaveViagens) as ViagemAgendaUI[] | undefined;
+
+  const isAllTrips = !rota;
+  const filtrarDaRota = (lista: ViagemAgendaUI[]) =>
+    isAllTrips ? lista : lista.filter((v) => v.rota_id === (rota.id as string));
+  const statusDePresenca = (lista: ViagemAgendaUI[]) => {
+    const mapa: Record<string, boolean> = {};
+    for (const viagem of lista) {
+      mapa[viagem.id ?? ''] = viagem.status_confirmacao ?? false;
+    }
+    return mapa;
+  };
+
+  const [viagens, setViagens] = useState<ViagemAgendaUI[]>(emCache ? filtrarDaRota(emCache) : []);
+  const [presencasStatus, setPresencasStatus] = useState<Record<string, boolean>>(
+    emCache ? statusDePresenca(filtrarDaRota(emCache)) : {},
+  );
+  const [loading, setLoading] = useState(!emCache);
   const [refreshing, setRefreshing] = useState(false);
   const [meuPonto, setMeuPonto] = useState<MeuPonto | null>(null);
   const [esquecerAberto, setEsquecerAberto] = useState(false);
   const [esquecendo, setEsquecendo] = useState(false);
   const isMountedRef = useRef(true);
+  const ultimaCargaRef = useRef(0);
 
-  const isAllTrips = !rota;
   const screenTitle = isAllTrips ? 'Minhas Viagens' : (rota.nome as string);
 
   const loadViagens = useCallback(async () => {
     try {
       const todasViagens = await alunoService.listarViagens();
-      const viagensFiltradas = isAllTrips
-        ? todasViagens
-        : todasViagens.filter((v) => v.rota_id === (rota.id as string));
+      guardarCache(chaveViagens, todasViagens);
+      const viagensFiltradas = filtrarDaRota(todasViagens);
 
       setViagens(viagensFiltradas);
-
-      const statusMap: Record<string, boolean> = {};
-      viagensFiltradas.forEach((viagem) => {
-        statusMap[viagem.id ?? ''] = viagem.status_confirmacao ?? false;
-      });
-      setPresencasStatus(statusMap);
+      setPresencasStatus(statusDePresenca(viagensFiltradas));
 
       if (!isAllTrips) {
         try {
@@ -181,18 +195,23 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [isAllTrips, rota?.id, toast]);
+  }, [isAllTrips, rota?.id, toast, chaveViagens]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    ultimaCargaRef.current = Date.now();
     loadViagens();
     return () => {
       isMountedRef.current = false;
     };
   }, [loadViagens]);
 
+  // Ao abrir a tela o foco dispara junto com a carga do mount: a segunda busca seria repetida.
   useEffect(() => {
     const unsubscribe = navigation?.addListener?.('focus', () => {
-      if (isMountedRef.current) loadViagens();
+      if (!isMountedRef.current) return;
+      if (Date.now() - ultimaCargaRef.current < 2000) return;
+      ultimaCargaRef.current = Date.now();
+      loadViagens();
     });
     return unsubscribe as (() => void) | undefined;
   }, [navigation, loadViagens]);

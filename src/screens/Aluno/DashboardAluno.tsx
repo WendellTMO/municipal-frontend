@@ -25,6 +25,7 @@ import { dayLabel } from '../../utils/dayLabel';
 import { escolherViagemDeHoje } from '../../utils/viagemAluno';
 import { proximaViagemDoPainel, saidaAtrasada } from '../../utils/proximaViagemPainel';
 import { formatarHora } from '../../utils/formatarHora';
+import { chaveDoCache, guardarCache, lerCache } from '../../utils/cacheTela';
 import { horaCurta } from '../../utils/viagemPainel';
 import AgoraCard from '../../components/AgoraCard';
 import PresencaAcoes from '../../components/PresencaAcoes';
@@ -39,18 +40,43 @@ import Tappable from '../../components/Tappable';
 type RootParamList = Record<string, object | undefined>;
 type Props = { navigation: NativeStackNavigationProp<RootParamList> };
 
+type ProximaViagem = ViagemAgendaUI & { horario: string; status: string };
+
+// Da lista de viagens sai a próxima do painel e a de hoje.
+const painelDeViagens = (todasViagens: ViagemAgendaUI[]) => {
+  let proxima: ProximaViagem | null = null;
+  let hoje: ViagemAgendaUI | null = null;
+  if (todasViagens.length > 0) {
+    const next = proximaViagemDoPainel(todasViagens);
+    if (next) {
+      proxima = {
+        ...next,
+        horario: formatarHora(next.horario_inicio),
+        status: next.status_confirmacao ? 'Confirmado' : 'Não confirmado',
+      };
+    }
+    hoje = escolherViagemDeHoje(todasViagens);
+  }
+  return { proxima, hoje };
+};
+
+type DadosDoPainel = { rotas: ViagemAgendaUI[]; viagens: ViagemAgendaUI[] };
+
 const DashboardAluno: React.FC<Props> = ({ navigation }) => {
-  const [rotasCadastradas, setRotasCadastradas] = useState<ViagemAgendaUI[]>([]);
-  const [proximaViagem, setProximaViagem] = useState<
-    (ViagemAgendaUI & { horario: string; status: string }) | null
-  >(null);
-  const [todayTrip, setTodayTrip] = useState<ViagemAgendaUI | null>(null);
+  const { user, logout } = useAuth();
+  const chavePainel = chaveDoCache((user as { id?: string } | null)?.id, 'painel-aluno');
+  // Último painel visto: aparece na hora e o novo substitui por trás, sem tela de carregando.
+  const emCache = lerCache(chavePainel) as DadosDoPainel | undefined;
+  const painelInicial = painelDeViagens(emCache ? emCache.viagens : []);
+
+  const [rotasCadastradas, setRotasCadastradas] = useState<ViagemAgendaUI[]>(emCache ? emCache.rotas : []);
+  const [proximaViagem, setProximaViagem] = useState<ProximaViagem | null>(painelInicial.proxima);
+  const [todayTrip, setTodayTrip] = useState<ViagemAgendaUI | null>(painelInicial.hoje);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!emCache);
   const [refreshing, setRefreshing] = useState(false);
   const [alert, setAlert] = useState<TripAlert | null>(null);
   const prevUnreadRef = useRef(0);
-  const { user, logout } = useAuth();
 
   const userRecord = user as Record<string, unknown>;
   const userStatus = userRecord?.status as string | undefined;
@@ -90,35 +116,25 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
   const loadData = useCallback(async () => {
     try {
-      const rotas = await alunoService.listarMinhasRotas().then(unwrapItems);
-      setRotasCadastradas(rotas as ViagemAgendaUI[]);
+      // As duas buscas não dependem uma da outra: vão juntas.
+      const [respostaRotas, todasViagens] = await Promise.all([
+        alunoService.listarMinhasRotas(),
+        alunoService.listarViagens(),
+      ]);
+      const rotas = unwrapItems(respostaRotas) as ViagemAgendaUI[];
+      guardarCache(chavePainel, { rotas, viagens: todasViagens });
 
-      const todasViagens = await alunoService.listarViagens();
-
-      if (todasViagens.length > 0) {
-        const next = proximaViagemDoPainel(todasViagens);
-        setProximaViagem(
-          next
-            ? {
-                ...next,
-                horario: formatarHora(next.horario_inicio),
-                status: next.status_confirmacao ? 'Confirmado' : 'Não confirmado',
-              }
-            : null,
-        );
-
-        setTodayTrip(escolherViagemDeHoje(todasViagens));
-      } else {
-        setProximaViagem(null);
-        setTodayTrip(null);
-      }
+      const painel = painelDeViagens(todasViagens);
+      setRotasCadastradas(rotas);
+      setProximaViagem(painel.proxima);
+      setTodayTrip(painel.hoje);
     } catch {
       setProximaViagem(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [chavePainel]);
 
   useEffect(() => {
     loadData();
