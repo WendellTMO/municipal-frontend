@@ -10,6 +10,14 @@ export const interpretarUrl = (pathname, search) => {
     return null;
   }
 
+  if (caminho.indexOf('/redefinir-senha/') === 0) {
+    const token = decodeURIComponent(caminho.slice('/redefinir-senha/'.length));
+    if (token && token.indexOf('/') === -1) {
+      return {route: 'RedefinirSenha', params: {token}};
+    }
+    return null;
+  }
+
   if (caminho === '/guardian-consent') {
     const token = new URLSearchParams(search || '').get('token');
     if (token) {

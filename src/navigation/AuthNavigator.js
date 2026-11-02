@@ -3,6 +3,7 @@ import {Platform} from 'react-native';
 import Login from '../screens/Auth/Login';
 import CriarConta from '../screens/Auth/CriarConta';
 import RecuperarSenha from '../screens/Auth/RecuperarSenha';
+import RedefinirSenha from '../screens/Auth/RedefinirSenha';
 import ConsentimentoResponsavel from '../screens/Auth/ConsentimentoResponsavel';
 import ConvitePin from '../screens/Auth/ConvitePin';
 import CompletarCadastro from '../screens/Auth/CompletarCadastro';
@@ -48,6 +49,7 @@ const AuthNavigator = () => {
           <Screen name="Login" component={Login} />
           <Screen name="CriarConta" component={CriarConta} />
           <Screen name="RecuperarSenha" component={RecuperarSenha} />
+          <Screen name="RedefinirSenha" component={RedefinirSenha} />
           <Screen name="ConsentimentoResponsavel" component={ConsentimentoResponsavel} />
           <Screen name="ConvitePin" component={ConvitePin} />
           <Screen name="CompletarCadastro" component={CompletarCadastro} />
@@ -73,6 +75,7 @@ const AuthNavigator = () => {
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="CriarConta" component={CriarConta} />
       <Stack.Screen name="RecuperarSenha" component={RecuperarSenha} />
+      <Stack.Screen name="RedefinirSenha" component={RedefinirSenha} />
       <Stack.Screen name="ConsentimentoResponsavel" component={ConsentimentoResponsavel} />
       <Stack.Screen name="ConvitePin" component={ConvitePin} />
       <Stack.Screen name="CompletarCadastro" component={CompletarCadastro} />
