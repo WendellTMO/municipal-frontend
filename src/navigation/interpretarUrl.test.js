@@ -12,6 +12,15 @@ describe('interpretarUrl', () => {
     expect(interpretarUrl('/convite/a%20b/', '').params.token).toBe('a b');
   });
 
+  it('abre RedefinirSenha com o token do caminho', () => {
+    expect(interpretarUrl('/redefinir-senha/tok_en-1', '')).toEqual({
+      route: 'RedefinirSenha',
+      params: {token: 'tok_en-1'},
+    });
+    expect(interpretarUrl('/redefinir-senha/', '')).toBeNull();
+    expect(interpretarUrl('/redefinir-senha/a/b', '')).toBeNull();
+  });
+
   it('abre ConsentimentoResponsavel com o token da query', () => {
     expect(interpretarUrl('/guardian-consent', '?token=xyz')).toEqual({
       route: 'ConsentimentoResponsavel',
