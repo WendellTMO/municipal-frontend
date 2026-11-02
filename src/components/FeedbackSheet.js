@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { borderRadius, colors, spacing, textStyles } from '../theme';
 import feedbackService from '../services/feedbackService';
+import { lerVersaoInstalada } from '../services/versaoApp';
 import { getErrorMessageFromError } from '../utils/errors';
 import {
   TIPOS_FEEDBACK,
@@ -38,7 +39,13 @@ const FeedbackSheet = ({ visible, onClose, tela, onSent }) => {
     setLoading(true);
     try {
       await feedbackService.enviarFeedback(
-        buildFeedbackPayload({ tipo, mensagem, tela, plataforma: Platform.OS }),
+        buildFeedbackPayload({
+          tipo,
+          mensagem,
+          tela,
+          plataforma: Platform.OS,
+          versionCode: lerVersaoInstalada()?.versionCode,
+        }),
       );
       setMensagem('');
       setTipo('BUG');

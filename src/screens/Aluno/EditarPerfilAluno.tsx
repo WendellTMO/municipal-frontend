@@ -20,6 +20,7 @@ import Icon, { IconNames } from '../../components/Icon';
 import { formatPhone, formatCep, formatCpf, onlyDigits } from '../../utils/masks';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import VersaoDoApp from '../../components/VersaoDoApp';
 import SubHeader from '../../components/SubHeader';
 import { alertar } from '../../utils/alerta';
 
@@ -358,6 +359,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
             )}
           </TouchableOpacity>
           <SairDaConta />
+          <VersaoDoApp />
         </ScrollView>
       </KeyboardAvoidingView>
     </TelaSegura>
