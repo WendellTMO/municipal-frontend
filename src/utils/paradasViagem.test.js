@@ -26,11 +26,17 @@ test('campo instituicao do ponto como objeto do backend', () => {
   expect(instituicaoDaParada(ponto, [])).toEqual({ id: 'i', nome: 'UFCG', tipo: 'Universidade Pública', endereco: null });
 });
 
-test('estados das paradas seguem o número de concluídas', () => {
-  const pontos = [{ latitude: 1, longitude: 1 }, { latitude: 2, longitude: 2 }, { latitude: 3, longitude: 3 }];
-  const estados = montarParadas(pontos, 1, []).map(p => p.estado);
+test('estados das paradas seguem os pontos visitados', () => {
+  const pontos = [{ id: 'a', latitude: 1, longitude: 1 }, { id: 'b', latitude: 2, longitude: 2 }, { id: 'c', latitude: 3, longitude: 3 }];
+  const estados = montarParadas(pontos, ['a'], []).map(p => p.estado);
   expect(estados).toEqual(['feita', 'proxima', 'pendente']);
-  expect(montarParadas(pontos, 3, []).map(p => p.estado)).toEqual(['feita', 'feita', 'feita']);
+  expect(montarParadas(pontos, ['a', 'b', 'c'], []).map(p => p.estado)).toEqual(['feita', 'feita', 'feita']);
+});
+
+test('ponto visitado fora de ordem fica feito e a próxima continua sendo a primeira não feita', () => {
+  const pontos = [{ id: 'a', latitude: 1, longitude: 1 }, { id: 'b', latitude: 2, longitude: 2 }, { id: 'c', latitude: 3, longitude: 3 }];
+  expect(montarParadas(pontos, ['c'], []).map(p => p.estado)).toEqual(['proxima', 'pendente', 'feita']);
+  expect(montarParadas(pontos, ['b'], []).map(p => p.estado)).toEqual(['proxima', 'feita', 'pendente']);
 });
 
 const ufcgAluno = { nome: 'UFCG', tipo: 'Universidade Pública' };

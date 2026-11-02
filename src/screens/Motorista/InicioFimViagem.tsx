@@ -38,11 +38,15 @@ import {
 import Icon, { IconNames } from '../../components/Icon';
 import { ReportSheet } from '../../components';
 import { CHIPS } from '../../components/ReportSheet';
-import { LocationMap, useArrivalDetection, useRotaPlanejada, normalizeRoutePoints } from '../../features/map/index';
+import { LocationMap, useRotaPlanejada, normalizeRoutePoints } from '../../features/map/index';
 import SubHeader from '../../components/SubHeader';
 import { useFeedbackPadrao } from '../../components/FeedbackPadraoContext';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
+import ConferirParadas from '../../components/ConferirParadas';
 import { agruparConfirmadosPorInstituicao, montarParadas } from '../../utils/paradasViagem';
+import { estadoVazio, idsProcessados, pontosAlcancados, registrarChegada, removerProcessados } from '../../utils/chegadasViagem';
+import type { EstadoChegadas } from '../../utils/chegadasViagem';
+import { apagarChegadas, lerChegadas, salvarChegadas } from '../../utils/chegadasStorage';
 import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
 import { limparEnvio, registrarEnvio } from '../../utils/demandaLocalizacao';
 import { escutarDemandaPrimeiroPlano, iniciarServicoViagem, pararServicoViagem } from '../../services/servicoViagem';
@@ -71,6 +75,8 @@ type Props = {
   navigation: NativeStackNavigationProp<RootParamList>;
   route: RouteProp<{ InicioFimViagem: { viagem: Record<string, unknown> } }, 'InicioFimViagem'>;
 };
+
+
 
 let Geolocation: typeof navigator.geolocation | null = null;
 try {
@@ -106,7 +112,15 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [broadcastVisible, setBroadcastVisible] = useState(false);
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [instituicoes, setInstituicoes] = useState<InstituicaoResponse[]>([]);
-  const [concluidas, setConcluidas] = useState(0);
+  // Pontos já alcançados (em qualquer ordem) e a fila de chegadas ainda não confirmadas pelo servidor.
+  // Fica salva no aparelho: sobrevive a fechar o app e à falta de internet.
+  const [chegadas, setChegadas] = useState<EstadoChegadas>(estadoVazio());
+  const chegadasRef = useRef(chegadas);
+  const [chegadasCarregadas, setChegadasCarregadas] = useState(false);
+  const enviandoChegadasRef = useRef(false);
+  const posAnteriorRef = useRef<{ latitude: number; longitude: number; em: number } | null>(null);
+  // Respostas do motorista na conferência ao finalizar: true passou, false não passou.
+  const [conferencia, setConferencia] = useState<Record<string, boolean>>({});
   const [roteiroAberto, setRoteiroAberto] = useState(false);
   // Confirmados abre como camada, sem trocar de tela: navegar com o mapa vivo atrás travava a transição.
   const [alunosAberto, setAlunosAberto] = useState(false);
@@ -255,30 +269,116 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   // Paradas válidas (com coordenadas), com estado e instituição de ensino.
   const pontosOrdenados = reordenarPontosPorInstituicao(pontosRota, instituicoes, ordemSalva);
   const pontosValidos = normalizeRoutePoints(pontosOrdenados);
-  const paradas = montarParadas(pontosValidos, concluidas, instituicoes);
+  const paradas = montarParadas(pontosValidos, chegadas.visitados, instituicoes);
   const proxima = paradas.find((p) => p.estado === 'proxima') ?? null;
   const gruposConfirmados = agruparConfirmadosPorInstituicao(
     (currentViagem?.alunos as Record<string, unknown>[] | undefined) ?? [],
   );
   const grupos = montarRoteiro(currentViagem?.tipo, paradas, currentViagem?.alunos as Record<string, unknown>[] | undefined);
-  const todasFeitas = pontosValidos.length > 0 && concluidas >= pontosValidos.length;
+  const todasFeitas = pontosValidos.length > 0 && chegadas.visitados.length >= pontosValidos.length;
+  const naoDetectadas = paradas.filter((p) => p.estado !== 'feita');
 
-  const marcarChegada = () => {
-    setConcluidas((n) => (n < pontosValidos.length ? n + 1 : n));
+  const mudarChegadas = (fazer: (estado: typeof chegadas) => typeof chegadas) => {
+    const novo = fazer(chegadasRef.current);
+    chegadasRef.current = novo;
+    setChegadas(novo);
   };
 
-  // Chegada automática a menos de 50 m da próxima parada; o botão "Cheguei" cobre o resto.
-  useArrivalDetection({
-    userLocation: posMotorista,
-    destination: proxima ? proxima.ponto : null,
-    thresholdMeters: 50,
-    onArrive: marcarChegada,
-  });
+  // Botão "Cheguei": marca a próxima parada da lista.
+  const marcarChegada = () => {
+    if (!proxima) return;
+    mudarChegadas((estado) => registrarChegada(estado, proxima.ponto, 'manual', posMotorista));
+  };
+
+  // Envia a fila ao servidor. Sem internet ou com erro, nada sai da fila e a próxima tentativa repete.
+  const enviarChegadas = async () => {
+    const id = viagemIdRef.current;
+    const fila = chegadasRef.current.pendentes;
+    if (!id || fila.length === 0 || enviandoChegadasRef.current) return;
+    enviandoChegadasRef.current = true;
+    try {
+      const resposta = await motoristaService.registrarChegadas(id, fila);
+      const processados = idsProcessados(resposta);
+      mudarChegadas((estado) => removerProcessados(estado, processados));
+    } catch {
+      // Fica na fila.
+    } finally {
+      enviandoChegadasRef.current = false;
+    }
+  };
+
+  const pontosValidosRef = useRef(pontosValidos);
+  pontosValidosRef.current = pontosValidos;
+
+  // Estado salvo da viagem (ao reabrir o app no meio dela).
+  useEffect(() => {
+    if (!viagemId) return;
+    let ativo = true;
+    lerChegadas(viagemId).then((salvo) => {
+      if (!ativo) return;
+      if (chegadasRef.current.visitados.length === 0) {
+        chegadasRef.current = salvo;
+        setChegadas(salvo);
+      }
+      setChegadasCarregadas(true);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [viagemId]);
+
+  useEffect(() => {
+    if (viagemId && chegadasCarregadas) salvarChegadas(viagemId, chegadas);
+  }, [viagemId, chegadasCarregadas, chegadas]);
+
+  // O GPS é lido aqui só no aparelho, em ritmo próprio, para não perder um ponto quando o envio ao
+  // servidor está espaçado (até 60 s).
+  useEffect(() => {
+    if (!viagemIniciada || !Geolocation) return;
+    const opcoes = { enableHighAccuracy: true, distanceFilter: 10, interval: 5000, fastestInterval: 2000 };
+    const id = Geolocation.watchPosition(
+      (pos) => setPosMotorista({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+      () => {},
+      opcoes as PositionOptions,
+    );
+    return () => Geolocation!.clearWatch(id);
+  }, [viagemIniciada]);
+
+  // Chegada automática: qualquer parada ainda não feita a até 50 m, em qualquer ordem. Com leituras
+  // seguidas (até 15 s), também vale o ônibus ter cortado o raio entre elas.
+  useEffect(() => {
+    if (!viagemIniciada || !chegadasCarregadas || !posMotorista) return;
+    const agora = Date.now();
+    const anterior = posAnteriorRef.current;
+    let trecho: { latitude: number; longitude: number } | null = null;
+    if (anterior && agora - anterior.em <= 15_000) trecho = anterior;
+    posAnteriorRef.current = { ...posMotorista, em: agora };
+
+    const alcancados = pontosAlcancados(posMotorista, pontosValidosRef.current, chegadasRef.current.visitados, {
+      anterior: trecho,
+    });
+    for (const ponto of pontosValidosRef.current) {
+      if (ponto.id && alcancados.includes(ponto.id)) {
+        mudarChegadas((estado) => registrarChegada(estado, ponto, 'auto', posMotorista));
+      }
+    }
+  }, [posMotorista, viagemIniciada, chegadasCarregadas]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Envia a fila quando ela muda e, enquanto a viagem anda, de 20 em 20 s (cobre a volta da internet).
+  useEffect(() => {
+    if (chegadas.pendentes.length === 0) return;
+    enviarChegadas();
+    if (!viagemIniciada) return;
+    const timer = setInterval(enviarChegadas, 20_000);
+    return () => clearInterval(timer);
+  }, [chegadas.pendentes.length, viagemIniciada]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Rota planejada pelas ruas ate o fim da lista; recalcula ao visitar parada e ao sair do traçado.
   const paradasRestantes: { latitude: number; longitude: number }[] = [];
-  for (const ponto of pontosValidos.slice(concluidas)) {
-    paradasRestantes.push({ latitude: ponto.latitude, longitude: ponto.longitude });
+  for (const parada of paradas) {
+    if (parada.estado !== 'feita') {
+      paradasRestantes.push({ latitude: parada.ponto.latitude, longitude: parada.ponto.longitude });
+    }
   }
   const trajeto = useRotaPlanejada(posMotorista, paradasRestantes, viagemIniciada);
 
@@ -351,10 +451,23 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   };
 
   // Só o "Sim, finalizar" da tela de confirmação chama o endpoint.
+  const abrirFinalizar = () => {
+    setConferencia({});
+    setFinalizarVisivel(true);
+  };
+
   const confirmarFinalizar = async () => {
     try {
       setLoading(true);
+      for (const parada of naoDetectadas) {
+        if (conferencia[parada.ponto.id] === true) {
+          mudarChegadas((estado) => registrarChegada(estado, parada.ponto, 'conferencia', null));
+        }
+      }
+      await enviarChegadas();
       await motoristaService.finalizarViagem(viagemId!);
+      await enviarChegadas();
+      if (chegadasRef.current.pendentes.length === 0) apagarChegadas(viagemId!);
       setFinalizarVisivel(false);
       AccessibilityInfo.announceForAccessibility('Viagem finalizada');
       toast.success('Viagem finalizada!');
@@ -465,7 +578,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             <RoteiroViagem
               viagem={currentViagem}
               pontosRota={pontosValidos}
-              concluidas={concluidas}
+              visitados={chegadas.visitados}
               instituicoes={instituicoes}
               onBack={() => setRoteiroAberto(false)}
             />
@@ -549,7 +662,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
           <TouchableOpacity
             style={[styles.finalizarButton, loading && styles.buttonDisabled]}
-            onPress={() => setFinalizarVisivel(true)}
+            onPress={abrirFinalizar}
             disabled={loading}
             accessibilityRole="button"
             accessibilityLabel="Finalizar viagem"
@@ -568,11 +681,22 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         <DialogoConfirmacao
           visible={finalizarVisivel}
           titulo="Finalizar a viagem?"
-          resumo="Tem certeza que deseja finalizar?"
+          resumo={
+            naoDetectadas.length > 0
+              ? 'O app não registrou estas paradas. O ônibus passou por elas?'
+              : 'Tem certeza que deseja finalizar?'
+          }
           onCancelar={() => setFinalizarVisivel(false)}
           principal={{ texto: 'Continuar viagem', cor: colors.success.main, onPress: () => setFinalizarVisivel(false) }}
-          secundario={{ texto: 'Sim, finalizar', cor: colors.error.main, carregando: loading, onPress: confirmarFinalizar }}
-        />
+          secundario={{ texto: 'Sim, finalizar', cor: colors.error.main, carregando: loading, onPress: confirmarFinalizar }}>
+          {naoDetectadas.length > 0 ? (
+            <ConferirParadas
+              paradas={naoDetectadas}
+              marcadas={conferencia}
+              onMarcar={(pontoId: string, passou: boolean) => setConferencia((atual) => ({ ...atual, [pontoId]: passou }))}
+            />
+          ) : null}
+        </DialogoConfirmacao>
 
         {/* Broadcast Modal */}
         <ModalApp

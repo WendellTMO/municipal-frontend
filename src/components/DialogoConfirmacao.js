@@ -8,7 +8,7 @@ import { colors, spacing, textStyles } from '../theme';
 import ModalApp from './ModalApp';
 
 // botoes (lista) tem prioridade sobre principal e secundario. O primeiro botão é o maior.
-const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, secundario, botoes }) => {
+const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, secundario, botoes, children }) => {
   const lista = botoes || [principal, secundario];
   return (
     <ModalApp visible={visible} transparent animationType="fade" onRequestClose={onCancelar} accessibilityViewIsModal>
@@ -25,6 +25,7 @@ const DialogoConfirmacao = ({ visible, titulo, resumo, onCancelar, principal, se
             {titulo}
           </Text>
           {resumo ? <Text style={styles.resumo}>{resumo}</Text> : null}
+          {children}
           {lista.map((botao, i) => (
             <TouchableOpacity
               key={`${i}-${botao.texto}`}
