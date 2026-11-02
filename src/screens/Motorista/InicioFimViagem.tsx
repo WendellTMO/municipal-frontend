@@ -333,7 +333,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       await salvarOrdemSeMudou();
       await motoristaService.iniciarViagem(viagemId);
       setViagemIniciada(true);
-      setTempoDecorrido(0);
 
       // Fetch points if not loaded yet
       if (pontosRota.length === 0 && rotaId) {
