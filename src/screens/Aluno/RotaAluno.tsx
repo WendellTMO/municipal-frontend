@@ -252,6 +252,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
   if (loading) {
     return (
       <TelaSegura style={styles.container}>
+        <SubHeader titulo={screenTitle} onBack={() => navigation.goBack()} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary.main} />
         </View>

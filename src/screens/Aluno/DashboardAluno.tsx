@@ -198,6 +198,12 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   if (loading) {
     return (
       <TelaSegura style={styles.container}>
+        <PainelHeader
+          perfil="Aluno"
+          unreadCount={unreadCount}
+          onBellPress={() => navigation.navigate('Notificacoes')}
+          onOpenConfig={() => navigation.navigate('ConfigNotificacoesAluno')}
+        />
         <LoadingSpinner
           fullScreen
           message="Carregando suas informações..."
