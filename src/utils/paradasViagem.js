@@ -28,13 +28,19 @@ export const instituicaoDaParada = (ponto, instituicoes) => {
   return melhor;
 };
 
-// Cada parada com seu estado: feita (antes da próxima), proxima ou pendente.
-export const montarParadas = (pontos, concluidas, instituicoes) => {
+// Cada parada com seu estado: feita (id em `visitados`, em qualquer ordem), proxima (a primeira
+// ainda não feita da lista) ou pendente.
+export const montarParadas = (pontos, visitados, instituicoes) => {
   const resultado = [];
+  let achouProxima = false;
   for (let i = 0; i < pontos.length; i++) {
     let estado = 'pendente';
-    if (i < concluidas) estado = 'feita';
-    else if (i === concluidas) estado = 'proxima';
+    if (visitados.includes(pontos[i].id)) {
+      estado = 'feita';
+    } else if (!achouProxima) {
+      estado = 'proxima';
+      achouProxima = true;
+    }
     resultado.push({
       ponto: pontos[i],
       numero: i + 1,

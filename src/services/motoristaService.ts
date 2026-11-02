@@ -14,6 +14,19 @@ interface EnviarLocalizacaoResponse {
   intervalo_sugerido_segundos?: number;
 }
 
+export type ChegadaEvento = {
+  ponto_id: string;
+  detectado_em: string;
+  origem: 'auto' | 'manual' | 'conferencia';
+  latitude?: number;
+  longitude?: number;
+};
+
+export type ChegadasResposta = {
+  aceitos: string[];
+  rejeitados: { ponto_id: string; motivo: string }[];
+};
+
 export type OrdemInstituicao = { instituicao_id: string; nome: string; tipo?: string | null; ordem: number };
 
 export type CorpoNovaParada = {
@@ -205,6 +218,15 @@ export const motoristaService = {
    * Finish a trip
    * Backend: PUT /v1/viagens/{id}/acao
    */
+  /**
+   * Envia a fila de chegadas aos pontos. Repetir um evento não tem efeito.
+   * Backend: POST /v1/viagens/{id}/pontos-visitados
+   */
+  async registrarChegadas(viagemId: string, eventos: ChegadaEvento[]): Promise<ChegadasResposta> {
+    const response = await api.post<ChegadasResposta>(`/viagens/${viagemId}/pontos-visitados`, { eventos });
+    return response.data;
+  },
+
   async finalizarViagem(viagemId: string): Promise<ViagemResponse> {
     const payload : ViagemAcaoRequest = {
       acao: 'FINALIZAR',

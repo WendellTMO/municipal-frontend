@@ -1,6 +1,6 @@
 /**
  * Roteiro da viagem em tela cheia: paradas agrupadas em embarque, instituição e desembarque.
- * Aberta pelo navegador (params: viagem, pontosRota, concluidas, instituicoes) ou, durante a
+ * Aberta pelo navegador (params: viagem, pontosRota, visitados, instituicoes) ou, durante a
  * viagem, como camada de InicioFimViagem (mesmas informações como props, mais onBack).
  */
 import React, { useEffect, useState } from 'react';
@@ -19,7 +19,7 @@ const RoteiroViagem = ({ navigation = null, route = null, onBack = null, direita
   const params = (route && route.params) || {};
   const viagem = props.viagem || params.viagem || {};
   const pontosRota = props.pontosRota || params.pontosRota || [];
-  const concluidas = props.concluidas ?? params.concluidas ?? 0;
+  const visitados = props.visitados ?? params.visitados ?? [];
   const instituicoesRecebidas = props.instituicoes || params.instituicoes;
   const [instituicoesBuscadas, setInstituicoesBuscadas] = useState([]);
 
@@ -33,7 +33,7 @@ const RoteiroViagem = ({ navigation = null, route = null, onBack = null, direita
   }, [instituicoesRecebidas]);
 
   const instituicoes = instituicoesRecebidas || instituicoesBuscadas;
-  const paradas = montarParadas(pontosRota, concluidas, instituicoes);
+  const paradas = montarParadas(pontosRota, visitados, instituicoes);
   const grupos = montarRoteiro(viagem.tipo, paradas, viagem.alunos);
 
   return (

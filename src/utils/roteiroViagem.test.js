@@ -19,8 +19,8 @@ const alunos = [
   aluno('Eva', 'p2', 'p3', false),
 ];
 
-const grupos = (tipo, pontos = rota, lista = alunos, concluidas = 0) =>
-  montarRoteiro(tipo, montarParadas(pontos, concluidas, []), lista);
+const grupos = (tipo, pontos = rota, lista = alunos, visitados = []) =>
+  montarRoteiro(tipo, montarParadas(pontos, visitados, []), lista);
 const titulos = lista => lista.map(g => g.titulo);
 const nomesDe = item => item.listas.map(l => l.nomes);
 
@@ -77,7 +77,7 @@ test('rota sem instituição omite o grupo e segue o sentido', () => {
 });
 
 test('numeração e estado seguem a rota', () => {
-  const r = grupos('CIRCULAR', rota, alunos, 1);
+  const r = grupos('CIRCULAR', rota, alunos, ['p1']);
   expect(r[0].itens[0]).toMatchObject({ numero: 1, estado: 'feita' });
   expect(r[0].itens[1]).toMatchObject({ numero: 2, estado: 'proxima' });
   expect(r[1].itens[0]).toMatchObject({ numero: 3, estado: 'pendente' });
