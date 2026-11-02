@@ -3,6 +3,7 @@ import {
   buildFeedbackPayload,
   shouldShowBetaNotice,
   betaNoticeKey,
+  textoDaVersao,
 } from './feedback';
 
 test('isMensagemValida usa o tamanho depois do trim', () => {
@@ -27,6 +28,15 @@ test('buildFeedbackPayload limpa e limita os campos', () => {
   expect(payload.tipo).toBe('BUG');
   expect(typeof payload.versao_app).toBe('string');
   expect(buildFeedbackPayload({ tipo: 'DUVIDA', mensagem: 'a', tela: '' }).tela).toBeNull();
+});
+
+test('a versão do feedback leva o versionCode quando existe', () => {
+  expect(textoDaVersao('1.0.4-beta', 29888779)).toBe('1.0.4-beta (29888779)');
+  expect(textoDaVersao('1.0.4-beta', undefined)).toBe('1.0.4-beta');
+  expect(textoDaVersao('', 5)).toBeNull();
+  const payload = buildFeedbackPayload({ tipo: 'BUG', mensagem: 'a', tela: '', versionCode: 29888779 });
+  expect(payload.versao_app).toMatch(/ \(29888779\)$/);
+  expect(payload.versao_app.length).toBeLessThanOrEqual(30);
 });
 
 test('shouldShowBetaNotice e a chave por usuário', () => {

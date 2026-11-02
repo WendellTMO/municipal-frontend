@@ -16,6 +16,7 @@ import { colors, spacing, borderRadius, shadows, textStyles, fontSize, lineHeigh
 import Icon, { IconNames } from '../components/Icon';
 import { withFabSpace } from '../config/feedback';
 import SubHeader from '../components/SubHeader';
+import VersaoDoApp from '../components/VersaoDoApp';
 import { rotuloAtual } from '../services/biometria';
 import { alertar } from '../utils/alerta';
 import { confirmAction } from '../utils/confirm';
@@ -141,6 +142,7 @@ const ConfigNotificacoes = ({ navigation }) => {
           <Icon name={IconNames.logout} size="md" color={colors.error.main} />
           <Text style={styles.logoutButtonText}>Sair da conta</Text>
         </TouchableOpacity>
+        <VersaoDoApp />
 
         <View style={{ height: spacing.xxl }} />
       </ScrollView>

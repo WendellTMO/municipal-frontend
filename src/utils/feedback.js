@@ -18,13 +18,23 @@ export const isMensagemValida = texto => {
   return tamanho >= MENSAGEM_MIN && tamanho <= MENSAGEM_MAX;
 };
 
-export const buildFeedbackPayload = ({ tipo, mensagem, tela, plataforma }) => ({
-  tipo,
-  mensagem: (mensagem || '').trim(),
-  tela: tela ? String(tela).slice(0, TELA_MAX) : null,
-  versao_app: APP_VERSION ? String(APP_VERSION).slice(0, VERSAO_MAX) : null,
-  plataforma,
-});
+// "1.0.4-beta (29888779)": o versionCode distingue duas builds com o mesmo nome de versão.
+export const textoDaVersao = (nome, versionCode) => {
+  if (!nome) return null;
+  if (!versionCode) return String(nome);
+  return `${nome} (${versionCode})`;
+};
+
+export const buildFeedbackPayload = ({ tipo, mensagem, tela, plataforma, versionCode }) => {
+  const versao = textoDaVersao(APP_VERSION, versionCode);
+  return {
+    tipo,
+    mensagem: (mensagem || '').trim(),
+    tela: tela ? String(tela).slice(0, TELA_MAX) : null,
+    versao_app: versao ? versao.slice(0, VERSAO_MAX) : null,
+    plataforma,
+  };
+};
 
 // O aviso aparece quando não há registro de que o usuário já o viu.
 export const shouldShowBetaNotice = valorGuardado => !valorGuardado;
