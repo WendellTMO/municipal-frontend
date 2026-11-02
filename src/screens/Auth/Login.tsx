@@ -18,6 +18,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Icon, IconNames, AuthBackground, AuthLogo } from '../../components';
 import { colors } from '../../theme';
 import { Storage, STORAGE_KEYS } from '../../utils/storage';
+import { confirmarFormularioDeLogin } from '../../utils/autofill';
 
 type LoginProps = {
   navigation: {
@@ -81,7 +82,9 @@ const Login: React.FC<LoginProps> = ({ navigation, route }) => {
     try {
       const result = await login({ email: email.trim(), password: senha }, lembrarMe);
 
-      if (!result?.success) {
+      if (result?.success) {
+        confirmarFormularioDeLogin();
+      } else {
         setErro(result?.error || 'Credenciais inválidas. Verifique seus dados.');
       }
     } catch (error: any) {
