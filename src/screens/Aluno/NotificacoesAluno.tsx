@@ -143,6 +143,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
   if (loading) {
     return (
       <TelaSegura style={styles.container}>
+        <SubHeader titulo="Notificações" onBack={() => navigation.goBack()} />
         <LoadingSpinner
           fullScreen
           message="Carregando notificações..."
