@@ -22,8 +22,6 @@ import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 import { organizarViagens } from '../../utils/viagensMotorista';
-import HistoricoViagens from '../../components/HistoricoViagens';
-import { useToast } from '../../components/Toast';
 
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
@@ -40,8 +38,7 @@ const DashboardMotorista = ({navigation}) => {
   }, []);
 
   const [proximaViagem, setProximaViagem] = useState(null);
-  const [historico, setHistorico] = useState([]);
-  const toast = useToast();
+  const [naoRealizadas, setNaoRealizadas] = useState(0);
   const [loadingViagem, setLoadingViagem] = useState(true);
   const [alunosInfo, setAlunosInfo] = useState({
     totalAlunos: 0,
@@ -57,7 +54,7 @@ const DashboardMotorista = ({navigation}) => {
         if (viagens && viagens.length > 0) {
           // A próxima é a mais perto de agora; as que passaram sem registro vão para o histórico.
           const organizadas = organizarViagens(viagens, new Date());
-          setHistorico(organizadas.historico);
+          setNaoRealizadas(organizadas.naoRealizadas);
 
           if (organizadas.proxima) {
             const proxima = organizadas.proxima;
@@ -103,7 +100,7 @@ const DashboardMotorista = ({navigation}) => {
           }
         } else {
           setProximaViagem(null);
-          setHistorico([]);
+          setNaoRealizadas(0);
         }
       } catch (error) {
         setProximaViagem(null);
@@ -131,17 +128,6 @@ const DashboardMotorista = ({navigation}) => {
     recarregar();
     return navigation?.addListener ? navigation.addListener('focus', recarregar) : undefined;
   }, [navigation, recarregar]);
-
-  // O motorista confirma que a viagem passada foi feita, mesmo sem ter registrado pelo app.
-  const confirmarViagemFeita = async viagem => {
-    try {
-      await motoristaService.marcarRealizada(viagem.id);
-      toast.success('Viagem marcada como feita.');
-      await recarregar();
-    } catch (e) {
-      toast.error(e?.message || 'Não foi possível confirmar a viagem agora.');
-    }
-  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -246,7 +232,26 @@ const DashboardMotorista = ({navigation}) => {
           </View>
         )}
 
-        <HistoricoViagens itens={historico} onConfirmarFeita={confirmarViagemFeita} />
+        <Tappable
+          style={styles.historicoEntrada}
+          onPress={() => navigation.navigate('HistoricoViagensMotorista')}
+          accessibilityRole="button"
+          accessibilityLabel={
+            naoRealizadas > 0
+              ? `Histórico de viagens, ${naoRealizadas} não realizada${naoRealizadas > 1 ? 's' : ''}`
+              : 'Histórico de viagens'
+          }>
+          <Icon name={IconNames.schedule} size="md" color={colors.primary.dark} />
+          <View style={styles.historicoTextos}>
+            <Text style={styles.historicoTitulo}>Histórico de viagens</Text>
+            <Text style={naoRealizadas > 0 ? styles.historicoAviso : styles.historicoSub}>
+              {naoRealizadas > 0
+                ? `${naoRealizadas} viagem${naoRealizadas > 1 ? 'ns' : ''} não realizada${naoRealizadas > 1 ? 's' : ''}`
+                : 'Feitas e canceladas'}
+            </Text>
+          </View>
+          <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} />
+        </Tappable>
 
         {/* Ações rápidas */}
         {ehGestor ? (
@@ -301,6 +306,19 @@ const DashboardMotorista = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
+  historicoEntrada: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    margin: spacing.base,
+    padding: spacing.base,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.background.paper,
+  },
+  historicoTextos: { flex: 1 },
+  historicoTitulo: { ...textStyles.body, fontWeight: '700', color: colors.text.primary },
+  historicoSub: { ...textStyles.bodySmall, color: colors.text.secondary },
+  historicoAviso: { ...textStyles.bodySmall, color: colors.error.main, fontWeight: '700' },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,

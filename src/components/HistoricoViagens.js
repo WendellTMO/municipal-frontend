@@ -1,6 +1,6 @@
 /**
- * Caixa "Histórico de viagens" da home do motorista. A viagem que passou sem ser registrada fica em
- * vermelho, com o botão "Foi feita" para o motorista confirmar que ela aconteceu.
+ * Lista do histórico de viagens do motorista. A viagem que passou sem ser registrada fica em vermelho,
+ * com o botão "Marcar como feita": o motorista confirma que ela aconteceu, mesmo sem registro no app.
  */
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -18,9 +18,10 @@ const SITUACAO = {
   nao_realizada: { texto: 'Não realizada', cor: colors.error.main },
 };
 
+const quando = viagem => `${formatarData(viagem.data)} às ${formatarHora(viagem.horario_inicio)}`;
+
 const HistoricoViagens = ({ itens, onConfirmarFeita }) => {
   const [confirmando, setConfirmando] = useState(null);
-  if (!itens || itens.length === 0) return null;
 
   const confirmar = async () => {
     const viagem = confirmando;
@@ -29,37 +30,31 @@ const HistoricoViagens = ({ itens, onConfirmarFeita }) => {
   };
 
   return (
-    <View style={styles.card}>
-      <View style={styles.cabecalho}>
-        <Icon name={IconNames.schedule} size="md" color={colors.primary.dark} />
-        <Text style={styles.titulo} accessibilityRole="header">
-          Histórico de viagens
-        </Text>
-      </View>
-
+    <View style={styles.lista}>
       {itens.map(({ viagem, situacao }) => {
         const info = SITUACAO[situacao];
         const naoRealizada = situacao === 'nao_realizada';
         return (
           <View key={viagem.id} style={[styles.linha, naoRealizada && styles.linhaVermelha]}>
-            <View style={styles.textos}>
-              <Text style={styles.quando}>
-                {formatarData(viagem.data)} às {formatarHora(viagem.horario_inicio)}
-              </Text>
-              {viagem.rota_nome ? (
-                <Text style={styles.rota} numberOfLines={1}>
-                  {viagem.rota_nome}
-                </Text>
-              ) : null}
-              <Text style={[styles.situacao, { color: info.cor }]}>{info.texto}</Text>
+            <View style={styles.topo}>
+              <View style={styles.textos}>
+                <Text style={styles.quando}>{quando(viagem)}</Text>
+                {viagem.rota_nome ? (
+                  <Text style={styles.rota} numberOfLines={1}>
+                    {viagem.rota_nome}
+                  </Text>
+                ) : null}
+                <Text style={[styles.situacao, { color: info.cor }]}>{info.texto}</Text>
+              </View>
             </View>
             {naoRealizada ? (
               <Tappable
                 style={styles.botao}
                 onPress={() => setConfirmando(viagem)}
                 accessibilityRole="button"
-                accessibilityLabel={`Confirmar que a viagem de ${formatarData(viagem.data)} foi feita`}>
-                <Text style={styles.botaoTexto}>Foi feita</Text>
+                accessibilityLabel={`Marcar como feita a viagem de ${quando(viagem)}`}>
+                <Icon name={IconNames.check} size="md" color="#FFFFFF" />
+                <Text style={styles.botaoTexto}>Marcar como feita</Text>
               </Tappable>
             ) : null}
           </View>
@@ -68,44 +63,41 @@ const HistoricoViagens = ({ itens, onConfirmarFeita }) => {
 
       <DialogoConfirmacao
         visible={!!confirmando}
-        titulo="A viagem foi feita?"
-        resumo="Ela vai aparecer como feita, sem registro no app."
+        titulo="Marcar como feita?"
+        resumo={
+          confirmando
+            ? `A viagem de ${quando(confirmando)} vai ficar como feita, sem registro no app.`
+            : ''
+        }
         onCancelar={() => setConfirmando(null)}
-        principal={{ texto: 'Sim, foi feita', cor: colors.success.main, onPress: confirmar }}
-        secundario={{ texto: 'Voltar', cor: colors.neutral[500], onPress: () => setConfirmando(null) }}
+        principal={{ texto: 'Sim, marcar como feita', cor: colors.success.main, onPress: confirmar }}
+        secundario={{ texto: 'Cancelar', cor: colors.neutral[500], onPress: () => setConfirmando(null) }}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    margin: spacing.base,
-    padding: spacing.base,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.background.paper,
-    gap: spacing.sm,
-  },
-  cabecalho: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
-  titulo: { ...textStyles.h4, color: colors.text.primary },
+  lista: { gap: spacing.sm },
   linha: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.neutral[50],
+    backgroundColor: colors.background.paper,
   },
   linhaVermelha: { backgroundColor: colors.error.light, borderWidth: 1, borderColor: colors.error.main },
+  topo: { flexDirection: 'row', alignItems: 'center' },
   textos: { flex: 1 },
   quando: { ...textStyles.body, fontWeight: '700', color: colors.text.primary },
   rota: { ...textStyles.bodySmall, color: colors.text.secondary },
   situacao: { ...textStyles.caption, fontWeight: '700', marginTop: 2 },
   botao: {
-    minHeight: 44,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minHeight: 48,
     paddingHorizontal: spacing.base,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.error.main,
+    backgroundColor: colors.success.main,
     alignItems: 'center',
     justifyContent: 'center',
   },
