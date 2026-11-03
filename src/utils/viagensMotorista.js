@@ -23,7 +23,8 @@ const situacaoDoHistorico = (viagem, perdida) => {
   return perdida ? 'nao_realizada' : null;
 };
 
-// Devolve { proxima, historico }. `historico` vem do mais recente para o mais antigo.
+// Devolve { proxima, historico, naoRealizadas }. `historico` vem do mais recente para o mais antigo;
+// `naoRealizadas` conta todas, mesmo as que o limite do histórico cortou.
 export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 15) => {
   let proxima = null;
   let menorDistancia = Infinity;
@@ -62,5 +63,9 @@ export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 
   }
 
   historico.sort((a, b) => (b.inicio ? b.inicio.getTime() : 0) - (a.inicio ? a.inicio.getTime() : 0));
-  return { proxima, historico: historico.slice(0, limiteHistorico) };
+  let naoRealizadas = 0;
+  for (const item of historico) {
+    if (item.situacao === 'nao_realizada') naoRealizadas += 1;
+  }
+  return { proxima, historico: historico.slice(0, limiteHistorico), naoRealizadas };
 };

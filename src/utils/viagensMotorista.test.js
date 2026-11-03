@@ -46,6 +46,14 @@ test('feita, feita sem app e cancelada entram no histórico, do mais recente ao 
   ]);
 });
 
+test('conta as não realizadas mesmo quando o limite corta o histórico', () => {
+  const lista = [viagem('a', '2026-11-01', '06:00:00'), viagem('b', '2026-11-02', '06:00:00'), viagem('c', '2026-11-03', '06:00:00'), viagem('d', '2026-11-03', '13:00:00')];
+  const resultado = organizarViagens(lista, agora, 1);
+  expect(resultado.proxima.id).toBe('d');
+  expect(resultado.historico).toHaveLength(1);
+  expect(resultado.naoRealizadas).toBe(3);
+});
+
 test('o histórico respeita o limite', () => {
   const lista = [];
   for (let i = 1; i <= 20; i++) lista.push(viagem('v' + i, '2026-10-' + String(i).padStart(2, '0'), '07:00:00', 'FINALIZADA'));
