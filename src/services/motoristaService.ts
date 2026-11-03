@@ -227,6 +227,15 @@ export const motoristaService = {
     return response.data;
   },
 
+  /**
+   * Confirma que uma viagem passada foi feita sem registro no app.
+   * Backend: PUT /v1/viagens/{id}/acao com MARCAR_REALIZADA
+   */
+  async marcarRealizada(viagemId: string): Promise<ViagemResponse> {
+    const response = await api.put<ViagemResponse>(`/viagens/${viagemId}/acao`, { acao: 'MARCAR_REALIZADA' });
+    return response.data;
+  },
+
   async finalizarViagem(viagemId: string): Promise<ViagemResponse> {
     const payload : ViagemAcaoRequest = {
       acao: 'FINALIZAR',
