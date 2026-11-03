@@ -60,7 +60,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     complemento: '',
   });
   const [salvando, setSalvando] = useState(false);
-  const [instituicoes, setInstituicoes] = useState<{ id: string; nome: string }[]>([]);
+  const [instituicoes, setInstituicoes] = useState<{ id: string; nome: string; sigla?: string | null }[]>([]);
   const [instituicaoId, setInstituicaoId] = useState('');
   const [instituicaoOriginal, setInstituicaoOriginal] = useState('');
 
