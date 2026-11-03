@@ -21,6 +21,9 @@ import SairDaConta from '../../components/SairDaConta';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
+import { organizarViagens } from '../../utils/viagensMotorista';
+import HistoricoViagens from '../../components/HistoricoViagens';
+import { useToast } from '../../components/Toast';
 
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
@@ -37,6 +40,8 @@ const DashboardMotorista = ({navigation}) => {
   }, []);
 
   const [proximaViagem, setProximaViagem] = useState(null);
+  const [historico, setHistorico] = useState([]);
+  const toast = useToast();
   const [loadingViagem, setLoadingViagem] = useState(true);
   const [alunosInfo, setAlunosInfo] = useState({
     totalAlunos: 0,
@@ -50,44 +55,12 @@ const DashboardMotorista = ({navigation}) => {
         const viagens = await motoristaService.listarViagens().then(unwrapItems);
         
         if (viagens && viagens.length > 0) {
-          const now = new Date();
-          now.setHours(0, 0, 0, 0);
+          // A próxima é a mais perto de agora; as que passaram sem registro vão para o histórico.
+          const organizadas = organizarViagens(viagens, new Date());
+          setHistorico(organizadas.historico);
 
-          const viagensFuturas = viagens
-            .filter((v) => {
-              // Exclude finished and cancelled trips
-              if (v.status === 'FINALIZADA' || v.status === 'CANCELADA') {
-                return false;
-              }
-              
-              const viagemDateStr = v.data.split('T')[0];
-              const [year, month, day] = viagemDateStr.split('-').map(Number);
-              const viagemDate = new Date(year, month - 1, day);
-              
-              if (v.horario_fim) {
-                const horarioFimStr = v.horario_fim.includes('T') 
-                  ? v.horario_fim.substring(11, 16) 
-                  : v.horario_fim.substring(0, 5);
-                const [horasFim, minutosFim] = horarioFimStr.split(':').map(Number);
-                const fimViagem = new Date(year, month - 1, day, horasFim, minutosFim);
-                
-                if (fimViagem < new Date()) {
-                  return false;
-                }
-              }
-              
-              return viagemDate >= now;
-            })
-            .sort((a, b) => {
-              const horarioA = a.horario_inicio || '00:00';
-              const horarioB = b.horario_inicio || '00:00';
-              const dateA = new Date(`${a.data}T${horarioA}`);
-              const dateB = new Date(`${b.data}T${horarioB}`);
-              return dateA - dateB;
-            });
-
-          if (viagensFuturas.length > 0) {
-            const proxima = viagensFuturas[0];
+          if (organizadas.proxima) {
+            const proxima = organizadas.proxima;
             const pontos = await pontoService.getPontosByRota(proxima.rota_id).then(unwrapItems);
             proxima.pontos = pontos;
             
@@ -130,6 +103,7 @@ const DashboardMotorista = ({navigation}) => {
           }
         } else {
           setProximaViagem(null);
+          setHistorico([]);
         }
       } catch (error) {
         setProximaViagem(null);
@@ -157,6 +131,17 @@ const DashboardMotorista = ({navigation}) => {
     recarregar();
     return navigation?.addListener ? navigation.addListener('focus', recarregar) : undefined;
   }, [navigation, recarregar]);
+
+  // O motorista confirma que a viagem passada foi feita, mesmo sem ter registrado pelo app.
+  const confirmarViagemFeita = async viagem => {
+    try {
+      await motoristaService.marcarRealizada(viagem.id);
+      toast.success('Viagem marcada como feita.');
+      await recarregar();
+    } catch (e) {
+      toast.error(e?.message || 'Não foi possível confirmar a viagem agora.');
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -260,6 +245,8 @@ const DashboardMotorista = ({navigation}) => {
             )}
           </View>
         )}
+
+        <HistoricoViagens itens={historico} onConfirmarFeita={confirmarViagemFeita} />
 
         {/* Ações rápidas */}
         {ehGestor ? (
