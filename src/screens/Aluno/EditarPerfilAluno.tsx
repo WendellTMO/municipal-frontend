@@ -22,6 +22,7 @@ import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
 import VersaoDoApp from '../../components/VersaoDoApp';
 import SubHeader from '../../components/SubHeader';
+import SeletorInstituicao from '../../components/SeletorInstituicao';
 import { alertar } from '../../utils/alerta';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
@@ -59,6 +60,9 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     complemento: '',
   });
   const [salvando, setSalvando] = useState(false);
+  const [instituicoes, setInstituicoes] = useState<{ id: string; nome: string }[]>([]);
+  const [instituicaoId, setInstituicaoId] = useState('');
+  const [instituicaoOriginal, setInstituicaoOriginal] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -71,7 +75,13 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
 
     const carregarEndereco = async () => {
       try {
-        const perfil = await alunoService.obterPerfil();
+        const [perfil, lista] = await Promise.all([alunoService.obterPerfil(), alunoService.listarInstituicoes()]);
+        const idAtual = ((perfil as { instituicao_id?: string }).instituicao_id as string) ?? '';
+        if (!cancelado) {
+          setInstituicoes(lista);
+          setInstituicaoId(idAtual);
+          setInstituicaoOriginal(idAtual);
+        }
         const e = perfil.endereco;
         if (cancelado || !e) return;
         setForm(prev => ({
@@ -113,6 +123,8 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
       nome: form.nome.trim(),
       telefone: onlyDigits(form.telefone) || undefined,
     };
+
+    if (instituicaoId && instituicaoId !== instituicaoOriginal) payload.instituicao_id = instituicaoId;
 
     const temEndereco =
       form.logradouro.trim() ||
@@ -217,6 +229,11 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
                 textContentType="telephoneNumber"
                 accessibilityLabel="Telefone"
               />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Instituição de ensino</Text>
+              <SeletorInstituicao instituicoes={instituicoes} valorId={instituicaoId} onEscolher={setInstituicaoId} />
             </View>
 
             <View style={styles.readOnlyGroup}>

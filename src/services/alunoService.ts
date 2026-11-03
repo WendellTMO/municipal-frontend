@@ -241,6 +241,12 @@ export const alunoService = {
     return response.data;
   },
 
+  /** GET /v1/instituicoes/: instituições cadastradas na prefeitura do aluno */
+  async listarInstituicoes(): Promise<{ id: string; nome: string }[]> {
+    const response = await api.get('/instituicoes/');
+    return unwrapItems(response.data) as { id: string; nome: string }[];
+  },
+
   /** GET /v1/alunos/me: perfil do aluno, com `endereco` salvo (ou null) */
   async obterPerfil(): Promise<AlunoResponse & { endereco?: EnderecoAluno | null }> {
     const response = await api.get<AlunoResponse & { endereco?: EnderecoAluno | null }>('/alunos/me');
