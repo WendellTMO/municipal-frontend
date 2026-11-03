@@ -241,10 +241,13 @@ export const alunoService = {
     return response.data;
   },
 
-  /** GET /v1/instituicoes/: instituições cadastradas na prefeitura do aluno */
-  async listarInstituicoes(): Promise<{ id: string; nome: string; sigla?: string | null }[]> {
-    const response = await api.get('/instituicoes/');
-    return unwrapItems(response.data) as { id: string; nome: string; sigla?: string | null }[];
+  /**
+   * Busca instituições da prefeitura do aluno por nome ou sigla (sem acento, melhores primeiro).
+   * Backend: GET /v1/instituicoes/busca?q=&limit=
+   */
+  async buscarInstituicoes(q: string, limit = 20): Promise<{ id: string; nome: string; sigla?: string | null; uf?: string | null }[]> {
+    const response = await api.get('/instituicoes/busca', { params: { q, limit } });
+    return unwrapItems(response.data) as { id: string; nome: string; sigla?: string | null; uf?: string | null }[];
   },
 
   /** GET /v1/alunos/me: perfil do aluno, com `endereco` salvo (ou null) */

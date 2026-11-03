@@ -60,7 +60,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     complemento: '',
   });
   const [salvando, setSalvando] = useState(false);
-  const [instituicoes, setInstituicoes] = useState<{ id: string; nome: string; sigla?: string | null }[]>([]);
+  const [instituicaoNome, setInstituicaoNome] = useState('');
   const [instituicaoId, setInstituicaoId] = useState('');
   const [instituicaoOriginal, setInstituicaoOriginal] = useState('');
 
@@ -75,12 +75,13 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
 
     const carregarEndereco = async () => {
       try {
-        const [perfil, lista] = await Promise.all([alunoService.obterPerfil(), alunoService.listarInstituicoes()]);
-        const idAtual = ((perfil as { instituicao_id?: string }).instituicao_id as string) ?? '';
+        const perfil = await alunoService.obterPerfil();
+        const dados = perfil as { instituicao_id?: string; escola?: string };
+        const idAtual = dados.instituicao_id ?? '';
         if (!cancelado) {
-          setInstituicoes(lista);
           setInstituicaoId(idAtual);
           setInstituicaoOriginal(idAtual);
+          setInstituicaoNome(dados.escola ?? '');
         }
         const e = perfil.endereco;
         if (cancelado || !e) return;
@@ -233,7 +234,15 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Instituição de ensino</Text>
-              <SeletorInstituicao instituicoes={instituicoes} valorId={instituicaoId} onEscolher={setInstituicaoId} />
+              <SeletorInstituicao
+                nomeAtual={instituicaoNome}
+                valorId={instituicaoId}
+                buscar={alunoService.buscarInstituicoes}
+                onEscolher={(id: string, nome: string) => {
+                  setInstituicaoId(id);
+                  setInstituicaoNome(nome);
+                }}
+              />
             </View>
 
             <View style={styles.readOnlyGroup}>
