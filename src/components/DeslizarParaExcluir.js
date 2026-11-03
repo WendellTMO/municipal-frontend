@@ -53,8 +53,13 @@ const DeslizarParaExcluir = ({ onExcluir, children }) => {
   return (
     <View style={styles.wrap}>
       <View style={styles.fundo} accessibilityElementsHidden importantForAccessibility="no">
-        <Icon name={IconNames.delete} size="lg" color={colors.primary.contrast} />
-        <Icon name={IconNames.delete} size="lg" color={colors.primary.contrast} />
+        {/* Puxar para a direita revela a lixeira da esquerda e puxar para a esquerda a da direita. */}
+        <Animated.View style={{ opacity: x.interpolate({ inputRange: [0, 24], outputRange: [0, 1], extrapolate: 'clamp' }) }}>
+          <Icon name={IconNames.delete} size="lg" color={colors.primary.contrast} />
+        </Animated.View>
+        <Animated.View style={{ opacity: x.interpolate({ inputRange: [-24, 0], outputRange: [1, 0], extrapolate: 'clamp' }) }}>
+          <Icon name={IconNames.delete} size="lg" color={colors.primary.contrast} />
+        </Animated.View>
       </View>
       <Animated.View style={{ transform: [{ translateX: x }] }} {...pan.panHandlers}>
         {children}
