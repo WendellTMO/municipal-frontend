@@ -8,7 +8,6 @@ import { colors } from '../theme';
 import Icon, { IconNames } from './Icon';
 import { assinarPosicao, definirPosicao, lerPosicao } from '../utils/fabStore';
 import { haptico } from '../utils/haptico';
-import { criarSegurar } from '../utils/segurar';
 import { useFeedbackPadraoAtual } from './FeedbackPadraoContext';
 import {
   decidirPosicao,
@@ -41,9 +40,8 @@ const RODAPE = 24 + (Platform.OS === 'ios' ? 34 : 0);
 const TOPO = 48;
 const MARGEM = 18;
 const TAMANHO = 56;
-// Pegar o botão: ele cresce um pouco. Segurar parado por este tempo abre o feedback.
+// Ao tocar, o botão cresce um pouco; soltar sem arrastar abre o feedback.
 const ESCALA_PEGO = 1.18;
-const SEGURAR_MS = 450;
 
 const FeedbackButton = ({ onPress }) => {
   const janela = useWindowDimensions();
@@ -62,15 +60,6 @@ const FeedbackButton = ({ onPress }) => {
   const inicio = useRef({ x: 0, y: 0 });
   const moveu = useRef(false);
   const escala = useRef(new Animated.Value(1)).current;
-  const segurar = useRef(
-    criarSegurar({
-      esperaMs: SEGURAR_MS,
-      aoSegurar: () => {
-        haptico('pegar');
-        atual.current.onPress();
-      },
-    }),
-  ).current;
 
   const aumentar = pego =>
     Animated.spring(escala, {
@@ -104,27 +93,25 @@ const FeedbackButton = ({ onPress }) => {
     moveu.current = false;
     haptico('toque');
     aumentar(true);
-    segurar.iniciar();
   };
 
   const mexer = g => {
     if (!moveu.current && !ehArraste(g.dx, g.dy)) return;
     moveu.current = true;
-    segurar.cancelar();
     setArrasto(posicaoDoToque(g));
   };
 
   const cancelarGesto = () => {
-    segurar.cancelar();
     aumentar(false);
     setArrasto(null);
   };
 
   const soltar = g => {
-    segurar.cancelar();
     aumentar(false);
-    // Toque rápido só devolve o botão ao tamanho normal; o feedback abre ao segurar.
-    if (!moveu.current) return;
+    if (!moveu.current) {
+      atual.current.onPress();
+      return;
+    }
     const solto = posicaoDoToque(g);
     const { width: w, height: h } = atual.current;
     definirPosicao(
