@@ -74,7 +74,11 @@ const HistoricoViagensMotorista = ({ navigation }) => {
           {itens.length === 0 ? (
             <Text style={styles.vazio}>Nenhuma viagem no histórico ainda.</Text>
           ) : (
-            <HistoricoViagens itens={itens} onConfirmarFeita={confirmarFeita} />
+            <HistoricoViagens
+              itens={itens}
+              onConfirmarFeita={confirmarFeita}
+              onAbrir={(viagem, situacao) => navigation.navigate('DetalheHistoricoViagem', { viagem, situacao })}
+            />
           )}
         </ScrollView>
       )}

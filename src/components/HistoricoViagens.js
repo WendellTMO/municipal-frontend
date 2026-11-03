@@ -11,7 +11,7 @@ import DialogoConfirmacao from './DialogoConfirmacao';
 import { formatarData } from '../utils/dataLocal';
 import { formatarHora } from '../utils/formatarHora';
 
-const SITUACAO = {
+export const SITUACAO = {
   feita: { texto: 'Feita', cor: colors.success.main },
   feita_sem_app: { texto: 'Feita, sem registro no app', cor: colors.warning.main },
   cancelada: { texto: 'Cancelada', cor: colors.neutral[500] },
@@ -20,7 +20,7 @@ const SITUACAO = {
 
 const quando = viagem => `${formatarData(viagem.data)} às ${formatarHora(viagem.horario_inicio)}`;
 
-const HistoricoViagens = ({ itens, onConfirmarFeita }) => {
+const HistoricoViagens = ({ itens, onConfirmarFeita, onAbrir }) => {
   const [confirmando, setConfirmando] = useState(null);
 
   const confirmar = async () => {
@@ -36,7 +36,11 @@ const HistoricoViagens = ({ itens, onConfirmarFeita }) => {
         const naoRealizada = situacao === 'nao_realizada';
         return (
           <View key={viagem.id} style={[styles.linha, naoRealizada && styles.linhaVermelha]}>
-            <View style={styles.topo}>
+            <Tappable
+              style={styles.topo}
+              onPress={() => onAbrir(viagem, situacao)}
+              accessibilityRole="button"
+              accessibilityLabel={`Ver detalhes da viagem de ${quando(viagem)}`}>
               <View style={styles.textos}>
                 <Text style={styles.quando}>{quando(viagem)}</Text>
                 {viagem.rota_nome ? (
@@ -46,7 +50,8 @@ const HistoricoViagens = ({ itens, onConfirmarFeita }) => {
                 ) : null}
                 <Text style={[styles.situacao, { color: info.cor }]}>{info.texto}</Text>
               </View>
-            </View>
+              <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} />
+            </Tappable>
             {naoRealizada ? (
               <Tappable
                 style={styles.botao}
