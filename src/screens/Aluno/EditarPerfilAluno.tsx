@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -23,6 +24,8 @@ import SairDaConta from '../../components/SairDaConta';
 import VersaoDoApp from '../../components/VersaoDoApp';
 import SubHeader from '../../components/SubHeader';
 import SeletorInstituicao from '../../components/SeletorInstituicao';
+import DialogoConfirmacao from '../../components/DialogoConfirmacao';
+import { assinaturaDoPerfil, perfilAlterado } from '../../utils/perfilAlterado';
 import { alertar } from '../../utils/alerta';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
@@ -63,6 +66,10 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
   const [instituicaoNome, setInstituicaoNome] = useState('');
   const [instituicaoId, setInstituicaoId] = useState('');
   const [instituicaoOriginal, setInstituicaoOriginal] = useState('');
+  // Assinatura do que está salvo no servidor; null até o perfil terminar de carregar.
+  const [salva, setSalva] = useState<string | null>(null);
+  const [carregado, setCarregado] = useState(false);
+  const [confirmandoSaida, setConfirmandoSaida] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -97,6 +104,8 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
         }));
       } catch {
         if (!cancelado) toast.error('Não foi possível carregar seu endereço. Tente novamente mais tarde.');
+      } finally {
+        if (!cancelado) setCarregado(true);
       }
     };
     carregarEndereco();
@@ -107,6 +116,30 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     // toast muda de identidade a cada render do provider; só recarrega quando o usuário muda
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Com o perfil carregado, o que está na tela é o que está salvo.
+  useEffect(() => {
+    if (carregado) setSalva(assinaturaDoPerfil(form, instituicaoId));
+    // só no momento em que termina de carregar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carregado]);
+
+  const alterado = perfilAlterado(salva, form, instituicaoId);
+
+  const voltar = useCallback(() => {
+    if (alterado) setConfirmandoSaida(true);
+    else navigation.goBack();
+  }, [alterado, navigation]);
+
+  // Android: o botão voltar do sistema também pergunta antes de descartar.
+  useEffect(() => {
+    if (!alterado) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setConfirmandoSaida(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, [alterado]);
 
   const setField = useCallback(
     (field: keyof FormState, value: string) =>
@@ -190,7 +223,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header */}
-        <SubHeader titulo="Meu perfil" onBack={() => navigation.goBack()} />
+        <SubHeader titulo="Meu perfil" onBack={voltar} />
 
         <ScrollView
           style={styles.scroll}
@@ -387,7 +420,38 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
           <SairDaConta />
           <VersaoDoApp />
         </ScrollView>
+
+        {/* Lembrete fixo: as mudanças só valem depois de salvar. */}
+        {alterado ? (
+          <View style={styles.lembrete} accessibilityLiveRegion="polite">
+            <Text style={styles.lembreteTexto}>Você tem alterações não salvas</Text>
+            <TouchableOpacity
+              style={[styles.lembreteBotao, salvando && styles.saveBtnDisabled]}
+              onPress={handleSalvar}
+              disabled={salvando}
+              accessibilityRole="button"
+              accessibilityLabel="Salvar alterações">
+              {salvando ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.lembreteBotaoTexto}>Salvar</Text>}
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </KeyboardAvoidingView>
+
+      <DialogoConfirmacao
+        visible={confirmandoSaida}
+        titulo="Sair sem salvar?"
+        resumo="As alterações que você fez no perfil vão ser perdidas."
+        onCancelar={() => setConfirmandoSaida(false)}
+        principal={{ texto: 'Continuar editando', cor: colors.primary.main, onPress: () => setConfirmandoSaida(false) }}
+        secundario={{
+          texto: 'Sair sem salvar',
+          cor: colors.error.main,
+          onPress: () => {
+            setConfirmandoSaida(false);
+            navigation.goBack();
+          },
+        }}
+      />
     </TelaSegura>
   );
 };
@@ -498,6 +562,26 @@ const styles = StyleSheet.create({
     ...shadows.md,
   },
   saveBtnDisabled: { opacity: 0.6 },
+  lembrete: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.warning.light,
+    borderTopWidth: 1,
+    borderTopColor: colors.warning.main,
+  },
+  lembreteTexto: { ...textStyles.body, flex: 1, color: colors.warning.contrast, fontWeight: '700' },
+  lembreteBotao: {
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary.main,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lembreteBotaoTexto: { ...textStyles.body, color: '#FFFFFF', fontWeight: '700' },
   saveBtnText: {
     ...textStyles.button,
     color: '#FFFFFF',
