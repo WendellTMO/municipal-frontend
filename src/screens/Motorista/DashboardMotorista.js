@@ -38,7 +38,6 @@ const DashboardMotorista = ({navigation}) => {
   }, []);
 
   const [proximaViagem, setProximaViagem] = useState(null);
-  const [naoRealizadas, setNaoRealizadas] = useState(0);
   const [loadingViagem, setLoadingViagem] = useState(true);
   const [alunosInfo, setAlunosInfo] = useState({
     totalAlunos: 0,
@@ -54,7 +53,6 @@ const DashboardMotorista = ({navigation}) => {
         if (viagens && viagens.length > 0) {
           // A próxima é a mais perto de agora; as que passaram sem registro vão para o histórico.
           const organizadas = organizarViagens(viagens, new Date());
-          setNaoRealizadas(organizadas.naoRealizadas);
 
           if (organizadas.proxima) {
             const proxima = organizadas.proxima;
@@ -100,7 +98,6 @@ const DashboardMotorista = ({navigation}) => {
           }
         } else {
           setProximaViagem(null);
-          setNaoRealizadas(0);
         }
       } catch (error) {
         setProximaViagem(null);
@@ -236,20 +233,9 @@ const DashboardMotorista = ({navigation}) => {
           style={styles.historicoEntrada}
           onPress={() => navigation.navigate('HistoricoViagensMotorista')}
           accessibilityRole="button"
-          accessibilityLabel={
-            naoRealizadas > 0
-              ? `Histórico de viagens, ${naoRealizadas} não realizada${naoRealizadas > 1 ? 's' : ''}`
-              : 'Histórico de viagens'
-          }>
+          accessibilityLabel="Histórico de viagens">
           <Icon name={IconNames.schedule} size="md" color={colors.primary.dark} />
-          <View style={styles.historicoTextos}>
-            <Text style={styles.historicoTitulo}>Histórico de viagens</Text>
-            <Text style={naoRealizadas > 0 ? styles.historicoAviso : styles.historicoSub}>
-              {naoRealizadas > 0
-                ? `${naoRealizadas} viagem${naoRealizadas > 1 ? 'ns' : ''} não realizada${naoRealizadas > 1 ? 's' : ''}`
-                : 'Feitas e canceladas'}
-            </Text>
-          </View>
+          <Text style={styles.historicoTitulo}>Histórico de viagens</Text>
           <Icon name={IconNames.chevronRight} size="md" color={colors.neutral[400]} />
         </Tappable>
 
@@ -315,10 +301,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     backgroundColor: colors.background.paper,
   },
-  historicoTextos: { flex: 1 },
-  historicoTitulo: { ...textStyles.body, fontWeight: '700', color: colors.text.primary },
-  historicoSub: { ...textStyles.bodySmall, color: colors.text.secondary },
-  historicoAviso: { ...textStyles.bodySmall, color: colors.error.main, fontWeight: '700' },
+  historicoTitulo: { ...textStyles.body, flex: 1, fontWeight: '700', color: colors.text.primary },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
