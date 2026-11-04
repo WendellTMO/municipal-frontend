@@ -25,7 +25,7 @@ import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 import { formatarData } from '../../utils/dataLocal';
 import { presencaTravada } from '../../utils/aBordo';
-import { chaveDoCache, guardarCache, lerCache } from '../../utils/cacheTela';
+import { CACHE_VIAGENS_ALUNO, chaveDoCache, guardarCache, lerCache } from '../../utils/cacheTela';
 import { useAuth } from '../../contexts/AuthContext';
 
 type RootParamList = Record<string, object | undefined>;
@@ -144,7 +144,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
   const toast = useToast();
 
   const { user } = useAuth();
-  const chaveViagens = chaveDoCache((user as { id?: string } | null)?.id, 'viagens-aluno');
+  const chaveViagens = chaveDoCache((user as { id?: string } | null)?.id, CACHE_VIAGENS_ALUNO);
   // Última lista vista: aparece na hora e a nova substitui por trás, sem spinner.
   const emCache = lerCache(chaveViagens) as ViagemAgendaUI[] | undefined;
 
