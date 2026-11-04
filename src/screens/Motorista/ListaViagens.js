@@ -19,10 +19,10 @@ import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
-import { formatarData, dataLocal } from '../../utils/dataLocal';
+import { formatarData } from '../../utils/dataLocal';
 import { organizarViagens } from '../../utils/viagensMotorista';
 import FolhaFiltroViagens from '../../components/FolhaFiltroViagens';
-import { contarViagens, filtrarViagens, filtroAtivo, filtroViagensPadrao } from '../../utils/filtroViagens';
+import { contarViagens, duracaoDaViagem, filtrarViagens, filtroAtivo, filtroViagensPadrao, formatarDuracao, rotasDasViagens } from '../../utils/filtroViagens';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -56,12 +56,7 @@ const ListaViagens = ({navigation, route}) => {
       return organizadas.proxima ? [organizadas.proxima, ...organizadas.proximas] : organizadas.proximas;
     }
 
-    // Ordenar por data (mais recentes primeiro)
-    return (viagensData || []).sort((a, b) => {
-      const dataA = dataLocal(a.data);
-      const dataB = dataLocal(b.data);
-      return dataB - dataA;
-    });
+    return viagensData || [];
   }, [isGestor, rotaFiltro?.id, soProximas]);
 
   // Use the useFetch hook
@@ -75,6 +70,7 @@ const ListaViagens = ({navigation, route}) => {
   const comFiltro = !soProximas;
   const contagem = contarViagens(viagens || [], filtro);
   const visiveis = comFiltro ? filtrarViagens(viagens || [], filtro) : viagens || [];
+  const rotas = rotaFiltro ? [] : rotasDasViagens(viagens || []);
   const temFiltro = comFiltro && filtroAtivo(filtro);
 
   const onRefresh = async () => {
@@ -189,6 +185,7 @@ const ListaViagens = ({navigation, route}) => {
                       </Text>
                       <Text style={styles.viagemHorario}>
                         {formatarHora(viagem.horario_inicio)}
+                        {duracaoDaViagem(viagem) ? `  ·  durou ${formatarDuracao(duracaoDaViagem(viagem))}` : ''}
                       </Text>
                     </View>
                     <View
@@ -221,6 +218,7 @@ const ListaViagens = ({navigation, route}) => {
         filtro={filtro}
         contagem={contagem}
         quantas={visiveis.length}
+        rotas={rotas}
         onMudar={setFiltro}
         onFechar={() => setFiltroAberto(false)}
       />
