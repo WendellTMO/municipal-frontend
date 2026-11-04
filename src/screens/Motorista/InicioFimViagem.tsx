@@ -49,7 +49,14 @@ import type { EstadoChegadas } from '../../utils/chegadasViagem';
 import { apagarChegadas, lerChegadas, salvarChegadas } from '../../utils/chegadasStorage';
 import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
 import { limparEnvio, registrarEnvio } from '../../utils/demandaLocalizacao';
-import { escutarDemandaPrimeiroPlano, iniciarServicoViagem, pararServicoViagem } from '../../services/servicoViagem';
+import {
+  abrirAjustesDeBateria,
+  abrirAjustesDoApp,
+  bateriaRestringida,
+  escutarDemandaPrimeiroPlano,
+  iniciarServicoViagem,
+  pararServicoViagem,
+} from '../../services/servicoViagem';
 import { horaCurta } from '../../utils/viagemPainel';
 import { lerPosicao, PERMISSAO_NEGADA } from '../../utils/lerPosicao';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
@@ -147,6 +154,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [alturaPainel, setAlturaPainel] = useState(0);
   // Por que o GPS não responde: 'negada' (permissão) ou 'indisponivel' (sem sinal). Some ao ler de novo.
   const [erroGps, setErroGps] = useState<'negada' | 'indisponivel' | null>(null);
+  // Aviso de que a localização pode parar com a tela bloqueada (serviço não subiu ou bateria restrita).
+  const [avisoBloqueio, setAvisoBloqueio] = useState<'servico' | 'bateria' | null>(null);
   // Cada aumento reinicia a leitura do GPS (voltar de outro app, botão Tentar de novo).
   const [reinicioGps, setReinicioGps] = useState(0);
 
@@ -261,7 +270,14 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     registrarEnvio(viagemIdRef.current, async () => {
       await lerEEnviar();
     });
-    iniciarServicoViagem();
+    iniciarServicoViagem().then(async (resultado) => {
+      if (parado) return;
+      if (resultado !== 'ok') {
+        setAvisoBloqueio('servico');
+      } else if (await bateriaRestringida()) {
+        setAvisoBloqueio('bateria');
+      }
+    });
 
     // Primeiro plano: o handler de segundo plano fica em index.js.
     const cancelarOnMessage = escutarDemandaPrimeiroPlano();
@@ -649,6 +665,37 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         ) : null}
 
         <View style={styles.floatingBottom} onLayout={(e) => setAlturaPainel(e.nativeEvent.layout.height)}>
+          {avisoBloqueio ? (
+            <View style={styles.avisoGps} accessibilityRole="alert">
+              <View style={styles.avisoGpsTextos}>
+                <Text style={styles.avisoGpsTitulo}>Com a tela bloqueada o sinal pode parar</Text>
+                <Text style={styles.avisoGpsTexto}>
+                  {avisoBloqueio === 'servico'
+                    ? 'Mantenha o BusKá aberto e permita a localização para o ônibus continuar aparecendo para os alunos.'
+                    : 'Tire a restrição de bateria do BusKá para o ônibus continuar aparecendo para os alunos.'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.avisoGpsBotao}
+                onPress={() => {
+                  if (avisoBloqueio === 'servico') abrirAjustesDoApp();
+                  else abrirAjustesDeBateria();
+                  setAvisoBloqueio(null);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Abrir os ajustes">
+                <Text style={styles.avisoGpsBotaoTexto}>Ajustar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.avisoGpsBotao}
+                onPress={() => setAvisoBloqueio(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Agora não">
+                <Text style={styles.avisoGpsBotaoTexto}>Agora não</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
           {erroGps ? (
             <View style={styles.avisoGps} accessibilityRole="alert">
               <View style={styles.avisoGpsTextos}>
