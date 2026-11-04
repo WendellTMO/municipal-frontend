@@ -1,10 +1,11 @@
 /**
- * Fileira de botões em que só um fica ligado (sentido, rota, ordem, atalho de período).
+ * Fileira de botões em que só um fica ligado (sentido, rota, ordem, atalho de período), com visto no ligado.
  * opcoes: [{ id, texto }]. Tocar no que já está ligado chama onEscolher com o mesmo id.
  */
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, textStyles } from '../theme';
+import Icon, { IconNames } from './Icon';
 import Tappable from './Tappable';
 
 const ChipsEscolha = ({ opcoes, valor, onEscolher }) => (
@@ -20,6 +21,7 @@ const ChipsEscolha = ({ opcoes, valor, onEscolher }) => (
           accessibilityRole="radio"
           accessibilityState={{ selected: ligado }}
           accessibilityLabel={opcao.texto}>
+          {ligado ? <Icon name={IconNames.check} size="sm" color="#FFFFFF" /> : null}
           <Text style={[styles.texto, ligado && styles.textoLigado]}>{opcao.texto}</Text>
         </Tappable>
       );
@@ -31,7 +33,9 @@ const styles = StyleSheet.create({
   fileira: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.base },
   chip: {
     minHeight: 44,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: spacing.md,
     borderRadius: 22,
     borderWidth: 1.5,

@@ -22,7 +22,8 @@ import { formatarHora } from '../../utils/formatarHora';
 import { formatarData } from '../../utils/dataLocal';
 import { organizarViagens } from '../../utils/viagensMotorista';
 import FolhaFiltroViagens from '../../components/FolhaFiltroViagens';
-import { contarViagens, duracaoDaViagem, filtrarViagens, filtroAtivo, filtroViagensPadrao, formatarDuracao, opcoesDasViagens } from '../../utils/filtroViagens';
+import FiltrosAtivos from '../../components/FiltrosAtivos';
+import { contarViagens, duracaoDaViagem, filtrarViagens, filtroAtivo, filtroViagensPadrao, formatarDuracao, opcoesDasViagens, resumoDoFiltro } from '../../utils/filtroViagens';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -73,6 +74,7 @@ const ListaViagens = ({navigation, route}) => {
   const opcoes = opcoesDasViagens(viagens || []);
   if (rotaFiltro) opcoes.rotas = [];
   const temFiltro = comFiltro && filtroAtivo(filtro);
+  const itensAtivos = temFiltro ? resumoDoFiltro(filtro, opcoes) : [];
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -157,12 +159,14 @@ const ListaViagens = ({navigation, route}) => {
           }>
           <View style={styles.content}>
             {temFiltro ? (
-              <Text style={styles.resumo}>
-                Mostrando {visiveis.length} de {viagens.length} viagens. Toque no funil para mudar.
-              </Text>
+              <FiltrosAtivos
+                itens={itensAtivos}
+                resumo={visiveis.length === 1 ? `Mostrando 1 de ${viagens.length} viagens` : `Mostrando ${visiveis.length} de ${viagens.length} viagens`}
+                onRemover={item => setFiltro(atual => ({ ...atual, ...item.limpar }))}
+              />
             ) : null}
             {visiveis.length === 0 ? (
-              <Text style={styles.semResultado}>Nenhuma viagem com esses filtros. As finalizadas ficam escondidas até você ligar Finalizadas no funil.</Text>
+              <Text style={styles.semResultado}>Nenhuma viagem com esses filtros. Toque num filtro acima para tirar, ou abra o funil para mudar.</Text>
             ) : null}
             {visiveis.map((viagem) => {
               const statusLabel = getStatusLabel(viagem.status);
@@ -170,7 +174,7 @@ const ListaViagens = ({navigation, route}) => {
               return (
                 <Tappable navega
                   key={viagem.id}
-                  style={styles.viagemCard}
+                  style={[styles.viagemCard, { borderLeftWidth: 5, borderLeftColor: statusColor }]}
                   onPress={() =>
                     navigation.navigate('DetalheViagemMotorista', {
                       viagem,
@@ -227,6 +231,7 @@ const ListaViagens = ({navigation, route}) => {
         filtro={filtro}
         contagem={contagem}
         quantas={visiveis.length}
+        total={(viagens || []).length}
         opcoes={opcoes}
         onMudar={setFiltro}
         onFechar={() => setFiltroAberto(false)}
@@ -255,7 +260,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primary.main,
   },
-  resumo: { ...textStyles.bodySmall, color: colors.text.secondary, marginBottom: spacing.base },
   semResultado: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.xl },
   container: {
     flex: 1,
