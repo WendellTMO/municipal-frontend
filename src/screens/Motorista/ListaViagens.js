@@ -21,6 +21,8 @@ import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 import { formatarData, dataLocal } from '../../utils/dataLocal';
 import { organizarViagens } from '../../utils/viagensMotorista';
+import ChipsFiltro from '../../components/ChipsFiltro';
+import { CHIPS_VIAGENS, contarViagens, filtrarViagens, filtroViagensPadrao } from '../../utils/filtroViagens';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -30,6 +32,7 @@ const ListaViagens = ({navigation, route}) => {
   const isGestor = user?.role?.toLowerCase() === 'gestor';
   
   const [refreshing, setRefreshing] = useState(false);
+  const [filtro, setFiltro] = useState(filtroViagensPadrao());
 
   // Fetch function
   const fetchViagens = useCallback(async () => {
@@ -66,6 +69,11 @@ const ListaViagens = ({navigation, route}) => {
     [rotaFiltro?.id, isGestor, soProximas],
     { showErrorToast: true }
   );
+
+  // "Próximas viagens" já é só o que vem pela frente: o filtro por situação não se aplica.
+  const comFiltro = !soProximas;
+  const contagem = contarViagens(viagens || []);
+  const visiveis = comFiltro ? filtrarViagens(viagens || [], filtro) : viagens || [];
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -136,7 +144,18 @@ const ListaViagens = ({navigation, route}) => {
             />
           }>
           <View style={styles.content}>
-            {(viagens || []).map((viagem) => {
+            {comFiltro ? (
+              <ChipsFiltro
+                chips={CHIPS_VIAGENS}
+                filtro={filtro}
+                contagem={contagem}
+                onAlternar={id => setFiltro(atual => ({ ...atual, [id]: !atual[id] }))}
+              />
+            ) : null}
+            {visiveis.length === 0 ? (
+              <Text style={styles.semResultado}>Nenhuma viagem com esses filtros. Toque em Finalizadas para ver as concluídas.</Text>
+            ) : null}
+            {visiveis.map((viagem) => {
               const statusLabel = getStatusLabel(viagem.status);
               const statusColor = getStatusColor(viagem.status);
               return (
@@ -190,6 +209,7 @@ const ListaViagens = ({navigation, route}) => {
 };
 
 const styles = StyleSheet.create({
+  semResultado: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.xl },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
