@@ -33,7 +33,7 @@ const RoteiroViagem = ({ navigation = null, route = null, onBack = null, direita
   }, [instituicoesRecebidas]);
 
   const instituicoes = instituicoesRecebidas || instituicoesBuscadas;
-  const paradas = montarParadas(pontosRota, visitados, instituicoes);
+  const paradas = montarParadas(pontosRota, visitados, instituicoes, viagem.alunos);
   const grupos = montarRoteiro(viagem.tipo, paradas, viagem.alunos);
 
   return (

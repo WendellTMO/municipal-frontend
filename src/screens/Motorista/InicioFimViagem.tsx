@@ -276,6 +276,26 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     };
   }, [viagemIniciada, reinicioGps]);
 
+  // Quem confirma ou cancela durante a viagem muda as paradas necessárias: relê os alunos a cada 20 s.
+  useEffect(() => {
+    if (!viagemIniciada || !viagemId) return;
+    const atualizar = async () => {
+      try {
+        const viagens = await motoristaService.listarViagens().then(unwrapItems);
+        const atual = (viagens as Record<string, unknown>[]).find((v) => v.id === viagemId);
+        if (!atual) return;
+        setViagem((anterior) => {
+          const antes = JSON.stringify((anterior as Record<string, unknown> | null)?.alunos ?? null);
+          return JSON.stringify(atual.alunos ?? null) === antes ? anterior : { ...(anterior as Record<string, unknown>), alunos: atual.alunos };
+        });
+      } catch {
+        // Sem rede a lista anterior continua valendo.
+      }
+    };
+    const timer = setInterval(atualizar, 20_000);
+    return () => clearInterval(timer);
+  }, [viagemIniciada, viagemId]);
+
   // Tela acesa enquanto a viagem anda: o motorista não pode ficar tocando para ela não apagar.
   useEffect(() => {
     if (!viagemIniciada) return;
@@ -285,7 +305,12 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   // Paradas válidas (com coordenadas), com estado e instituição de ensino.
   const pontosOrdenados = reordenarPontosPorInstituicao(pontosRota, instituicoes, ordemSalva);
   const pontosValidos = normalizeRoutePoints(pontosOrdenados);
-  const paradas = montarParadas(pontosValidos, chegadas.visitados, instituicoes);
+  const paradas = montarParadas(
+    pontosValidos,
+    chegadas.visitados,
+    instituicoes,
+    currentViagem?.alunos as Record<string, unknown>[] | undefined,
+  );
   const proxima = paradas.find((p) => p.estado === 'proxima') ?? null;
   const gruposConfirmados = agruparConfirmadosPorInstituicao(
     (currentViagem?.alunos as Record<string, unknown>[] | undefined) ?? [],
