@@ -12,6 +12,7 @@ import { useFeedbackPadraoAtual } from './FeedbackPadraoContext';
 import {
   decidirPosicao,
   ehArraste,
+  TEMPO_SEGURAR_MS,
   encaixar,
   limitarBaixo,
   limitarPonto,
@@ -59,6 +60,8 @@ const FeedbackButton = ({ onPress }) => {
   atual.current = { width, height, posicao, onPress };
   const inicio = useRef({ x: 0, y: 0 });
   const moveu = useRef(false);
+  const timerSegurar = useRef(null);
+  const abriuSegurando = useRef(false);
   const escala = useRef(new Animated.Value(1)).current;
 
   const aumentar = pego =>
@@ -91,23 +94,42 @@ const FeedbackButton = ({ onPress }) => {
     const baixo = limitarBaixo(p.baixo, h, TAMANHO, TOPO, RODAPE);
     inicio.current = { x: xDoLado(p.lado, w, TAMANHO, MARGEM), y: h - TAMANHO - baixo };
     moveu.current = false;
+    abriuSegurando.current = false;
     haptico('toque');
     aumentar(true);
+    // Parado por meio segundo: abre o feedback agora, sem esperar o dedo soltar.
+    clearTimeout(timerSegurar.current);
+    timerSegurar.current = setTimeout(() => {
+      if (moveu.current) return;
+      abriuSegurando.current = true;
+      haptico('pegar');
+      aumentar(false);
+      atual.current.onPress();
+    }, TEMPO_SEGURAR_MS);
   };
 
   const mexer = g => {
     if (!moveu.current && !ehArraste(g.dx, g.dy)) return;
+    clearTimeout(timerSegurar.current);
+    if (abriuSegurando.current) return;
     moveu.current = true;
     setArrasto(posicaoDoToque(g));
   };
 
   const cancelarGesto = () => {
+    clearTimeout(timerSegurar.current);
     aumentar(false);
     setArrasto(null);
   };
 
   const soltar = g => {
+    clearTimeout(timerSegurar.current);
     aumentar(false);
+    // O feedback já abriu enquanto segurava: soltar não abre de novo.
+    if (abriuSegurando.current) {
+      abriuSegurando.current = false;
+      return;
+    }
     if (!moveu.current) {
       atual.current.onPress();
       return;
