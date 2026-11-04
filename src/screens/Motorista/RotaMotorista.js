@@ -189,7 +189,13 @@ const RotaMotorista = ({ navigation }) => {
     const veiculo = onibusMap[rota.veiculo_id];
 
     return (
-      <View key={rota.id} style={styles.rotaCard}>
+      <Tappable
+        navega
+        sombra={false}
+        key={rota.id}
+        style={styles.rotaCard}
+        onPress={() => navigation.navigate('ListaViagens', { rota })}
+        accessibilityLabel={`Ver as viagens da rota ${rota.nome}`}>
         {/* Card Header */}
         <View style={styles.rotaCardHeader}>
           <View style={styles.rotaCardTitleRow}>
@@ -230,20 +236,19 @@ const RotaMotorista = ({ navigation }) => {
 
         {/* Horários */}
         <View style={styles.horariosSection}>
-          <Text style={styles.horariosSectionTitle}>Horários de Operação</Text>
+          <Text style={styles.horariosSectionTitle}>Horário e dias de operação</Text>
           {renderHorarios(rota.id)}
         </View>
 
-        {/* Actions */}
-        <View style={styles.actionsRow}>
-          <Tappable navega
-            style={styles.actionBtn}
-            onPress={() => navigation.navigate('ListaViagens', { rota })}>
-            <Icon name={IconNames.schedule} size="sm" color={colors.text.inverse} />
-            <Text style={styles.actionBtnText}>Viagens</Text>
-          </Tappable>
+        {/* O cartão inteiro abre as viagens da rota. */}
+        <View style={styles.verViagens}>
+          <Text style={styles.verViagensTexto}>Ver viagens</Text>
+          <Icon name={IconNames.chevronRight} size="sm" color={colors.primary.dark} />
+        </View>
 
-          {isGestor && (
+        {/* Ações do gestor */}
+        {isGestor && (
+        <View style={styles.actionsRow}>
             <>
               <Tappable navega
                 style={[styles.actionBtn, styles.actionBtnSecondary]}
@@ -266,9 +271,9 @@ const RotaMotorista = ({ navigation }) => {
                 <Text style={styles.actionBtnText}>Nova Viagem</Text>
               </Tappable>
             </>
-          )}
         </View>
-      </View>
+        )}
+      </Tappable>
     );
   };
 
@@ -519,6 +524,17 @@ const styles = StyleSheet.create({
   noHorariosText: { ...textStyles.caption, color: colors.text.hint, flex: 1 },
 
   // Actions
+  verViagens: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+  },
+  verViagensTexto: { ...textStyles.bodySmall, color: colors.primary.dark, fontWeight: '700' },
   actionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
