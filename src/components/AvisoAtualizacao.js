@@ -42,6 +42,8 @@ const AvisoAtualizacao = () => {
     try {
       await Linking.openURL(pendente.apkUrl);
       setErroAbrir(false);
+      // O download segue no navegador: a nota opcional não fica na frente do app ao voltar.
+      if (!obrigatoria) depois();
     } catch (e) {
       setErroAbrir(true);
     }
