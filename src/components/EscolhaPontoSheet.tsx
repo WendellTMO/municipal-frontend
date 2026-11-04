@@ -158,7 +158,7 @@ const EscolhaPontoSheet = ({
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title} accessibilityRole="header">
-              {tituloEscolha(sentido)}
+              {confirmandoOutra ? 'Outra instituição' : tituloEscolha(sentido)}
             </Text>
             <Tappable onPress={onClose} sombra={false} accessibilityLabel="Fechar" style={styles.fechar}>
               <Icon name={IconNames.close} size="md" color={colors.text.secondary} />
@@ -167,7 +167,6 @@ const EscolhaPontoSheet = ({
 
           {confirmandoOutra ? (
             <View accessibilityRole="alert">
-              <Text style={styles.outraTitulo}>Outra instituição</Text>
               <Text style={styles.outraTexto}>{mensagemOutra}</Text>
               <Tappable
                 style={styles.confirmar}
@@ -351,7 +350,6 @@ const styles = StyleSheet.create({
   opcaoTextoAtiva: { color: '#FFFFFF', fontWeight: '700' as const },
   instituicao: { ...textStyles.body, color: colors.text.secondary, marginTop: spacing.sm },
   instituicaoBloco: { marginBottom: spacing.sm },
-  outraTitulo: { ...textStyles.h4, color: colors.text.primary, marginBottom: spacing.sm },
   outraTexto: { ...textStyles.body, color: colors.text.secondary, lineHeight: 24, marginBottom: spacing.base },
   voltarBotao: { alignItems: 'center', justifyContent: 'center', minHeight: 52, marginTop: spacing.sm },
   voltarTexto: { ...textStyles.h5, color: colors.primary.main, fontWeight: '700' as const },
