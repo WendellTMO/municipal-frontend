@@ -239,3 +239,49 @@ export const filtroAtivo = filtro => {
   }
   return false;
 };
+
+const diaMes = data => `${doisDigitos(data.getDate())}/${doisDigitos(data.getMonth() + 1)}`;
+
+const textoDoPeriodo = filtro => {
+  const de = lerDataDigitada(filtro.de);
+  const ate = lerDataDigitada(filtro.ate);
+  if (de && ate) return de.getTime() === ate.getTime() ? diaMes(de) : `${diaMes(de)} a ${diaMes(ate)}`;
+  if (de) return `a partir de ${diaMes(de)}`;
+  if (ate) return `até ${diaMes(ate)}`;
+  return '';
+};
+
+// O que está diferente do padrão, um item por filtro: [{ id, texto, limpar }]. `limpar` é o pedaço do
+// filtro que volta ao padrão quando o item é removido. A tela mostra isto como botões com X.
+export const resumoDoFiltro = (filtro, opcoes) => {
+  const padrao = filtroViagensPadrao();
+  const itens = [];
+  const busca = String(filtro.busca || '').trim();
+  if (busca) itens.push({ id: 'busca', texto: `"${busca}"`, limpar: { busca: '' } });
+  for (const chip of CHIPS_VIAGENS) {
+    if (filtro[chip.id] === padrao[chip.id]) continue;
+    const prefixo = filtro[chip.id] ? 'Com' : 'Sem';
+    itens.push({ id: chip.id, texto: `${prefixo} ${chip.texto.toLowerCase()}`, limpar: { [chip.id]: padrao[chip.id] } });
+  }
+  if (filtro.tipo !== padrao.tipo) {
+    const tipo = TIPOS_VIAGEM.find(t => t.id === filtro.tipo);
+    itens.push({ id: 'tipo', texto: `Só ${(tipo ? tipo.texto : filtro.tipo).toLowerCase()}`, limpar: { tipo: padrao.tipo } });
+  }
+  if (filtro.rota) {
+    const rota = (opcoes?.rotas || []).find(r => r.id === filtro.rota);
+    itens.push({ id: 'rota', texto: rota ? rota.texto : 'Rota', limpar: { rota: '' } });
+  }
+  if (filtro.motorista) itens.push({ id: 'motorista', texto: filtro.motorista, limpar: { motorista: '' } });
+  if (filtro.veiculo) itens.push({ id: 'veiculo', texto: filtro.veiculo, limpar: { veiculo: '' } });
+  const periodo = textoDoPeriodo(filtro);
+  if (periodo) itens.push({ id: 'periodo', texto: periodo, limpar: { de: '', ate: '' } });
+  if (filtro.alunos !== padrao.alunos) {
+    const alunos = ALUNOS_VIAGEM.find(a => a.id === filtro.alunos);
+    itens.push({ id: 'alunos', texto: `Alunos: ${alunos ? alunos.texto.toLowerCase() : filtro.alunos}`, limpar: { alunos: padrao.alunos } });
+  }
+  if (filtro.ordem !== padrao.ordem) {
+    const ordem = ORDENS_VIAGEM.find(o => o.id === filtro.ordem);
+    itens.push({ id: 'ordem', texto: ordem ? ordem.texto : filtro.ordem, limpar: { ordem: padrao.ordem } });
+  }
+  return itens;
+};

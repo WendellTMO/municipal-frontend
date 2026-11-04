@@ -8,6 +8,7 @@ import {
   lerDataDigitada,
   ordenarViagens,
   periodoRapido,
+  resumoDoFiltro,
   opcoesDasViagens,
 } from './filtroViagens';
 
@@ -162,4 +163,20 @@ test('viagem sem motorista entra como Sem Motorista nas opções', () => {
 
 test('mês passado no atalho de período', () => {
   expect(periodoRapido('mesPassado', new Date(2026, 0, 15))).toEqual({ de: '2025-12-01', ate: '2025-12-31' });
+});
+
+test('resumo do filtro: nada no padrão e um item para cada mudança, com o que limpar', () => {
+  expect(resumoDoFiltro(filtroViagensPadrao(), {})).toEqual([]);
+  const filtro = { ...filtroViagensPadrao(), finalizadas: true, canceladas: false, tipo: 'VOLTA', de: '2026-11-01', ate: '2026-11-30', ordem: 'longas', busca: ' maria ' };
+  const itens = resumoDoFiltro(filtro, {});
+  expect(itens.map(i => i.texto)).toEqual(['"maria"', 'Sem canceladas', 'Com finalizadas', 'Só volta', '01/11 a 30/11', 'Mais longas']);
+  const periodo = itens.find(i => i.id === 'periodo');
+  expect(periodo.limpar).toEqual({ de: '', ate: '' });
+  expect(filtroAtivo({ ...filtro, ...periodo.limpar })).toBe(true);
+});
+
+test('resumo: rota pelo nome e só um dos lados do período', () => {
+  const opcoes = { rotas: [{ id: 'r1', texto: 'Galante' }] };
+  const filtro = { ...filtroViagensPadrao(), rota: 'r1', ate: '2026-11-30' };
+  expect(resumoDoFiltro(filtro, opcoes).map(i => i.texto)).toEqual(['Galante', 'até 30/11']);
 });

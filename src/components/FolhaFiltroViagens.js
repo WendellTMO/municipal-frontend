@@ -1,14 +1,17 @@
 /**
- * Folha de baixo do funil em "Minhas Viagens": busca, situação (botões que ligam e desligam), sentido, rota,
- * motorista, veículo, período (atalhos ou datas De / Até), alunos confirmados e ordem. Cada toque já vale: o botão do fim só mostra quantas viagens ficaram e fecha.
- * Na web as datas usam o seletor do navegador. No celular o motorista digita DD/MM/AAAA.
+ * Folha de baixo do funil em "Minhas Viagens". Em cima, o que se usa mais: busca, situação, sentido,
+ * período e ordem. Rota, motorista, veículo e alunos ficam em "Mais filtros", que abre sozinho quando
+ * algum deles está valendo. Cada toque já filtra a lista por trás: o botão do fim mostra quantas
+ * viagens ficaram e fecha. Na web as datas usam o seletor do navegador. No celular digita DD/MM/AAAA.
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { borderRadius, colors, spacing, textStyles } from '../theme';
+import Icon, { IconNames } from './Icon';
 import ModalApp from './ModalApp';
 import ChipsFiltro from './ChipsFiltro';
 import ChipsEscolha from './ChipsEscolha';
+import Tappable from './Tappable';
 import {
   ALUNOS_VIAGEM,
   CHIPS_VIAGENS,
@@ -19,6 +22,16 @@ import {
   filtroViagensPadrao,
   periodoRapido,
 } from '../utils/filtroViagens';
+
+// Bolinha de cada situação nos botões desligados, as mesmas cores dos selos da lista.
+const COR_DA_SITUACAO = {
+  aIniciar: colors.warning.main,
+  emAndamento: colors.primary.dark,
+  naoRealizadas: colors.text.secondary,
+  canceladas: colors.error.main,
+  finalizadas: colors.success.main,
+};
+const CHIPS_COM_COR = CHIPS_VIAGENS.map(chip => ({ ...chip, cor: COR_DA_SITUACAO[chip.id] }));
 
 const CampoData = ({ rotulo, valor, onMudar }) => (
   <View style={styles.campoData}>
@@ -50,13 +63,35 @@ const CampoData = ({ rotulo, valor, onMudar }) => (
   </View>
 );
 
-const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, opcoes, onMudar, onFechar }) => {
+const Secao = ({ titulo, children }) => (
+  <View style={styles.secao}>
+    <Text style={styles.secaoTitulo}>{titulo}</Text>
+    {children}
+  </View>
+);
+
+const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, total, opcoes, onMudar, onFechar }) => {
   const mudar = parcial => onMudar({ ...filtro, ...parcial });
+  const padrao = filtroViagensPadrao();
+
   let atalhoLigado = '';
   for (const atalho of PERIODOS_RAPIDOS) {
     const periodo = periodoRapido(atalho.id);
     if (filtro.de === periodo.de && filtro.ate === periodo.ate) atalhoLigado = atalho.id;
   }
+
+  // "Mais filtros": quantos estão valendo e se a seção abre sozinha.
+  let avancadosAtivos = 0;
+  for (const chave of ['rota', 'motorista', 'veiculo', 'alunos']) {
+    if (filtro[chave] !== padrao[chave]) avancadosAtivos += 1;
+  }
+  const [maisAberto, setMaisAberto] = useState(false);
+  useEffect(() => {
+    if (visible) setMaisAberto(avancadosAtivos > 0);
+    // só ao abrir a folha: mexer num filtro lá dentro não pode fechar a seção
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
   return (
     <ModalApp visible={visible} transparent animationType="slide" onRequestClose={onFechar} accessibilityViewIsModal>
       <View style={styles.fundo}>
@@ -69,101 +104,136 @@ const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, opcoes, onMuda
         />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.folha}>
           <View style={styles.alca} accessibilityElementsHidden />
-          <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
+          <View style={styles.cabecalho}>
             <Text style={styles.titulo} accessibilityRole="header">
               Filtrar viagens
             </Text>
-
-            <TextInput
-              style={styles.busca}
-              value={filtro.busca}
-              onChangeText={busca => mudar({ busca })}
-              placeholder="Buscar rota, motorista, placa..."
-              placeholderTextColor={colors.text.hint}
-              returnKeyType="search"
-              autoCorrect={false}
-              accessibilityLabel="Buscar viagens"
-            />
-
-            <Text style={styles.secao}>Situação</Text>
-            <ChipsFiltro
-              chips={CHIPS_VIAGENS}
-              filtro={filtro}
-              contagem={contagem}
-              onAlternar={id => mudar({ [id]: !filtro[id] })}
-            />
-
-            <Text style={styles.secao}>Sentido</Text>
-            <ChipsEscolha opcoes={TIPOS_VIAGEM} valor={filtro.tipo} onEscolher={tipo => mudar({ tipo })} />
-
-            {opcoes.rotas.length > 1 ? (
-              <>
-                <Text style={styles.secao}>Rota</Text>
-                <ChipsEscolha
-                  opcoes={[{ id: '', texto: 'Todas' }, ...opcoes.rotas]}
-                  valor={filtro.rota}
-                  onEscolher={rota => mudar({ rota })}
-                />
-              </>
-            ) : null}
-
-            {opcoes.motoristas.length > 1 ? (
-              <>
-                <Text style={styles.secao}>Motorista</Text>
-                <ChipsEscolha
-                  opcoes={[{ id: '', texto: 'Todos' }, ...opcoes.motoristas]}
-                  valor={filtro.motorista}
-                  onEscolher={motorista => mudar({ motorista })}
-                />
-              </>
-            ) : null}
-
-            {opcoes.veiculos.length > 1 ? (
-              <>
-                <Text style={styles.secao}>Veículo</Text>
-                <ChipsEscolha
-                  opcoes={[{ id: '', texto: 'Todos' }, ...opcoes.veiculos]}
-                  valor={filtro.veiculo}
-                  onEscolher={veiculo => mudar({ veiculo })}
-                />
-              </>
-            ) : null}
-
-            <Text style={styles.secao}>Período</Text>
-            <ChipsEscolha
-              opcoes={PERIODOS_RAPIDOS}
-              valor={atalhoLigado}
-              onEscolher={id => mudar(id === atalhoLigado ? { de: '', ate: '' } : periodoRapido(id))}
-            />
-            <View style={styles.datas}>
-              <CampoData rotulo="De" valor={filtro.de} onMudar={de => mudar({ de })} />
-              <CampoData rotulo="Até" valor={filtro.ate} onMudar={ate => mudar({ ate })} />
-            </View>
-
-            <Text style={styles.secao}>Alunos confirmados</Text>
-            <ChipsEscolha opcoes={ALUNOS_VIAGEM} valor={filtro.alunos} onEscolher={alunos => mudar({ alunos })} />
-
-            <Text style={styles.secao}>Ordenar por</Text>
-            <ChipsEscolha opcoes={ORDENS_VIAGEM} valor={filtro.ordem} onEscolher={ordem => mudar({ ordem })} />
-            <Text style={styles.dica}>Mais longas e mais curtas usam o tempo real da viagem. Viagem sem tempo medido vai para o fim.</Text>
-
             {filtroAtivo(filtro) ? (
               <TouchableOpacity
                 style={styles.limpar}
                 onPress={() => onMudar(filtroViagensPadrao())}
                 accessibilityRole="button"
                 accessibilityLabel="Limpar filtros">
-                <Text style={styles.limparTexto}>Limpar filtros</Text>
+                <Text style={styles.limparTexto}>Limpar</Text>
               </TouchableOpacity>
             ) : null}
+            <TouchableOpacity style={styles.fechar} onPress={onFechar} accessibilityRole="button" accessibilityLabel="Fechar">
+              <Icon name={IconNames.close} size="md" color={colors.text.secondary} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
+            <View style={styles.buscaCaixa}>
+              <Icon name={IconNames.search} size="md" color={colors.text.hint} />
+              <TextInput
+                style={styles.busca}
+                value={filtro.busca}
+                onChangeText={busca => mudar({ busca })}
+                placeholder="Buscar rota, motorista, placa..."
+                placeholderTextColor={colors.text.hint}
+                returnKeyType="search"
+                autoCorrect={false}
+                accessibilityLabel="Buscar viagens"
+              />
+              {filtro.busca ? (
+                <TouchableOpacity onPress={() => mudar({ busca: '' })} accessibilityRole="button" accessibilityLabel="Apagar busca">
+                  <Icon name={IconNames.close} size="md" color={colors.text.secondary} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            <Secao titulo="Situação">
+              <ChipsFiltro
+                chips={CHIPS_COM_COR}
+                filtro={filtro}
+                contagem={contagem}
+                onAlternar={id => mudar({ [id]: !filtro[id] })}
+              />
+            </Secao>
+
+            <Secao titulo="Sentido">
+              <ChipsEscolha opcoes={TIPOS_VIAGEM} valor={filtro.tipo} onEscolher={tipo => mudar({ tipo })} />
+            </Secao>
+
+            <Secao titulo="Período">
+              <ChipsEscolha
+                opcoes={PERIODOS_RAPIDOS}
+                valor={atalhoLigado}
+                onEscolher={id => mudar(id === atalhoLigado ? { de: '', ate: '' } : periodoRapido(id))}
+              />
+              <View style={styles.datas}>
+                <CampoData rotulo="De" valor={filtro.de} onMudar={de => mudar({ de })} />
+                <CampoData rotulo="Até" valor={filtro.ate} onMudar={ate => mudar({ ate })} />
+              </View>
+            </Secao>
+
+            <Secao titulo="Ordenar por">
+              <ChipsEscolha opcoes={ORDENS_VIAGEM} valor={filtro.ordem} onEscolher={ordem => mudar({ ordem })} />
+              <Text style={styles.dica}>Mais longas e mais curtas usam o tempo real da viagem. Viagem sem tempo medido vai para o fim.</Text>
+            </Secao>
+
+            <View style={styles.mais}>
+              <Tappable
+                sombra={false}
+                style={styles.maisCabecalho}
+                onPress={() => setMaisAberto(aberto => !aberto)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: maisAberto }}
+                accessibilityLabel="Mais filtros">
+                <Text style={styles.maisTitulo}>Mais filtros</Text>
+                {avancadosAtivos > 0 ? (
+                  <View style={styles.maisContagem}>
+                    <Text style={styles.maisContagemTexto}>{avancadosAtivos}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.maisEspaco} />
+                <Icon name={maisAberto ? IconNames.expandLess : IconNames.expandMore} size="lg" color={colors.primary.dark} />
+              </Tappable>
+              {maisAberto ? (
+                <View style={styles.maisCorpo}>
+                  {opcoes.rotas.length > 1 ? (
+                    <Secao titulo="Rota">
+                      <ChipsEscolha
+                        opcoes={[{ id: '', texto: 'Todas' }, ...opcoes.rotas]}
+                        valor={filtro.rota}
+                        onEscolher={rota => mudar({ rota })}
+                      />
+                    </Secao>
+                  ) : null}
+                  {opcoes.motoristas.length > 1 ? (
+                    <Secao titulo="Motorista">
+                      <ChipsEscolha
+                        opcoes={[{ id: '', texto: 'Todos' }, ...opcoes.motoristas]}
+                        valor={filtro.motorista}
+                        onEscolher={motorista => mudar({ motorista })}
+                      />
+                    </Secao>
+                  ) : null}
+                  {opcoes.veiculos.length > 1 ? (
+                    <Secao titulo="Veículo">
+                      <ChipsEscolha
+                        opcoes={[{ id: '', texto: 'Todos' }, ...opcoes.veiculos]}
+                        valor={filtro.veiculo}
+                        onEscolher={veiculo => mudar({ veiculo })}
+                      />
+                    </Secao>
+                  ) : null}
+                  <Secao titulo="Alunos confirmados">
+                    <ChipsEscolha opcoes={ALUNOS_VIAGEM} valor={filtro.alunos} onEscolher={alunos => mudar({ alunos })} />
+                  </Secao>
+                </View>
+              ) : null}
+            </View>
           </ScrollView>
+
           <View style={styles.rodape}>
             <TouchableOpacity
-              style={styles.ver}
+              style={[styles.ver, quantas === 0 && styles.verVazio]}
               onPress={onFechar}
               accessibilityRole="button"
               accessibilityLabel={`Ver ${quantas} viagens`}>
               <Text style={styles.verTexto}>{quantas === 1 ? 'Ver 1 viagem' : `Ver ${quantas} viagens`}</Text>
+              <Text style={styles.verSub}>de {total} no total</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -182,21 +252,28 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   alca: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.neutral[300], alignSelf: 'center' },
+  cabecalho: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  titulo: { ...textStyles.h3, fontSize: 24, lineHeight: 30, color: colors.text.primary, flex: 1 },
+  limpar: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.md },
+  limparTexto: { ...textStyles.button, fontSize: 18, color: colors.primary.dark },
+  fechar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.neutral[100], alignItems: 'center', justifyContent: 'center' },
   conteudo: { padding: spacing.lg, paddingBottom: spacing.base },
-  titulo: { ...textStyles.h3, fontSize: 24, lineHeight: 30, color: colors.text.primary, marginBottom: spacing.base },
-  secao: { ...textStyles.h5, color: colors.text.primary, marginBottom: spacing.sm },
-  datas: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.base },
-  busca: {
+  buscaCaixa: {
     minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     borderWidth: 1.5,
     borderColor: colors.border.light,
-    borderRadius: borderRadius.lg,
+    borderRadius: 26,
     backgroundColor: colors.neutral[50],
     paddingHorizontal: spacing.md,
-    fontSize: 18,
-    color: colors.text.primary,
-    marginBottom: spacing.base,
+    marginBottom: spacing.lg,
   },
+  busca: { flex: 1, minWidth: 0, fontSize: 18, color: colors.text.primary, paddingVertical: spacing.sm },
+  secao: { marginBottom: spacing.xs },
+  secaoTitulo: { ...textStyles.h5, color: colors.text.primary, marginBottom: spacing.sm },
+  datas: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.base },
   campoData: { flex: 1, minWidth: 0, gap: spacing.xs },
   campoRotulo: { ...textStyles.bodySmall, color: colors.text.secondary },
   campo: {
@@ -210,8 +287,21 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   dica: { ...textStyles.caption, color: colors.text.secondary, marginTop: -spacing.sm, marginBottom: spacing.base },
-  limpar: { minHeight: 48, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
-  limparTexto: { ...textStyles.button, fontSize: 18, color: colors.primary.dark },
+  mais: { borderRadius: borderRadius.lg, backgroundColor: colors.primary.lighter, overflow: 'hidden' },
+  maisCabecalho: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md },
+  maisTitulo: { ...textStyles.h4, color: colors.primary.dark },
+  maisContagem: {
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.primary.main,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  maisContagemTexto: { ...textStyles.caption, color: '#FFFFFF', fontWeight: '700' },
+  maisEspaco: { flex: 1 },
+  maisCorpo: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, backgroundColor: colors.background.paper },
   rodape: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.lg },
   ver: {
     minHeight: 60,
@@ -219,8 +309,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary.dark,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: spacing.sm,
   },
+  verVazio: { backgroundColor: colors.neutral[600] },
   verTexto: { color: '#FFFFFF', fontSize: 20, fontWeight: '700' },
+  verSub: { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
 });
 
 export default FolhaFiltroViagens;
