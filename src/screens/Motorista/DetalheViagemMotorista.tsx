@@ -294,13 +294,13 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
       <FolhaMotivos
         visible={confirmandoCancelar}
         titulo="Por que a viagem não vai acontecer?"
-        resumo="Ao escolher, os alunos confirmados e o gestor recebem o aviso na hora."
+        resumo="Ao escolher, todos os alunos da rota e o gestor recebem o aviso na hora."
         carregandoIndice={cancelando ? motivoEnviando : -1}
         onCancelar={() => setConfirmandoCancelar(false)}
         opcoes={[
           { texto: 'Problema no ônibus', descricao: 'Quebrou ou está na oficina', icone: IconNames.bus, onPress: () => cancelarComMotivo('problema no ônibus', 0) },
           { texto: 'Feriado ou sem aula', descricao: 'Não há aula nesse dia', icone: IconNames.calendarToday, onPress: () => cancelarComMotivo('feriado ou sem aula', 1) },
-          { texto: 'Outro imprevisto', descricao: 'Aviso geral, sem detalhar', icone: IconNames.warning, onPress: () => cancelarComMotivo('imprevisto', 2) },
+          { texto: 'Outro motivo', descricao: 'Você escreve o que aconteceu', icone: IconNames.edit, pedirTexto: true, onPress: (digitado?: string) => cancelarComMotivo(digitado ?? 'imprevisto', 2) },
         ]}
       />
     </TelaSegura>
