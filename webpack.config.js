@@ -44,7 +44,9 @@ module.exports = {
 
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
+    // Em produção o hash do conteúdo vai no nome: o servidor pode guardar o arquivo por um ano e uma
+    // publicação nova muda o nome, então o navegador baixa o novo sem recarga forçada.
+    filename: isProd ? '[name].[contenthash:8].js' : 'bundle.js',
     publicPath: '/',
     clean: true,
   },
