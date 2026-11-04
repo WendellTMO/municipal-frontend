@@ -284,7 +284,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     (currentViagem?.alunos as Record<string, unknown>[] | undefined) ?? [],
   );
   const grupos = montarRoteiro(currentViagem?.tipo, paradas, currentViagem?.alunos as Record<string, unknown>[] | undefined);
-  const todasFeitas = pontosValidos.length > 0 && chegadas.visitados.length >= pontosValidos.length;
   const naoDetectadas = paradas.filter((p) => p.estado !== 'feita');
 
   const mudarChegadas = (fazer: (estado: typeof chegadas) => typeof chegadas) => {
@@ -646,9 +645,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               <Icon name={IconNames.location} size="md" color={colors.primary.main} />
             </View>
             <View style={styles.proximaTextos}>
-              <Text style={styles.proximaRotulo}>{todasFeitas ? 'ROTA CONCLUÍDA' : 'PRÓXIMA PARADA'}</Text>
-              <Text style={styles.proximaNome} numberOfLines={2}>
-                {proxima ? (proxima.ponto.apelido as string) : 'Todas as paradas feitas'}
+              <Text style={styles.proximaNome} numberOfLines={2} accessibilityLabel={proxima ? `Próxima parada: ${proxima.ponto.apelido}` : undefined}>
+                {proxima ? (proxima.ponto.apelido as string) : 'Rota concluída'}
               </Text>
               {proxima && proxima.instituicao ? (
                 <Text style={styles.proximaInstituicao} numberOfLines={1}>
@@ -666,9 +664,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                 onPress={() => setRoteiroAberto(true)}
                 accessibilityRole="button"
                 accessibilityLabel="Roteiro">
-                <Icon name={IconNames.route} size="xl" color="#FFFFFF" />
+                <Icon name={IconNames.route} size="lg" color="#FFFFFF" />
               </TouchableOpacity>
-              <Text style={styles.acaoLegenda} numberOfLines={1}>Roteiro</Text>
             </View>
             <View style={styles.acaoItem}>
               <TouchableOpacity
@@ -678,9 +675,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                 accessibilityRole="button"
                 accessibilityState={{ disabled: !proxima }}
                 accessibilityLabel="No ponto">
-                <Icon name={IconNames.noPonto} size="xl" color="#FFFFFF" />
+                <Icon name={IconNames.noPonto} size="lg" color="#FFFFFF" />
               </TouchableOpacity>
-              <Text style={styles.acaoLegenda} numberOfLines={1}>Cheguei</Text>
             </View>
             <View style={styles.acaoItem}>
               <TouchableOpacity
@@ -689,9 +685,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                 accessibilityRole="button"
                 accessibilityLabel="Avisar"
                 accessibilityHint="Avisar os alunos ou registrar um problema para a gestão">
-                <Icon name={IconNames.campaign} size="xl" color="#FFFFFF" />
+                <Icon name={IconNames.campaign} size="lg" color="#FFFFFF" />
               </TouchableOpacity>
-              <Text style={styles.acaoLegenda} numberOfLines={1}>Avisar</Text>
             </View>
             <View style={styles.acaoItem}>
               <TouchableOpacity
@@ -699,9 +694,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
                 onPress={() => setAlunosAberto(true)}
                 accessibilityRole="button"
                 accessibilityLabel="Alunos">
-                <Icon name={IconNames.group} size="xl" color="#FFFFFF" />
+                <Icon name={IconNames.group} size="lg" color="#FFFFFF" />
               </TouchableOpacity>
-              <Text style={styles.acaoLegenda} numberOfLines={1}>Confirmados</Text>
             </View>
           </View>
 
@@ -966,7 +960,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: borderRadius.xxl,
     borderTopRightRadius: borderRadius.xxl,
     padding: spacing.base,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.base,
     gap: spacing.md,
     ...shadows.xl,
   },
@@ -980,8 +974,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   proximaTextos: { flex: 1 },
-  proximaRotulo: { ...textStyles.caption, color: colors.text.secondary, letterSpacing: 1 },
-  proximaNome: { ...textStyles.h5, color: colors.text.primary },
+  proximaNome: { ...textStyles.h4, color: colors.text.primary },
   proximaInstituicao: { ...textStyles.caption, color: colors.primary.main, fontWeight: '700' as const },
   minhaPosicaoWrap: { position: 'absolute', right: spacing.base, alignItems: 'center', gap: 4, zIndex: 15 },
   minhaPosicao: {
@@ -996,12 +989,10 @@ const styles = StyleSheet.create({
   // Quatro botões com flex igual e vão de 8 px: ocupam a largura do Finalizar Viagem, sem sobras.
   acoesRow: { flexDirection: 'row', gap: spacing.sm },
   acaoItem: { flex: 1, alignItems: 'center', gap: 4 },
-  // 12 px Inter, uma linha; "Confirmados" cabe em ~75 px (celular de 360 px dá ~78 px por botão)
-  acaoLegenda: { ...textStyles.caption, color: colors.text.secondary, textAlign: 'center' },
   acaoIcone: {
     alignSelf: 'stretch',
-    height: 64,
-    borderRadius: 18,
+    height: 52,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1081,23 +1072,25 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     fontWeight: '700' as const,
   },
+  // O botão de maior destaque da tela: motoristas idosos e com baixa visão precisam achá-lo sem procurar.
+  // Vermelho escuro com texto branco (contraste 4,8:1) e 80 px de altura, contra 52 px dos demais.
   finalizarButton: {
-    backgroundColor: colors.error.main,
+    backgroundColor: colors.error.dark,
     borderRadius: borderRadius.xl,
-    paddingVertical: spacing.xxl,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.sm,
-    minHeight: 88,
+    gap: spacing.md,
+    minHeight: 80,
     ...shadows.xl,
   },
   finalizarButtonText: {
     ...textStyles.button,
     color: colors.text.inverse,
-    fontSize: fontSize.h3,
-    lineHeight: 32,
-    fontWeight: '700' as const,
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '800' as const,
   },
   buttonDisabled: { opacity: 0.6 },
 
