@@ -63,7 +63,6 @@ const CriarConta = ({navigation}) => {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
-  const [matricula, setMatricula] = useState('');
   const [telefone, setTelefone] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -261,10 +260,6 @@ const CriarConta = ({navigation}) => {
       newErrors.cpf = getFieldValidationMessage('cpf', 'invalid');
     }
 
-    if (!matricula.trim()) {
-      newErrors.matricula = getFieldValidationMessage('matricula', 'required');
-    }
-
     if (!instituicaoId) {
       newErrors.instituicaoId = 'Selecione uma instituição de ensino.';
     }
@@ -385,7 +380,6 @@ const CriarConta = ({navigation}) => {
         email,
         password: senha,
         cpf: cpf.replace(/\D/g, ''),
-        matricula,
         telefone: telefone ? telefone.replace(/\D/g, '') : undefined,
         instituicao_id: instituicaoId || undefined,
         data_nascimento: isoDate,
@@ -429,7 +423,6 @@ const CriarConta = ({navigation}) => {
     confirmarSenha: STEPS.BASIC,
     nome: STEPS.PERSONAL,
     cpf: STEPS.PERSONAL,
-    matricula: STEPS.PERSONAL,
     instituicaoId: STEPS.PERSONAL,
     telefone: STEPS.PERSONAL,
     dataNascimento: STEPS.PERSONAL,
@@ -458,7 +451,6 @@ const CriarConta = ({navigation}) => {
       'nome',
       'email',
       'cpf',
-      'matricula',
       'telefone',
       'senha',
       'confirmarSenha',
@@ -888,29 +880,6 @@ const CriarConta = ({navigation}) => {
                   />
                 </View>
                 {renderFieldError('cpf')}
-
-                <Text style={styles.label}>Matrícula *</Text>
-                <View
-                  style={[
-                    styles.inputWrapper,
-                    focusedField === 'matricula' && styles.inputWrapperFocused,
-                    errors.matricula && styles.inputWrapperError,
-                  ]}>
-                  <Icon name="school" size="md" color={colors.neutral[400]} />
-                  <TextInput
-                    style={styles.input}
-                    onFocus={() => setFocusedField('matricula')}
-                    onBlur={() => setFocusedField('')}
-                    placeholder="Número da matrícula escolar"
-                    placeholderTextColor={colors.neutral[400]}
-                    value={matricula}
-                    onChangeText={text => {
-                      setMatricula(text);
-                      clearFieldError('matricula');
-                    }}
-                  />
-                </View>
-                {renderFieldError('matricula')}
 
                 <Text style={styles.label}>Instituição de ensino *</Text>
                 <TouchableOpacity

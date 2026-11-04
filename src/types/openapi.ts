@@ -1213,8 +1213,8 @@ export interface components {
             cpf: string;
             /** @description Telefone */
             telefone?: string;
-            /** @description Matrícula escolar */
-            matricula: string;
+            /** @description Matrícula escolar (opcional) */
+            matricula?: string;
             /** @description UUID da instituição */
             instituicao_id: string;
             /** @description Nome do pai */

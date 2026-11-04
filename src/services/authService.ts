@@ -91,9 +91,6 @@ export const authService = {
     if (!userData.cpf || userData.cpf.replace(/\D/g, '').length !== 11) {
       throw new ValidationError('CPF inválido. Informe os 11 dígitos', 'cpf', null, { cpf: 'CPF inválido. Informe os 11 dígitos' });
     }
-    if (!userData.matricula?.trim()) {
-      throw new ValidationError('Matrícula é obrigatória', 'matricula', null, { matricula: 'Matrícula é obrigatória' });
-    }
     if (!userData.instituicao_id) {
       throw new ValidationError('Instituição é obrigatória', 'instituicao_id', null, { instituicao_id: 'Instituição é obrigatória' });
     }
@@ -107,7 +104,6 @@ export const authService = {
       email: normalizeEmail(userData.email),
       password: userData.password,
       cpf: onlyDigits(userData.cpf),
-      matricula: userData.matricula.trim(),
       telefone: userData.telefone ? onlyDigits(userData.telefone) : undefined,
       data_nascimento: userData.data_nascimento,
       email_responsavel: userData.email_responsavel ?? undefined,
