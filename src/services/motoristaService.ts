@@ -5,6 +5,7 @@ interface LocalizacaoResponse {
   latitude: number;
   longitude: number;
   atualizado_em: string;
+  pontos_visitados?: string[];
 }
 
 interface EnviarLocalizacaoResponse {

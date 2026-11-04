@@ -22,6 +22,7 @@ import { useABordo } from '../../hooks/useABordo';
 import { distanciaMetros as haversineMetros, posicaoMudou } from '../../utils/coordenadas';
 import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
+import { mesmaLista, paradasPendentes } from '../../utils/paradasPendentes';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -94,6 +95,8 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   const [distanciaMetros, setDistanciaMetros] = useState<number | null>(null);
   const [pontosRota, setPontosRota] = useState<PontoFlatResponse[]>([]);
   const [proximoPonto, setProximoPonto] = useState<PontoFlatResponse | null>(null);
+  // Paradas em que o motorista já chegou, vindas do backend junto com a posição do ônibus.
+  const [visitados, setVisitados] = useState<string[]>([]);
   const [estadoOnibus, setEstadoOnibus] = useState<EstadoOnibus>('semSinal');
   const [mostrarEstado, setMostrarEstado] = useState(false);
   const [centralizarTick, setCentralizarTick] = useState(0);
@@ -166,9 +169,10 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   const posicaoOnibusMapa = aBordo ? posicaoAluno : posicaoMotorista;
 
   // Rota planejada calculada neste aparelho, a partir da posicao do onibus que ele ja recebe.
+  const pontosPendentes = paradasPendentes(pontosRota, visitados) as PontoFlatResponse[];
   const rotaPlanejada = useRotaPlanejada(
     posicaoOnibusMapa,
-    paradasRestantesPorProximidade(pontosRota, posicaoOnibusMapa),
+    paradasRestantesPorProximidade(pontosPendentes, posicaoOnibusMapa),
     statusViagem === 'EM_ANDAMENTO',
   );
 
@@ -178,7 +182,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
       setProximoPonto(null);
       return;
     }
-    const withDist = pontosRota
+    const withDist = pontosPendentes
       .map((p) => {
         const pp = p as Record<string, unknown>;
         const lat = pp.latitude as number | undefined;
@@ -191,10 +195,13 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
       })
       .filter(Boolean) as { ponto: PontoFlatResponse; dist: number }[];
 
-    if (withDist.length === 0) return;
+    if (withDist.length === 0) {
+      setProximoPonto(null);
+      return;
+    }
     const nearest = withDist.reduce((a, b) => (a.dist < b.dist ? a : b));
     setProximoPonto(nearest.ponto);
-  }, [posicaoOnibusMapa, pontosRota]);
+  }, [posicaoOnibusMapa, pontosRota, visitados]);
 
   const buscarLocalizacao = useCallback(async () => {
     if (!viagemId) return;
@@ -206,6 +213,8 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
       const atrasoS = enviadoEm ? (Date.now() - new Date(enviadoEm).getTime()) / 1000 : 0;
       const anterior = posicaoAnterior.current;
       posicaoAnterior.current = nova;
+      const novosVisitados = (loc as unknown as { pontos_visitados?: string[] }).pontos_visitados ?? [];
+      setVisitados((atual) => (mesmaLista(atual, novosVisitados) ? atual : novosVisitados));
       setPosicaoMotorista((atual) =>
         posicaoMudou(atual, nova, TOLERANCIA_ONIBUS_M) ? nova : atual,
       );
