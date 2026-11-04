@@ -5,6 +5,7 @@ import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -12,7 +13,7 @@ public class AutofillCommitPackage implements ReactPackage {
 
   @Override
   public List<NativeModule> createNativeModules(ReactApplicationContext context) {
-    return Collections.<NativeModule>singletonList(new AutofillCommitModule(context));
+    return Arrays.<NativeModule>asList(new AutofillCommitModule(context), new TelaAcesaModule(context));
   }
 
   @Override
