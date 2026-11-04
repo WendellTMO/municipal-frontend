@@ -3,6 +3,9 @@
 
 export const LIMIAR_ARRASTE = 6;
 
+// Segurar o botão parado por este tempo abre o feedback sem precisar soltar. Mexer antes disso vira arraste.
+export const TEMPO_SEGURAR_MS = 500;
+
 export const ehArraste = (dx, dy) => Math.abs(dx) > LIMIAR_ARRASTE || Math.abs(dy) > LIMIAR_ARRASTE;
 
 const limitar = (valor, minimo, maximo) => {
