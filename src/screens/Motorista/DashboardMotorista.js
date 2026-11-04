@@ -18,6 +18,7 @@ import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import ProximasViagens from '../../components/ProximasViagens';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
@@ -38,6 +39,7 @@ const DashboardMotorista = ({navigation}) => {
   }, []);
 
   const [proximaViagem, setProximaViagem] = useState(null);
+  const [proximas, setProximas] = useState([]);
   const [loadingViagem, setLoadingViagem] = useState(true);
   const [alunosInfo, setAlunosInfo] = useState({
     totalAlunos: 0,
@@ -53,6 +55,7 @@ const DashboardMotorista = ({navigation}) => {
         if (viagens && viagens.length > 0) {
           // A próxima é a mais perto de agora; as que passaram sem registro vão para o histórico.
           const organizadas = organizarViagens(viagens, new Date());
+          setProximas(organizadas.proximas);
 
           if (organizadas.proxima) {
             const proxima = organizadas.proxima;
@@ -98,9 +101,11 @@ const DashboardMotorista = ({navigation}) => {
           }
         } else {
           setProximaViagem(null);
+          setProximas([]);
         }
       } catch (error) {
         setProximaViagem(null);
+        setProximas([]);
       } finally {
         setLoadingViagem(false);
       }
@@ -228,6 +233,11 @@ const DashboardMotorista = ({navigation}) => {
             )}
           </View>
         )}
+
+        <ProximasViagens
+          viagens={proximas}
+          onAbrir={viagem => navigation.navigate('DetalheViagemMotorista', { viagem })}
+        />
 
         <Tappable
           style={styles.historicoEntrada}
