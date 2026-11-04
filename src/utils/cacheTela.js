@@ -5,6 +5,9 @@
  */
 const guardados = new Map();
 
+// A Home e a tela Viagens do aluno buscam a mesma lista: o mesmo nome faz a Viagens abrir na hora.
+export const CACHE_VIAGENS_ALUNO = 'viagens-aluno';
+
 export const chaveDoCache = (usuarioId, nome) => `${usuarioId || 'sem-usuario'}:${nome}`;
 
 export const lerCache = chave => guardados.get(chave);

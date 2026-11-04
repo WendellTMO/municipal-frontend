@@ -25,7 +25,7 @@ import { dayLabel } from '../../utils/dayLabel';
 import { escolherViagemDeHoje } from '../../utils/viagemAluno';
 import { proximaViagemDoPainel, saidaAtrasada } from '../../utils/proximaViagemPainel';
 import { formatarHora } from '../../utils/formatarHora';
-import { chaveDoCache, guardarCache, lerCache } from '../../utils/cacheTela';
+import { CACHE_VIAGENS_ALUNO, chaveDoCache, guardarCache, lerCache } from '../../utils/cacheTela';
 import { horaCurta } from '../../utils/viagemPainel';
 import AgoraCard from '../../components/AgoraCard';
 import PresencaAcoes from '../../components/PresencaAcoes';
@@ -65,6 +65,7 @@ type DadosDoPainel = { rotas: ViagemAgendaUI[]; viagens: ViagemAgendaUI[] };
 const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   const { user, logout } = useAuth();
   const chavePainel = chaveDoCache((user as { id?: string } | null)?.id, 'painel-aluno');
+  const chaveViagens = chaveDoCache((user as { id?: string } | null)?.id, CACHE_VIAGENS_ALUNO);
   // Último painel visto: aparece na hora e o novo substitui por trás, sem tela de carregando.
   const emCache = lerCache(chavePainel) as DadosDoPainel | undefined;
   const painelInicial = painelDeViagens(emCache ? emCache.viagens : []);
@@ -123,6 +124,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
       ]);
       const rotas = unwrapItems(respostaRotas) as ViagemAgendaUI[];
       guardarCache(chavePainel, { rotas, viagens: todasViagens });
+      guardarCache(chaveViagens, todasViagens);
 
       const painel = painelDeViagens(todasViagens);
       setRotasCadastradas(rotas);
@@ -134,7 +136,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [chavePainel]);
+  }, [chavePainel, chaveViagens]);
 
   useEffect(() => {
     loadData();
