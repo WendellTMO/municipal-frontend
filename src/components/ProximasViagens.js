@@ -10,13 +10,20 @@ import { formatarSentido } from '../utils/formatarSentido';
 import { formatarHora } from '../utils/formatarHora';
 import Tappable from './Tappable';
 
-const ProximasViagens = ({ viagens, onAbrir }) => {
+const ProximasViagens = ({ viagens, onAbrir, onVerTodas }) => {
   if (!viagens || viagens.length === 0) return null;
   return (
     <View style={styles.bloco}>
-      <Text style={styles.titulo} accessibilityRole="header">
-        Próximas viagens
-      </Text>
+      <View style={styles.cabecalho}>
+        <Text style={styles.titulo} accessibilityRole="header">
+          Próximas viagens
+        </Text>
+        {onVerTodas ? (
+          <Tappable navega style={styles.verTodas} onPress={onVerTodas} accessibilityLabel="Ver todas as próximas viagens">
+            <Text style={styles.verTodasTexto}>Ver todas</Text>
+          </Tappable>
+        ) : null}
+      </View>
       <View style={styles.linha}>
         {viagens.map(viagem => {
           const cancelada = viagem.status === 'CANCELADA';
@@ -52,7 +59,10 @@ const ProximasViagens = ({ viagens, onAbrir }) => {
 
 const styles = StyleSheet.create({
   bloco: { marginHorizontal: spacing.base, marginBottom: spacing.base },
-  titulo: { ...textStyles.h4, color: colors.text.primary, marginBottom: spacing.sm },
+  cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
+  titulo: { ...textStyles.h4, color: colors.text.primary },
+  verTodas: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.md, borderRadius: borderRadius.lg, backgroundColor: colors.primary.lighter },
+  verTodasTexto: { ...textStyles.button, color: colors.primary.dark },
   linha: { flexDirection: 'row', gap: spacing.sm },
   quadrado: {
     flex: 1,

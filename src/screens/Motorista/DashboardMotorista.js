@@ -239,6 +239,7 @@ const DashboardMotorista = ({navigation}) => {
         <ProximasViagens
           viagens={proximas}
           onAbrir={viagem => navigation.navigate('DetalheViagemMotorista', { viagem })}
+          onVerTodas={() => navigation.navigate('ListaViagens', { soProximas: true })}
         />
 
         <Tappable

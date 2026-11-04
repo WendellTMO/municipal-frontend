@@ -20,11 +20,13 @@ import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 import { formatarData, dataLocal } from '../../utils/dataLocal';
+import { organizarViagens } from '../../utils/viagensMotorista';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
   const params = route?.params || {};
   const rotaFiltro = params.rota; // Optional: filter by specific route
+  const soProximas = params.soProximas === true; // Só as que ainda vão acontecer, da mais perto para a mais longe
   const isGestor = user?.role?.toLowerCase() === 'gestor';
   
   const [refreshing, setRefreshing] = useState(false);
@@ -45,18 +47,23 @@ const ListaViagens = ({navigation, route}) => {
       }
     }
     
+    if (soProximas) {
+      const organizadas = organizarViagens(viagensData, new Date(), 0, Infinity);
+      return organizadas.proxima ? [organizadas.proxima, ...organizadas.proximas] : organizadas.proximas;
+    }
+
     // Ordenar por data (mais recentes primeiro)
     return (viagensData || []).sort((a, b) => {
       const dataA = dataLocal(a.data);
       const dataB = dataLocal(b.data);
       return dataB - dataA;
     });
-  }, [isGestor, rotaFiltro?.id]);
+  }, [isGestor, rotaFiltro?.id, soProximas]);
 
   // Use the useFetch hook
   const { data: viagens, isLoading, isError, error, refetch } = useFetch(
     fetchViagens,
-    [rotaFiltro?.id, isGestor],
+    [rotaFiltro?.id, isGestor, soProximas],
     { showErrorToast: true }
   );
 
@@ -94,7 +101,7 @@ const ListaViagens = ({navigation, route}) => {
   return (
     <TelaSegura style={styles.container}>
       <SubHeader
-        titulo={rotaFiltro ? 'Viagens' : 'Minhas Viagens'}
+        titulo={soProximas ? 'Próximas viagens' : rotaFiltro ? 'Viagens' : 'Minhas Viagens'}
         subtitulo={rotaFiltro ? rotaFiltro.nome : undefined}
         onBack={() => navigation.goBack()}
       />
@@ -108,9 +115,11 @@ const ListaViagens = ({navigation, route}) => {
         />
       ) : (viagens || []).length === 0 ? (
         <EmptyView
-          title={rotaFiltro ? 'Nenhuma viagem nesta rota' : 'Nenhuma viagem atribuída'}
-          message={rotaFiltro 
-            ? 'Crie uma viagem para esta rota' 
+          title={soProximas ? 'Nenhuma viagem pela frente' : rotaFiltro ? 'Nenhuma viagem nesta rota' : 'Nenhuma viagem atribuída'}
+          message={soProximas
+            ? 'Quando o gestor agendar novas viagens, elas aparecem aqui'
+            : rotaFiltro
+            ? 'Crie uma viagem para esta rota'
             : 'O gestor precisa atribuir viagens para você'}
           icon={IconNames.route}
         />
