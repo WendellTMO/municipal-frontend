@@ -236,6 +236,14 @@ export const motoristaService = {
     return response.data;
   },
 
+  /**
+   * O motorista cancela a própria viagem agendada; alunos e gestores são avisados.
+   * Backend: PUT /v1/viagens/{id}/cancelar com motivo opcional
+   */
+  async cancelarViagem(viagemId: string, motivo?: string): Promise<void> {
+    await api.put(`/viagens/${viagemId}/cancelar`, motivo ? { motivo } : {});
+  },
+
   async finalizarViagem(viagemId: string): Promise<ViagemResponse> {
     const payload : ViagemAcaoRequest = {
       acao: 'FINALIZAR',

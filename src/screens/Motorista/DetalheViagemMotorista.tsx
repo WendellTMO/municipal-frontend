@@ -35,6 +35,8 @@ import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
+import DialogoConfirmacao from '../../components/DialogoConfirmacao';
+import { useToast } from '../../components/Toast';
 import { horaCurta } from '../../utils/viagemPainel';
 import { formatarSentido } from '../../utils/formatarSentido';
 
@@ -56,6 +58,9 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
   const viagem = (navRoute?.params?.viagem ?? {}) as Record<string, unknown>;
   const { user } = useAuth();
   const isMotorista = user?.role?.toLowerCase() === 'motorista';
+  const toast = useToast();
+  const [cancelando, setCancelando] = useState(false);
+  const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
 
   const [pontosRota, setPontosRota] = useState<PontoFlatResponse[]>([]);
   const [carregando, setCarregando] = useState(false);
@@ -77,6 +82,21 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
     };
     buscarPontos();
   }, [viagem?.rota_id]);
+
+  // O motivo vai para os alunos e para o gestor junto com o aviso de cancelamento.
+  const cancelarComMotivo = async (motivo: string) => {
+    setCancelando(true);
+    try {
+      await motoristaService.cancelarViagem(viagem.id as string, motivo);
+      setConfirmandoCancelar(false);
+      toast.success('Viagem cancelada. Alunos e gestor foram avisados.');
+      navigation.goBack();
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Não foi possível cancelar a viagem.');
+    } finally {
+      setCancelando(false);
+    }
+  };
 
   if (!viagem?.id) {
     return (
@@ -236,6 +256,18 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
             </TouchableOpacity>
           )}
 
+          {/* Imprevisto: ônibus quebrou, feriado de última hora */}
+          {isMotorista && status === 'AGENDADA' && (
+            <TouchableOpacity
+              style={styles.cancelarButton}
+              onPress={() => setConfirmandoCancelar(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancelar esta viagem">
+              <Icon name={IconNames.close} size="md" color={colors.error.main} />
+              <Text style={styles.cancelarButtonText}>Não vou fazer esta viagem</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Resume trip CTA — only for motoristas when already in progress */}
           {isMotorista && status === 'EM_ANDAMENTO' && (
             <TouchableOpacity
@@ -250,6 +282,19 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
 
         </View>
       </ScrollView>
+
+      <DialogoConfirmacao
+        visible={confirmandoCancelar}
+        titulo="Cancelar esta viagem?"
+        resumo="Os alunos confirmados e o gestor vão receber o aviso. Qual é o motivo?"
+        onCancelar={() => setConfirmandoCancelar(false)}
+        botoes={[
+          { texto: 'Problema no ônibus', cor: colors.error.main, carregando: cancelando, onPress: () => cancelarComMotivo('problema no ônibus') },
+          { texto: 'Feriado ou sem aula', cor: colors.error.main, onPress: () => cancelarComMotivo('feriado ou sem aula') },
+          { texto: 'Outro motivo', cor: colors.error.main, onPress: () => cancelarComMotivo('imprevisto') },
+          { texto: 'Voltar', cor: colors.neutral[500], onPress: () => setConfirmandoCancelar(false) },
+        ]}
+      />
     </TelaSegura>
   );
 };
@@ -406,6 +451,19 @@ const styles = StyleSheet.create({
     minHeight: 60,
     ...shadows.md,
   },
+  cancelarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    minHeight: 56,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.error.main,
+    backgroundColor: colors.background.paper,
+  },
+  cancelarButtonText: { ...textStyles.button, color: colors.error.main },
   iniciarButtonText: { ...textStyles.button, color: colors.text.inverse, fontSize: fontSize.h4 },
 });
 
