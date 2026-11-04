@@ -2,7 +2,7 @@
  * Serviço em primeiro plano do Android: mantém o app vivo durante a viagem para o envio
  * de posição continuar com a tela apagada. iOS tem desenho próprio depois (no-op aqui).
  */
-import { PermissionsAndroid, Platform } from 'react-native';
+import { Linking, PermissionsAndroid, Platform } from 'react-native';
 import { aguardarCondicao } from '../utils/aguardarCondicao';
 import { tratarMensagemDemanda } from '../utils/demandaLocalizacao';
 import { Storage, STORAGE_KEYS } from '../utils/storage';
@@ -35,9 +35,13 @@ export function registrarServicoViagem(): void {
   );
 }
 
-// Chamar com o app visível (iniciar viagem). Se a notificação for negada, não inicia o serviço.
-export async function iniciarServicoViagem(): Promise<void> {
-  if (Platform.OS !== 'android' || resolverServico) return;
+// Como terminou a tentativa de iniciar o serviço: o app mostra um aviso quando não deu certo,
+// porque sem o serviço o Android pode parar o envio da posição com a tela bloqueada.
+export type ResultadoServico = 'ok' | 'sem-localizacao' | 'erro';
+
+// Chamar com o app visível (iniciar viagem).
+export async function iniciarServicoViagem(): Promise<ResultadoServico> {
+  if (Platform.OS !== 'android' || resolverServico) return 'ok';
   geracao += 1;
   const minhaGeracao = geracao;
   try {
@@ -47,10 +51,11 @@ export async function iniciarServicoViagem(): Promise<void> {
       esperaMs: ESPERA_PERMISSAO_MS,
       cancelado: () => minhaGeracao !== geracao,
     });
-    if (!liberada) return;
+    if (!liberada) return 'sem-localizacao';
     const { default: notifee, AndroidImportance, AndroidForegroundServiceType } = require('@notifee/react-native');
-    const permissao = await notifee.requestPermission();
-    if (permissao.authorizationStatus < 1) return; // 0 = negada
+    // Pede a permissão, mas não desiste se for negada: no Android 13 ou mais novo o serviço de
+    // localização roda mesmo sem a notificação aparecer, e é ele que mantém o envio com a tela bloqueada.
+    await notifee.requestPermission();
     const canalId = await notifee.createChannel({
       id: 'viagem_em_andamento',
       name: 'Viagem em andamento',
@@ -69,9 +74,35 @@ export async function iniciarServicoViagem(): Promise<void> {
         actions: [{ title: 'Abrir', pressAction: { id: 'abrir', launchActivity: 'default' } }],
       },
     });
+    return 'ok';
   } catch {
     // Sem serviço o envio normal segue funcionando.
+    return 'erro';
   }
+}
+
+// Android com economia de bateria ligada para o app: com a tela bloqueada o sistema pode parar o envio.
+export async function bateriaRestringida(): Promise<boolean> {
+  if (Platform.OS !== 'android') return false;
+  try {
+    const notifee = require('@notifee/react-native').default;
+    return !!(await notifee.isBatteryOptimizationEnabled());
+  } catch {
+    return false;
+  }
+}
+
+export async function abrirAjustesDeBateria(): Promise<void> {
+  try {
+    const notifee = require('@notifee/react-native').default;
+    await notifee.openBatteryOptimizationSettings();
+  } catch {
+    Linking.openSettings();
+  }
+}
+
+export function abrirAjustesDoApp(): void {
+  Linking.openSettings();
 }
 
 export async function pararServicoViagem(): Promise<void> {
