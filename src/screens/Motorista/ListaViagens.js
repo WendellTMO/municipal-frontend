@@ -21,8 +21,8 @@ import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 import { formatarData, dataLocal } from '../../utils/dataLocal';
 import { organizarViagens } from '../../utils/viagensMotorista';
-import ChipsFiltro from '../../components/ChipsFiltro';
-import { CHIPS_VIAGENS, contarViagens, filtrarViagens, filtroViagensPadrao } from '../../utils/filtroViagens';
+import FolhaFiltroViagens from '../../components/FolhaFiltroViagens';
+import { contarViagens, filtrarViagens, filtroAtivo, filtroViagensPadrao } from '../../utils/filtroViagens';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -33,6 +33,7 @@ const ListaViagens = ({navigation, route}) => {
   
   const [refreshing, setRefreshing] = useState(false);
   const [filtro, setFiltro] = useState(filtroViagensPadrao());
+  const [filtroAberto, setFiltroAberto] = useState(false);
 
   // Fetch function
   const fetchViagens = useCallback(async () => {
@@ -72,8 +73,9 @@ const ListaViagens = ({navigation, route}) => {
 
   // "Próximas viagens" já é só o que vem pela frente: o filtro por situação não se aplica.
   const comFiltro = !soProximas;
-  const contagem = contarViagens(viagens || []);
+  const contagem = contarViagens(viagens || [], filtro);
   const visiveis = comFiltro ? filtrarViagens(viagens || [], filtro) : viagens || [];
+  const temFiltro = comFiltro && filtroAtivo(filtro);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -112,6 +114,19 @@ const ListaViagens = ({navigation, route}) => {
         titulo={soProximas ? 'Próximas viagens' : rotaFiltro ? 'Viagens' : 'Minhas Viagens'}
         subtitulo={rotaFiltro ? rotaFiltro.nome : undefined}
         onBack={() => navigation.goBack()}
+        direita={
+          comFiltro && (viagens || []).length > 0 ? (
+            <Tappable
+              sombra={false}
+              style={styles.funil}
+              onPress={() => setFiltroAberto(true)}
+              accessibilityRole="button"
+              accessibilityLabel={temFiltro ? 'Filtros, ativos' : 'Filtros'}>
+              <Icon name={IconNames.filter} size="md" color="#FFFFFF" />
+              {temFiltro ? <View style={styles.funilAtivo} /> : null}
+            </Tappable>
+          ) : null
+        }
       />
 
       {isLoading ? (
@@ -144,16 +159,13 @@ const ListaViagens = ({navigation, route}) => {
             />
           }>
           <View style={styles.content}>
-            {comFiltro ? (
-              <ChipsFiltro
-                chips={CHIPS_VIAGENS}
-                filtro={filtro}
-                contagem={contagem}
-                onAlternar={id => setFiltro(atual => ({ ...atual, [id]: !atual[id] }))}
-              />
+            {temFiltro ? (
+              <Text style={styles.resumo}>
+                Mostrando {visiveis.length} de {viagens.length} viagens. Toque no funil para mudar.
+              </Text>
             ) : null}
             {visiveis.length === 0 ? (
-              <Text style={styles.semResultado}>Nenhuma viagem com esses filtros. Toque em Finalizadas para ver as concluídas.</Text>
+              <Text style={styles.semResultado}>Nenhuma viagem com esses filtros. As finalizadas ficam escondidas até você ligar Finalizadas no funil.</Text>
             ) : null}
             {visiveis.map((viagem) => {
               const statusLabel = getStatusLabel(viagem.status);
@@ -204,11 +216,39 @@ const ListaViagens = ({navigation, route}) => {
           </View>
         </ScrollView>
       )}
+      <FolhaFiltroViagens
+        visible={filtroAberto}
+        filtro={filtro}
+        contagem={contagem}
+        quantas={visiveis.length}
+        onMudar={setFiltro}
+        onFechar={() => setFiltroAberto(false)}
+      />
     </TelaSegura>
   );
 };
 
 const styles = StyleSheet.create({
+  funil: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  funilAtivo: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.warning.main,
+    borderWidth: 2,
+    borderColor: colors.primary.main,
+  },
+  resumo: { ...textStyles.bodySmall, color: colors.text.secondary, marginBottom: spacing.base },
   semResultado: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.xl },
   container: {
     flex: 1,

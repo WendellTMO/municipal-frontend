@@ -112,6 +112,7 @@ export const IconNames = {
   forward: 'arrow-forward',
   menu: 'menu',
   close: 'close',
+  filter: 'filter-list',
   
   // Transport
   bus: 'directions-bus',
