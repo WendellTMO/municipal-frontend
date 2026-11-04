@@ -67,3 +67,34 @@ test('ninguém confirmou devolve lista vazia', () => {
   expect(agruparConfirmadosPorInstituicao([{ confirmacao: false }])).toEqual([]);
   expect(agruparConfirmadosPorInstituicao(undefined)).toEqual([]);
 });
+
+describe('parada sem alunos confirmados', () => {
+  const pontos = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  const aluno = (embarque, destino) => ({ confirmacao: true, ponto_embarque_id: embarque, ponto_destino_id: destino });
+
+  test('sem ninguém confirmado nenhuma parada é dispensada', () => {
+    const paradas = montarParadas(pontos, [], [], []);
+    expect(paradas.map(p => p.dispensavel)).toEqual([false, false, false]);
+    expect(paradas[0].estado).toBe('proxima');
+  });
+
+  test('a parada que nenhum confirmado usa fica dispensável e nunca é a próxima', () => {
+    const paradas = montarParadas(pontos, [], [], [aluno('b', 'c')]);
+    expect(paradas.map(p => p.dispensavel)).toEqual([true, false, false]);
+    expect(paradas.map(p => p.estado)).toEqual(['pendente', 'proxima', 'pendente']);
+  });
+
+  test('quando o único aluno do ponto cancela, o ponto sai da lista de paradas necessárias', () => {
+    const comOsDois = montarParadas(pontos, [], [], [aluno('a', 'c'), aluno('b', 'c')]);
+    expect(comOsDois.map(p => p.dispensavel)).toEqual([false, false, false]);
+    const depoisDoCancelamento = montarParadas(pontos, [], [], [{ ...aluno('a', 'c'), confirmacao: false }, aluno('b', 'c')]);
+    expect(depoisDoCancelamento.map(p => p.dispensavel)).toEqual([true, false, false]);
+    expect(depoisDoCancelamento[1].estado).toBe('proxima');
+  });
+
+  test('parada já feita não aparece como dispensável', () => {
+    const paradas = montarParadas(pontos, ['a'], [], [aluno('b', 'c')]);
+    expect(paradas[0].estado).toBe('feita');
+    expect(paradas[0].dispensavel).toBe(false);
+  });
+});

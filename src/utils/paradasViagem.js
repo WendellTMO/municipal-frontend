@@ -28,16 +28,31 @@ export const instituicaoDaParada = (ponto, instituicoes) => {
   return melhor;
 };
 
+// Ids dos pontos em que algum aluno confirmado embarca ou desce. Devolve null enquanto ninguém
+// confirmou: sem confirmação nenhuma não dá para dispensar parada, o motorista segue a rota inteira.
+export const pontosUsadosPorConfirmados = alunos => {
+  const usados = new Set();
+  for (const aluno of alunos || []) {
+    if (!aluno.confirmacao) continue;
+    if (aluno.ponto_embarque_id) usados.add(String(aluno.ponto_embarque_id));
+    if (aluno.ponto_destino_id) usados.add(String(aluno.ponto_destino_id));
+  }
+  return usados.size > 0 ? usados : null;
+};
+
 // Cada parada com seu estado: feita (id em `visitados`, em qualquer ordem), proxima (a primeira
-// ainda não feita da lista) ou pendente.
-export const montarParadas = (pontos, visitados, instituicoes) => {
+// ainda não feita da lista) ou pendente. Com alunos confirmados, a parada em que nenhum deles
+// embarca nem desce fica `dispensavel` (pode ser pulada) e nunca é a próxima.
+export const montarParadas = (pontos, visitados, instituicoes, alunos) => {
   const resultado = [];
+  const usados = pontosUsadosPorConfirmados(alunos);
   let achouProxima = false;
   for (let i = 0; i < pontos.length; i++) {
     let estado = 'pendente';
+    const dispensavel = usados !== null && !usados.has(String(pontos[i].id));
     if (visitados.includes(pontos[i].id)) {
       estado = 'feita';
-    } else if (!achouProxima) {
+    } else if (!achouProxima && !dispensavel) {
       estado = 'proxima';
       achouProxima = true;
     }
@@ -45,6 +60,7 @@ export const montarParadas = (pontos, visitados, instituicoes) => {
       ponto: pontos[i],
       numero: i + 1,
       estado,
+      dispensavel: dispensavel && estado !== 'feita',
       instituicao: instituicaoDaParada(pontos[i], instituicoes),
     });
   }

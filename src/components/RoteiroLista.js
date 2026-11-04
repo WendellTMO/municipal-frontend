@@ -69,6 +69,7 @@ const Linha = ({ item, aberta, onAlternar, verTudo, onVerTudo, ultima }) => {
 
   let resumo = item.etiquetas.map(e => e.texto).join(', ');
   if (proxima) resumo = `${resumo}, próximo`;
+  if (item.dispensavel) resumo = `${resumo}, sem alunos confirmados, pode pular`;
   const rotulo = `Parada ${item.numero}, ${item.nome}, ${resumo}`;
   const podeAbrir = !item.vazio;
 
@@ -97,6 +98,11 @@ const Linha = ({ item, aberta, onAlternar, verTudo, onVerTudo, ultima }) => {
             {proxima ? (
               <View style={styles.etiquetaProxima}>
                 <Text style={styles.etiquetaProximaTexto}>Próximo</Text>
+              </View>
+            ) : null}
+            {item.dispensavel ? (
+              <View style={styles.etiquetaPular}>
+                <Text style={styles.etiquetaPularTexto}>Sem alunos, pode pular</Text>
               </View>
             ) : null}
           </View>
@@ -240,6 +246,15 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   etiquetaProximaTexto: { fontFamily: fontFamily.bold, fontSize: 13, fontWeight: '700', color: '#FFFFFF' },
+  etiquetaPular: {
+    alignSelf: 'flex-start',
+    marginTop: spacing.xs,
+    backgroundColor: colors.neutral[100],
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  etiquetaPularTexto: { fontFamily: fontFamily.bold, fontSize: 13, fontWeight: '700', color: colors.neutral[600] },
   etiquetas: { alignItems: 'flex-start', gap: spacing.xs, flexShrink: 0 },
   pilula: { borderRadius: borderRadius.full, paddingHorizontal: 10, paddingVertical: 3 },
   pilula_azul: { backgroundColor: colors.primary.lighter },
