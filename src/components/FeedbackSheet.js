@@ -17,6 +17,7 @@ import {
 import { borderRadius, colors, spacing, textStyles } from '../theme';
 import feedbackService from '../services/feedbackService';
 import { lerVersaoInstalada } from '../services/versaoApp';
+import { descreverDispositivo } from '../utils/dispositivo';
 import { getErrorMessageFromError } from '../utils/errors';
 import {
   TIPOS_FEEDBACK,
@@ -45,6 +46,11 @@ const FeedbackSheet = ({ visible, onClose, tela, onSent }) => {
           tela,
           plataforma: Platform.OS,
           versionCode: lerVersaoInstalada()?.versionCode,
+          aparelho: descreverDispositivo(
+            Platform.OS,
+            Platform.constants,
+            typeof navigator !== 'undefined' ? navigator.userAgent : '',
+          ),
         }),
       );
       setMensagem('');

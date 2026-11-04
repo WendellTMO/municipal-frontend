@@ -44,3 +44,12 @@ test('shouldShowBetaNotice e a chave por usuário', () => {
   expect(shouldShowBetaNotice('1')).toBe(false);
   expect(betaNoticeKey('abc')).toBe('beta_notice_visto:abc');
 });
+
+test('o aparelho vai no payload e some quando não há dados', () => {
+  const com = buildFeedbackPayload({ tipo: 'BUG', mensagem: 'a', tela: '', aparelho: { dispositivo: 'samsung SM-S911B', versao_so: 'Android 14' } });
+  expect(com.dispositivo).toBe('samsung SM-S911B');
+  expect(com.versao_so).toBe('Android 14');
+  const sem = buildFeedbackPayload({ tipo: 'BUG', mensagem: 'a', tela: '' });
+  expect(sem.dispositivo).toBeNull();
+  expect(sem.versao_so).toBeNull();
+});
