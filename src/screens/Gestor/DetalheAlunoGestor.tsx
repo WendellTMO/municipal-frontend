@@ -148,7 +148,6 @@ const DetalheAlunoGestor = ({ route, navigation }: any) => {
             label="Data de nascimento"
             value={aluno.data_nascimento ? `${fmtDate(aluno.data_nascimento)}${age !== null ? ` (${age} anos)` : ''}` : undefined}
           />
-          <InfoRow label="Matrícula" value={aluno.matricula} />
           <InfoRow label="Instituição" value={aluno.escola} />
         </SectionCard>
 

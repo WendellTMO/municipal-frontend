@@ -313,12 +313,8 @@ const AccountInfoSection = ({
       <View style={styles.infoRow}>
         <Icon name={IconNames.badge} size="md" color={colors.text.secondary} />
         <View style={styles.infoText}>
-          <Text style={styles.infoLabel}>
-            {role === 'aluno' ? 'Matrícula' : 'Perfil'}
-          </Text>
-          <Text style={styles.infoValue}>
-            {role === 'aluno' ? user?.matricula ?? '—' : roleLabel(user?.role)}
-          </Text>
+          <Text style={styles.infoLabel}>Perfil</Text>
+          <Text style={styles.infoValue}>{roleLabel(user?.role)}</Text>
         </View>
       </View>
 
