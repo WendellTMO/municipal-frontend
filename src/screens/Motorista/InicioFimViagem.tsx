@@ -51,6 +51,7 @@ import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
 import { limparEnvio, registrarEnvio } from '../../utils/demandaLocalizacao';
 import { escutarDemandaPrimeiroPlano, iniciarServicoViagem, pararServicoViagem } from '../../services/servicoViagem';
 import { horaCurta } from '../../utils/viagemPainel';
+import { lerPosicao, PERMISSAO_NEGADA } from '../../utils/lerPosicao';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
@@ -144,6 +145,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [alturaTopo, setAlturaTopo] = useState(0);
   const [centralizarTick, setCentralizarTick] = useState(0);
   const [alturaPainel, setAlturaPainel] = useState(0);
+  // Por que o GPS não responde: 'negada' (permissão) ou 'indisponivel' (sem sinal). Some ao ler de novo.
+  const [erroGps, setErroGps] = useState<'negada' | 'indisponivel' | null>(null);
+  // Cada aumento reinicia a leitura do GPS (voltar de outro app, botão Tentar de novo).
+  const [reinicioGps, setReinicioGps] = useState(0);
 
   const currentViagem = (viagem ?? viagemParam) as Record<string, unknown>;
   const viagemId = (currentViagem?.id ?? viagemParam?.id) as string | undefined;
@@ -227,8 +232,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     // Uma leitura de GPS + POST. Devolve a resposta, ou null se o GPS ou o POST falharem.
     const lerEEnviar = () =>
       new Promise<Record<string, unknown> | null>((resolve) => {
-        Geolocation!.getCurrentPosition(
+        lerPosicao(
+          Geolocation!,
           (pos) => {
+            setErroGps(null);
             setPosMotorista({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
             motoristaService
               .enviarLocalizacao(viagemIdRef.current!, {
@@ -238,8 +245,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               .then((resp) => resolve(resp as unknown as Record<string, unknown>))
               .catch(() => resolve(null));
           },
-          () => resolve(null),
-          { enableHighAccuracy: true, timeout: 10_000, maximumAge: 5_000 },
+          (erro) => {
+            setErroGps(erro?.code === PERMISSAO_NEGADA ? 'negada' : 'indisponivel');
+            resolve(null);
+          },
         );
       });
 
@@ -265,7 +274,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       limparEnvio();
       pararServicoViagem();
     };
-  }, [viagemIniciada]);
+  }, [viagemIniciada, reinicioGps]);
 
   // Tela acesa enquanto a viagem anda: o motorista não pode ficar tocando para ela não apagar.
   useEffect(() => {
@@ -344,11 +353,26 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     if (!viagemIniciada || !Geolocation) return;
     const opcoes = { enableHighAccuracy: true, distanceFilter: 10, interval: 5000, fastestInterval: 2000 };
     const id = Geolocation.watchPosition(
-      (pos) => setPosMotorista({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-      () => {},
+      (pos) => {
+        setErroGps(null);
+        setPosMotorista({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      },
+      (erro) => {
+        if (erro.code === PERMISSAO_NEGADA) setErroGps('negada');
+      },
       opcoes as PositionOptions,
     );
     return () => Geolocation!.clearWatch(id);
+  }, [viagemIniciada, reinicioGps]);
+
+  // Navegador de celular: ao voltar de outro app a leitura do GPS pode ter ficado parada. Reinicia.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !viagemIniciada) return;
+    const aoVoltar = () => {
+      if (document.visibilityState === 'visible') setReinicioGps((n) => n + 1);
+    };
+    document.addEventListener('visibilitychange', aoVoltar);
+    return () => document.removeEventListener('visibilitychange', aoVoltar);
   }, [viagemIniciada]);
 
   // Chegada automática: qualquer parada ainda não feita a até 50 m, em qualquer ordem. Com leituras
@@ -601,6 +625,28 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         ) : null}
 
         <View style={styles.floatingBottom} onLayout={(e) => setAlturaPainel(e.nativeEvent.layout.height)}>
+          {erroGps ? (
+            <View style={styles.avisoGps} accessibilityRole="alert">
+              <View style={styles.avisoGpsTextos}>
+                <Text style={styles.avisoGpsTitulo}>
+                  {erroGps === 'negada' ? 'Localização bloqueada' : 'Sem sinal de localização'}
+                </Text>
+                <Text style={styles.avisoGpsTexto}>
+                  {erroGps === 'negada'
+                    ? 'Permita a localização nas configurações do navegador ou do app.'
+                    : 'Os alunos não estão vendo o ônibus. Vá para um lugar aberto.'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.avisoGpsBotao}
+                onPress={() => setReinicioGps((n) => n + 1)}
+                accessibilityRole="button"
+                accessibilityLabel="Tentar localizar de novo">
+                <Text style={styles.avisoGpsBotaoTexto}>Tentar de novo</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
           {/* Só a informação da próxima parada */}
           <View style={styles.proximaCard}>
             <View style={styles.proximaIcone}>
@@ -967,6 +1013,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   acaoDesabilitada: { opacity: 0.4 },
+  avisoGps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.warning.light,
+    borderWidth: 1,
+    borderColor: colors.warning.main,
+  },
+  avisoGpsTextos: { flex: 1 },
+  avisoGpsTitulo: { ...textStyles.h5, color: colors.warning.dark },
+  avisoGpsTexto: { ...textStyles.bodySmall, color: colors.text.primary },
+  avisoGpsBotao: {
+    minHeight: 48,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    borderRadius: 12,
+    backgroundColor: colors.warning.dark,
+  },
+  avisoGpsBotaoTexto: { ...textStyles.button, color: '#FFFFFF' },
   modalSecao: { ...textStyles.h5, color: colors.text.primary, marginTop: spacing.base, marginBottom: spacing.sm },
   problemaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   problemaChip: {
