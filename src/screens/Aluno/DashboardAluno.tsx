@@ -161,7 +161,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           text: colors.error.dark,
           icon: IconNames.close,
           label: 'Viagem de hoje cancelada',
-          sub: 'Entre em contato com o gestor',
+          sub: todayTrip.motivo_cancelamento ? `Motivo: ${todayTrip.motivo_cancelamento}` : 'Entre em contato com o gestor',
           onPress: undefined,
         };
       default:
@@ -178,6 +178,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
   };
 
   const emAndamento = todayTrip?.status_viagem === 'EM_ANDAMENTO';
+  const cancelada = proximaViagem?.status_viagem === 'CANCELADA';
 
   // Resposta "Desci" do diálogo do mini mapa: usa o cancelamento de presença de sempre.
   const desci = async (): Promise<boolean> => {
@@ -208,7 +209,12 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
     let quando = `em ${dia}`;
     if (dia === 'HOJE') quando = 'hoje';
     if (dia === 'AMANHÃ') quando = 'amanhã';
-    const confirmada = proximaViagem.status === 'Confirmado' ? 'confirmada' : 'não confirmada';
+    let confirmada = proximaViagem.status === 'Confirmado' ? 'confirmada' : 'não confirmada';
+    if (proximaViagem.status_viagem === 'CANCELADA') {
+      confirmada = proximaViagem.motivo_cancelamento
+        ? `cancelada, motivo: ${proximaViagem.motivo_cancelamento}`
+        : 'cancelada';
+    }
     const rota = (proximaViagem.rota_nome ?? 'Rota').replace(/→/g, 'para');
     proximaViagemLabel = `Próxima viagem ${quando} às ${proximaViagem.horario}, ${rota}, ${confirmada}`;
   }
@@ -377,19 +383,24 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
           <TripHeroCard
             dayLabel={dayLabel(proximaViagem.data)}
             time={proximaViagem.horario}
-            statusLabel={proximaViagem.status}
+            statusLabel={cancelada ? 'Cancelada' : proximaViagem.status}
             statusColor={
-              proximaViagem.status === 'Confirmado' ? colors.success.main : colors.warning.main
+              cancelada ? colors.error.dark : proximaViagem.status === 'Confirmado' ? colors.success.main : colors.warning.main
             }
             statusIcon={
-              proximaViagem.status === 'Confirmado' ? IconNames.checkCircle : IconNames.warning
+              cancelada ? IconNames.error : proximaViagem.status === 'Confirmado' ? IconNames.checkCircle : IconNames.warning
             }
             title={proximaViagem.rota_nome ?? 'Rota'}
             subtitle={
-              saidaAtrasada(proximaViagem)
+              cancelada
+                ? proximaViagem.motivo_cancelamento
+                  ? `Não vai acontecer: ${proximaViagem.motivo_cancelamento}`
+                  : 'Esta viagem não vai acontecer'
+                : saidaAtrasada(proximaViagem)
                 ? `Saída prevista às ${proximaViagem.horario}`
                 : undefined
             }
+            fundo={cancelada ? '#9F1D1D' : undefined}
             accessibilityLabel={proximaViagemLabel}
             onPress={abrirDetalheViagem}>
             {aceitaPresenca(proximaViagem.status_viagem) ? (

@@ -39,6 +39,8 @@ export type ViagemAgendaUI = {
   precisa_escolher_ponto: boolean;
   /** Trip operational status (AGENDADA | EM_ANDAMENTO | FINALIZADA | CANCELADA) */
   status_viagem: string | undefined;
+  /** Motivo informado por quem cancelou (só em viagem CANCELADA) */
+  motivo_cancelamento?: string | null;
   alunos_confirmados_count: number;
   total_alunos: number;
 };
@@ -58,6 +60,7 @@ function normalizeViagemAgenda(viagem: ViagemAgendaAlunoResponse): ViagemAgendaU
     ponto_destino_id: (raw.ponto_destino_id as string) ?? undefined,
     precisa_escolher_ponto: (raw.precisa_escolher_ponto as boolean) ?? false,
     status_viagem: (raw.status_viagem as string) ?? 'AGENDADA',
+    motivo_cancelamento: (raw.motivo_cancelamento as string | null) ?? null,
     alunos_confirmados_count: (raw.alunos_confirmados_count as number) ?? 0,
     total_alunos: (raw.total_alunos as number) ?? 0,
   };
