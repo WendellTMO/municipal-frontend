@@ -70,3 +70,20 @@ test('proximas traz até 3 viagens depois da próxima, incluindo cancelada que a
 test('proximas fica vazia quando só existe a próxima', () => {
   expect(organizarViagens([viagem('13h', '2026-11-03', '13:00:00')], agora).proximas).toEqual([]);
 });
+
+test('cancelada de hoje concorre à próxima e mantém o status CANCELADA', () => {
+  const cancelada = viagem('c', '2026-11-03', '13:00:00', 'CANCELADA');
+  const amanha = viagem('amanha', '2026-11-04', '06:00:00');
+  const { proxima, proximas } = organizarViagens([cancelada, amanha], agora);
+  expect(proxima.id).toBe('c');
+  expect(proxima.status).toBe('CANCELADA');
+  expect(proximas.map(v => v.id)).toEqual(['amanha']);
+});
+
+test('cancelada de outro dia não vira a próxima e fica nas próximas', () => {
+  const cancelada = viagem('c', '2026-11-04', '06:00:00', 'CANCELADA');
+  const hoje = viagem('hoje', '2026-11-03', '13:00:00');
+  const { proxima, proximas } = organizarViagens([cancelada, hoje], agora);
+  expect(proxima.id).toBe('hoje');
+  expect(proximas.map(v => v.id)).toEqual(['c']);
+});

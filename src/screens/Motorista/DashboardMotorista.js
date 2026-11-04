@@ -161,6 +161,7 @@ const DashboardMotorista = ({navigation}) => {
   }, [proximaViagem]);
 
   const emAndamento = proximaViagem?.status === 'Em andamento';
+  const cancelada = proximaViagem?.statusApi === 'CANCELADA';
   const ehGestor = user?.role?.toLowerCase() === 'gestor';
 
   return (
@@ -183,13 +184,26 @@ const DashboardMotorista = ({navigation}) => {
             time={proximaViagem.horario}
             statusLabel={proximaViagem.status}
             statusColor={
-              proximaViagem.status === 'Em andamento' ? colors.success.main : colors.warning.main
+              cancelada
+                ? colors.error.dark
+                : proximaViagem.status === 'Em andamento'
+                ? colors.success.main
+                : colors.warning.main
             }
             statusIcon={
-              proximaViagem.status === 'Em andamento' ? IconNames.route : IconNames.schedule
+              cancelada
+                ? IconNames.error
+                : proximaViagem.status === 'Em andamento'
+                ? IconNames.route
+                : IconNames.schedule
             }
+            fundo={cancelada ? '#9F1D1D' : undefined}
             title={`${proximaViagem.origem || 'Origem'} → ${proximaViagem.destino || 'Destino'}`}
-            subtitle={formatarSentido(proximaViagem.tipo)}
+            subtitle={
+              cancelada && proximaViagem.motivo_cancelamento
+                ? `${formatarSentido(proximaViagem.tipo)} · Cancelada: ${proximaViagem.motivo_cancelamento}`
+                : formatarSentido(proximaViagem.tipo)
+            }
             accessibilityLabel={`Ver detalhes da próxima viagem, ${dayLabel(proximaViagem.data)} às ${proximaViagem.horario}, ${proximaViagem.origem || 'origem'} para ${proximaViagem.destino || 'destino'}, ${proximaViagem.status}`}
             onPress={() =>
               // O detalhe espera o status da API (AGENDADA...), não o texto do cartão.
@@ -205,6 +219,9 @@ const DashboardMotorista = ({navigation}) => {
                   : 'Nenhum aluno inscrito nesta rota'}
               </Text>
             </View>
+            {cancelada ? (
+              <Text style={styles.avisoRetomar}>Se o ônibus ficar pronto, iniciar desfaz o cancelamento e avisa os alunos.</Text>
+            ) : null}
             <Tappable navega
               style={[
                 styles.iniciarButton,
@@ -360,6 +377,7 @@ const styles = StyleSheet.create({
   // Alunos Info
   
   // Action Buttons
+  avisoRetomar: { ...textStyles.bodySmall, color: '#FFE4E4', marginBottom: spacing.sm },
   iniciarButton: {
     flexDirection: 'row',
     alignItems: 'center',
