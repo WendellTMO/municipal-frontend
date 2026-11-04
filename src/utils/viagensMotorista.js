@@ -17,6 +17,9 @@ export const inicioDaViagem = viagem => {
   return Number.isNaN(inicio.getTime()) ? null : inicio;
 };
 
+const mesmoDia = (a, b) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
 const situacaoDoHistorico = (viagem, perdida) => {
   if (viagem.status === 'CANCELADA') return 'cancelada';
   if (viagem.status === 'FINALIZADA') return viagem.realizada_sem_app ? 'feita_sem_app' : 'feita';
@@ -33,6 +36,8 @@ export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 
   const agendadas = [];
   const historico = [];
   const canceladasFuturas = [];
+  // Cancelada de hoje ainda pode ser retomada (o ônibus foi consertado): concorre à próxima.
+  const canceladasDeHoje = [];
 
   for (const viagem of viagens || []) {
     const inicio = inicioDaViagem(viagem);
@@ -42,7 +47,9 @@ export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 
       agendadas.push({ viagem, inicio });
     } else if (viagem.status === 'FINALIZADA' || viagem.status === 'CANCELADA') {
       historico.push({ viagem, inicio, situacao: situacaoDoHistorico(viagem, false) });
-      if (viagem.status === 'CANCELADA' && inicio && inicio >= agora) {
+      if (viagem.status === 'CANCELADA' && inicio && mesmoDia(inicio, agora)) {
+        canceladasDeHoje.push({ viagem, inicio });
+      } else if (viagem.status === 'CANCELADA' && inicio && inicio >= agora) {
         canceladasFuturas.push({ viagem, inicio });
       }
     }
@@ -51,7 +58,7 @@ export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 
   if (emAndamento.length > 0) {
     proxima = emAndamento[0];
   } else {
-    for (const { viagem, inicio } of agendadas) {
+    for (const { viagem, inicio } of [...agendadas, ...canceladasDeHoje]) {
       // Empate: vale a que ainda vai acontecer.
       const distancia = Math.abs(inicio - agora) + (inicio < agora ? 1 : 0);
       if (distancia < menorDistancia) {
@@ -72,6 +79,9 @@ export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 
     if (viagem !== proxima && inicio >= agora) candidatas.push({ viagem, inicio });
   }
   for (const item of canceladasFuturas) candidatas.push(item);
+  for (const item of canceladasDeHoje) {
+    if (item.viagem !== proxima && item.inicio >= agora) candidatas.push(item);
+  }
   candidatas.sort((a, b) => a.inicio - b.inicio);
   const proximas = [];
   for (const { viagem } of candidatas) {

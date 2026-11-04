@@ -37,7 +37,8 @@ import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import FolhaMotivos from '../../components/FolhaMotivos';
 import { useToast } from '../../components/Toast';
-import { horaCurta } from '../../utils/viagemPainel';
+import { ehDeHoje, horaCurta } from '../../utils/viagemPainel';
+import AvisoViagemCancelada from '../../components/AvisoViagemCancelada';
 import { formatarSentido } from '../../utils/formatarSentido';
 
 type RootParamList = Record<string, object | undefined>;
@@ -125,6 +126,10 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
+
+          {status === 'CANCELADA' && (
+            <AvisoViagemCancelada motivo={viagem.motivo_cancelamento as string | undefined} />
+          )}
 
           {/* Imprevisto (ônibus quebrou, feriado): avisar os alunos é o que o motorista mais faz aqui */}
           {isMotorista && status === 'AGENDADA' && (
@@ -264,8 +269,8 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
             </TouchableOpacity>
           )}
 
-          {/* Iniciar CTA — only for motoristas when trip hasn't started yet */}
-          {isMotorista && status === 'AGENDADA' && (
+          {/* Iniciar CTA: viagem agendada, ou cancelada de hoje (o ônibus foi consertado) */}
+          {isMotorista && (status === 'AGENDADA' || (status === 'CANCELADA' && ehDeHoje(viagem))) && (
             <TouchableOpacity
               style={styles.iniciarButton}
               onPress={() => navigation.navigate('InicioFimViagem', { viagem })}
