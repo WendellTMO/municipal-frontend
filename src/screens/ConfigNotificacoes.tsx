@@ -68,14 +68,18 @@ const ConfigNotificacoes = ({ navigation }) => {
     }
   };
 
-  const handleSalvarPreferencias = async () => {
+  // Salva ao tocar no interruptor. Se o servidor recusar, o interruptor volta ao valor anterior.
+  const alternarNotificacoes = async (valor: boolean) => {
+    const anterior = receberNotificacoes;
+    setReceberNotificacoes(valor);
+    setSalvandoPrefs(true);
     try {
-      setSalvandoPrefs(true);
-      await userService.updateProfile({ receber_notificacoes: receberNotificacoes });
+      await userService.updateProfile({ receber_notificacoes: valor });
       if (refreshUser) await refreshUser();
-      toast.success('Preferências salvas!');
+      toast.success(valor ? 'Notificações ativadas' : 'Notificações desativadas');
     } catch (e: any) {
-      toast.error(e?.message ?? 'Erro ao salvar preferências.');
+      setReceberNotificacoes(anterior);
+      toast.error(e?.message ?? 'Não foi possível salvar. Tente de novo.');
     } finally {
       setSalvandoPrefs(false);
     }
@@ -104,8 +108,7 @@ const ConfigNotificacoes = ({ navigation }) => {
 
         <NotificacoesSection
           receberNotificacoes={receberNotificacoes}
-          onToggle={setReceberNotificacoes}
-          onSave={handleSalvarPreferencias}
+          onToggle={alternarNotificacoes}
           salvando={salvandoPrefs}
           role={role}
         />
@@ -249,26 +252,27 @@ const AlunoNotificationSection = ({ user }: { user: any }) => {
 const NotificacoesSection = ({
   receberNotificacoes,
   onToggle,
-  onSave,
   salvando,
   role,
 }: {
   receberNotificacoes: boolean;
   onToggle: (v: boolean) => void;
-  onSave: () => void;
   salvando: boolean;
   role?: string;
 }) => {
   const description =
     role === 'motorista'
-      ? 'Receber avisos do gestor, confirmações de alunos e alertas da rota'
+      ? 'Avisos do gestor, confirmações de alunos e alertas da rota'
       : role === 'gestor'
-      ? 'Receber ocorrências, relatórios e alertas do sistema'
-      : 'Receber lembretes de viagem, avisos do motorista e atualizações de rota';
+      ? 'Ocorrências, relatórios e alertas do sistema'
+      : 'Lembretes de viagem, avisos do motorista e atualizações de rota';
 
   return (
     <View style={styles.section}>
-      <View style={styles.settingRowTopAligned}>
+      <View style={styles.settingRow}>
+        <View style={[styles.settingIconContainer, { backgroundColor: colors.primary.lighter }]}>
+          <Icon name={IconNames.notifications} size="md" color={colors.primary.dark} />
+        </View>
         <View style={styles.settingInfo}>
           <Text style={styles.settingTitle}>Receber notificações</Text>
           <Text style={styles.settingDescription}>{description}</Text>
@@ -276,22 +280,13 @@ const NotificacoesSection = ({
         <Switch
           value={receberNotificacoes}
           onValueChange={onToggle}
+          disabled={salvando}
           trackColor={{ false: colors.border.light, true: colors.primary.dark }}
           thumbColor={colors.background.paper}
           accessibilityLabel="Receber notificações"
           accessibilityRole="switch"
         />
       </View>
-      <TouchableOpacity
-        style={[styles.saveButton, salvando && { opacity: 0.6 }]}
-        onPress={onSave}
-        disabled={salvando}>
-        {salvando ? (
-          <ActivityIndicator color="#FFFFFF" size="small" />
-        ) : (
-          <Text style={styles.saveButtonText}>Salvar Preferências</Text>
-        )}
-      </TouchableOpacity>
     </View>
   );
 };
