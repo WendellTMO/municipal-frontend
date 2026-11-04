@@ -12,7 +12,7 @@ import { motoristaService } from '../../services/motoristaService';
 import { unwrapItems } from '../../types';
 import { organizarViagens } from '../../utils/viagensMotorista';
 import { contarPorGrupo, filtrarHistorico, filtroPadrao } from '../../utils/filtroHistorico';
-import Tappable from '../../components/Tappable';
+import ChipsFiltro from '../../components/ChipsFiltro';
 import { withFabSpace } from '../../config/feedback';
 import { colors, spacing, textStyles } from '../../theme';
 
@@ -84,25 +84,12 @@ const HistoricoViagensMotorista = ({ navigation }) => {
             />
           }>
           {itens.length > 0 ? (
-            <View style={styles.filtros} accessibilityRole="toolbar">
-              {CHIPS.map(chip => {
-                const ligado = filtro[chip.id];
-                return (
-                  <Tappable
-                    key={chip.id}
-                    sombra={false}
-                    style={[styles.chip, ligado && styles.chipLigado]}
-                    onPress={() => setFiltro(atual => ({ ...atual, [chip.id]: !atual[chip.id] }))}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: ligado }}
-                    accessibilityLabel={`${chip.texto}, ${contagem[chip.id]} viagens, ${ligado ? 'mostrando' : 'escondidas'}`}>
-                    <Text style={[styles.chipTexto, ligado && styles.chipTextoLigado]}>
-                      {chip.texto} ({contagem[chip.id]})
-                    </Text>
-                  </Tappable>
-                );
-              })}
-            </View>
+            <ChipsFiltro
+              chips={CHIPS}
+              filtro={filtro}
+              contagem={contagem}
+              onAlternar={id => setFiltro(atual => ({ ...atual, [id]: !atual[id] }))}
+            />
           ) : null}
           {itens.length === 0 ? (
             <Text style={styles.vazio}>Nenhuma viagem no histórico ainda.</Text>
@@ -125,19 +112,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.default },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   conteudo: { padding: spacing.base },
-  filtros: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.base },
-  chip: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    borderColor: colors.border.main,
-    backgroundColor: colors.background.paper,
-  },
-  chipLigado: { backgroundColor: colors.primary.main, borderColor: colors.primary.main },
-  chipTexto: { ...textStyles.button, color: colors.text.secondary },
-  chipTextoLigado: { color: '#FFFFFF' },
   vazio: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.xl },
 });
 
