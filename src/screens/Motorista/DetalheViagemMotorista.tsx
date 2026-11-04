@@ -124,6 +124,24 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
 
+          {/* Imprevisto (ônibus quebrou, feriado): avisar os alunos é o que o motorista mais faz aqui */}
+          {isMotorista && status === 'AGENDADA' && (
+            <TouchableOpacity
+              style={styles.avisarCancelamento}
+              onPress={() => setConfirmandoCancelar(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Avisar os alunos que esta viagem não vai acontecer">
+              <View style={styles.avisarIcone}>
+                <Icon name={IconNames.campaign} size="lg" color={colors.text.inverse} />
+              </View>
+              <View style={styles.avisarTextos}>
+                <Text style={styles.avisarTitulo}>Esta viagem não vai acontecer?</Text>
+                <Text style={styles.avisarDescricao}>Avisar os alunos agora</Text>
+              </View>
+              <Icon name={IconNames.chevronRight} size="md" color={colors.error.main} />
+            </TouchableOpacity>
+          )}
+
           {/* Summary card */}
           <View style={styles.card}>
             <View style={styles.summaryHeader}>
@@ -256,18 +274,6 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
             </TouchableOpacity>
           )}
 
-          {/* Imprevisto: ônibus quebrou, feriado de última hora */}
-          {isMotorista && status === 'AGENDADA' && (
-            <TouchableOpacity
-              style={styles.cancelarButton}
-              onPress={() => setConfirmandoCancelar(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Cancelar esta viagem">
-              <Icon name={IconNames.close} size="md" color={colors.error.main} />
-              <Text style={styles.cancelarButtonText}>Não vou fazer esta viagem</Text>
-            </TouchableOpacity>
-          )}
-
           {/* Resume trip CTA — only for motoristas when already in progress */}
           {isMotorista && status === 'EM_ANDAMENTO' && (
             <TouchableOpacity
@@ -285,8 +291,8 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
 
       <DialogoConfirmacao
         visible={confirmandoCancelar}
-        titulo="Cancelar esta viagem?"
-        resumo="Os alunos confirmados e o gestor vão receber o aviso. Qual é o motivo?"
+        titulo="Avisar que a viagem não vai acontecer?"
+        resumo="Os alunos confirmados e o gestor recebem o aviso agora. Qual é o motivo?"
         onCancelar={() => setConfirmandoCancelar(false)}
         botoes={[
           { texto: 'Problema no ônibus', cor: colors.error.main, carregando: cancelando, onPress: () => cancelarComMotivo('problema no ônibus') },
@@ -451,19 +457,28 @@ const styles = StyleSheet.create({
     minHeight: 60,
     ...shadows.md,
   },
-  cancelarButton: {
+  avisarCancelamento: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-    minHeight: 56,
+    gap: spacing.md,
+    marginBottom: spacing.base,
+    padding: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.error.main,
-    backgroundColor: colors.background.paper,
+    borderColor: colors.error.light,
+    backgroundColor: colors.error.lighter,
   },
-  cancelarButtonText: { ...textStyles.button, color: colors.error.main },
+  avisarIcone: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.error.main,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avisarTextos: { flex: 1 },
+  avisarTitulo: { ...textStyles.h5, color: colors.error.dark },
+  avisarDescricao: { ...textStyles.bodySmall, color: colors.text.secondary },
   iniciarButtonText: { ...textStyles.button, color: colors.text.inverse, fontSize: fontSize.h4 },
 });
 
