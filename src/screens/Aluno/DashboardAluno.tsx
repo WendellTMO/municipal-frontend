@@ -153,6 +153,8 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
   const todayBannerConfig = (() => {
     if (!todayTrip) return null;
+    // O cartão da próxima viagem já mostra esta mesma viagem cancelada com o motivo.
+    if (proximaViagem && proximaViagem.id === todayTrip.id) return null;
     switch (todayTrip.status_viagem) {
       case 'CANCELADA':
         return {
