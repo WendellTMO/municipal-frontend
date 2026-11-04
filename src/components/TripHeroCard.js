@@ -20,9 +20,10 @@ const TripHeroCard = ({
   subtitle = '',
   onPress,
   accessibilityLabel,
+  fundo = undefined,
   children = undefined,
 }) => (
-  <View style={styles.card}>
+  <View style={[styles.card, fundo ? { backgroundColor: fundo } : null]}>
     <Tappable
       navega
       onPress={onPress}

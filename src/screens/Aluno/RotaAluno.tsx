@@ -20,6 +20,7 @@ import EscolhaPontoSheet, { LinhaDosPontos } from '../../components/EscolhaPonto
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import AvisoViagemCancelada from '../../components/AvisoViagemCancelada';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
@@ -264,6 +265,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const getStatusFromViagem = (viagem: ViagemAgendaUI): string => {
+    if (viagem.status_viagem === 'CANCELADA') return 'Cancelada';
     const isConfirmed = presencasStatus[viagem.id ?? ''] ?? viagem.status_confirmacao;
     return isConfirmed ? 'Confirmado' : 'Não confirmado';
   };
@@ -369,14 +371,18 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
                     </View>
                   </View>
 
-                  {/* Capacity */}
-                  <CapacityPill
-                    confirmed={viagem.alunos_confirmados_count}
-                    total={viagem.total_alunos}
-                  />
+                  {/* Viagem cancelada mostra o motivo; as outras, as vagas */}
+                  {viagem.status_viagem === 'CANCELADA' ? (
+                    <AvisoViagemCancelada compacto motivo={viagem.motivo_cancelamento} />
+                  ) : (
+                    <CapacityPill
+                      confirmed={viagem.alunos_confirmados_count}
+                      total={viagem.total_alunos}
+                    />
+                  )}
                   </Tappable>
 
-                  {podeConfirmar(viagem) && (
+                  {viagem.status_viagem !== 'CANCELADA' && podeConfirmar(viagem) && (
                     <PresencaDaViagem
                       key={`${viagem.id}-${viagem.precisa_escolher_ponto}-${viagem.status_confirmacao}`}
                       viagem={viagem}

@@ -25,6 +25,7 @@ import EscolhaPontoSheet, { LinhaDosPontos } from '../../components/EscolhaPonto
 import { usePresencaViagem } from '../../hooks/usePresencaViagem';
 import { presencaTravada } from '../../utils/aBordo';
 import { aceitaPresenca } from '../../utils/presenca';
+import AvisoViagemCancelada from '../../components/AvisoViagemCancelada';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 
@@ -187,6 +188,8 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
 
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>
+          {statusViagem === 'CANCELADA' ? <AvisoViagemCancelada motivo={viagem.motivo_cancelamento} /> : null}
+
           {/* Main Info Card */}
           <View style={styles.card}>
             <View style={styles.viagemHeader}>
@@ -232,7 +235,8 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
             />
           </View>
 
-          {/* Presence Card */}
+          {/* Presence Card: viagem cancelada não tem o que confirmar */}
+          {statusViagem !== 'CANCELADA' && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Status de Presença</Text>
             <View
@@ -286,6 +290,7 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
               </TouchableOpacity>
             )}
           </View>
+          )}
 
           {/* Route Points */}
           <View style={styles.card}>
