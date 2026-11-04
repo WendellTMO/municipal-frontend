@@ -8,6 +8,8 @@ export interface FeedbackRequest {
   tela: string | null;
   versao_app: string | null;
   plataforma: 'android' | 'ios' | 'web';
+  dispositivo?: string | null;
+  versao_so?: string | null;
 }
 
 export interface FeedbackResponse {

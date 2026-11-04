@@ -25,7 +25,7 @@ export const textoDaVersao = (nome, versionCode) => {
   return `${nome} (${versionCode})`;
 };
 
-export const buildFeedbackPayload = ({ tipo, mensagem, tela, plataforma, versionCode }) => {
+export const buildFeedbackPayload = ({ tipo, mensagem, tela, plataforma, versionCode, aparelho }) => {
   const versao = textoDaVersao(APP_VERSION, versionCode);
   return {
     tipo,
@@ -33,6 +33,8 @@ export const buildFeedbackPayload = ({ tipo, mensagem, tela, plataforma, version
     tela: tela ? String(tela).slice(0, TELA_MAX) : null,
     versao_app: versao ? versao.slice(0, VERSAO_MAX) : null,
     plataforma,
+    dispositivo: aparelho?.dispositivo ?? null,
+    versao_so: aparelho?.versao_so ?? null,
   };
 };
 
