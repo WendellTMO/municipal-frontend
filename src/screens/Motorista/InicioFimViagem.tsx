@@ -51,6 +51,7 @@ import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
 import { limparEnvio, registrarEnvio } from '../../utils/demandaLocalizacao';
 import { escutarDemandaPrimeiroPlano, iniciarServicoViagem, pararServicoViagem } from '../../services/servicoViagem';
 import { horaCurta } from '../../utils/viagemPainel';
+import { manterTelaAcesa } from '../../utils/telaAcesa';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
 import CronometroViagem from '../../components/CronometroViagem';
@@ -264,6 +265,12 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       limparEnvio();
       pararServicoViagem();
     };
+  }, [viagemIniciada]);
+
+  // Tela acesa enquanto a viagem anda: o motorista não pode ficar tocando para ela não apagar.
+  useEffect(() => {
+    if (!viagemIniciada) return;
+    return manterTelaAcesa();
   }, [viagemIniciada]);
 
   // Paradas válidas (com coordenadas), com estado e instituição de ensino.
