@@ -140,7 +140,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
                 <Text style={styles.avisarTitulo}>Esta viagem não vai acontecer?</Text>
                 <Text style={styles.avisarDescricao}>Avisar os alunos agora</Text>
               </View>
-              <Icon name={IconNames.chevronRight} size="md" color={colors.error.main} />
+              <Icon name={IconNames.chevronRight} size="md" color={colors.warning.dark} />
             </TouchableOpacity>
           )}
 
@@ -467,19 +467,19 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.error.light,
-    backgroundColor: colors.error.lighter,
+    borderColor: colors.warning.main,
+    backgroundColor: colors.warning.light,
   },
   avisarIcone: {
     width: 44,
     height: 44,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.error.main,
+    backgroundColor: colors.warning.dark,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avisarTextos: { flex: 1 },
-  avisarTitulo: { ...textStyles.h5, color: colors.error.dark },
+  avisarTitulo: { ...textStyles.h5, color: colors.warning.dark },
   avisarDescricao: { ...textStyles.bodySmall, color: colors.text.secondary },
   iniciarButtonText: { ...textStyles.button, color: colors.text.inverse, fontSize: fontSize.h4 },
 });
