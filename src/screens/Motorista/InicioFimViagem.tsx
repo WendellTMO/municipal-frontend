@@ -569,7 +569,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             posicaoOnibus={posMotorista}
             proximaParadaId={proxima ? (proxima.ponto.id as string) : null}
             rotaCoordenadas={trajeto}
-            seguirOnibus={false}
+            seguirOnibus
             centralizarTick={centralizarTick}
             margemSuperior={alturaTopo}
             margemInferior={alturaPainel}
