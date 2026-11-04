@@ -329,7 +329,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.row}>
-              <View style={[styles.fieldGroup, { flex: 2 }]}>
+              <View style={[styles.fieldGroup, { flex: 1 }]}>
                 <Text style={styles.label}>Cidade</Text>
                 <TextInput
                   style={styles.input}
@@ -339,7 +339,8 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
                   placeholderTextColor={colors.text.hint}
                 />
               </View>
-              <View style={[styles.fieldGroup, { flex: 1, marginLeft: spacing.sm }]}>
+              {/* Largura fixa: o CEP mascarado (58429-900) precisa caber inteiro. */}
+              <View style={[styles.fieldGroup, { width: 132, marginLeft: spacing.sm }]}>
                 <Text style={styles.label}>CEP</Text>
                 <TextInput
                   style={styles.input}
