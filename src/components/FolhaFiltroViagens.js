@@ -1,6 +1,6 @@
 /**
- * Folha de baixo do funil em "Minhas Viagens": situação (botões que ligam e desligam) e período
- * (atalhos ou datas De / Até). Cada toque já vale: o botão do fim só mostra quantas viagens ficaram e fecha.
+ * Folha de baixo do funil em "Minhas Viagens": situação (botões que ligam e desligam), sentido, rota,
+ * período (atalhos ou datas De / Até) e ordem. Cada toque já vale: o botão do fim só mostra quantas viagens ficaram e fecha.
  * Na web as datas usam o seletor do navegador. No celular o motorista digita DD/MM/AAAA.
  */
 import React from 'react';
@@ -8,10 +8,12 @@ import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, Vi
 import { borderRadius, colors, spacing, textStyles } from '../theme';
 import ModalApp from './ModalApp';
 import ChipsFiltro from './ChipsFiltro';
-import Tappable from './Tappable';
+import ChipsEscolha from './ChipsEscolha';
 import {
   CHIPS_VIAGENS,
+  ORDENS_VIAGEM,
   PERIODOS_RAPIDOS,
+  TIPOS_VIAGEM,
   filtroAtivo,
   filtroViagensPadrao,
   periodoRapido,
@@ -47,8 +49,13 @@ const CampoData = ({ rotulo, valor, onMudar }) => (
   </View>
 );
 
-const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, onMudar, onFechar }) => {
+const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, rotas = [], onMudar, onFechar }) => {
   const mudar = parcial => onMudar({ ...filtro, ...parcial });
+  let atalhoLigado = '';
+  for (const atalho of PERIODOS_RAPIDOS) {
+    const periodo = periodoRapido(atalho.id);
+    if (filtro.de === periodo.de && filtro.ate === periodo.ate) atalhoLigado = atalho.id;
+  }
   return (
     <ModalApp visible={visible} transparent animationType="slide" onRequestClose={onFechar} accessibilityViewIsModal>
       <View style={styles.fundo}>
@@ -74,29 +81,34 @@ const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, onMudar, onFec
               onAlternar={id => mudar({ [id]: !filtro[id] })}
             />
 
+            <Text style={styles.secao}>Sentido</Text>
+            <ChipsEscolha opcoes={TIPOS_VIAGEM} valor={filtro.tipo} onEscolher={tipo => mudar({ tipo })} />
+
+            {rotas.length > 1 ? (
+              <>
+                <Text style={styles.secao}>Rota</Text>
+                <ChipsEscolha
+                  opcoes={[{ id: '', texto: 'Todas' }, ...rotas]}
+                  valor={filtro.rota}
+                  onEscolher={rota => mudar({ rota })}
+                />
+              </>
+            ) : null}
+
             <Text style={styles.secao}>Período</Text>
-            <View style={styles.atalhos}>
-              {PERIODOS_RAPIDOS.map(atalho => {
-                const periodo = periodoRapido(atalho.id);
-                const ligado = filtro.de === periodo.de && filtro.ate === periodo.ate;
-                return (
-                  <Tappable
-                    key={atalho.id}
-                    sombra={false}
-                    style={[styles.atalho, ligado && styles.atalhoLigado]}
-                    onPress={() => mudar(ligado ? { de: '', ate: '' } : periodo)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: ligado }}
-                    accessibilityLabel={atalho.texto}>
-                    <Text style={[styles.atalhoTexto, ligado && styles.atalhoTextoLigado]}>{atalho.texto}</Text>
-                  </Tappable>
-                );
-              })}
-            </View>
+            <ChipsEscolha
+              opcoes={PERIODOS_RAPIDOS}
+              valor={atalhoLigado}
+              onEscolher={id => mudar(id === atalhoLigado ? { de: '', ate: '' } : periodoRapido(id))}
+            />
             <View style={styles.datas}>
               <CampoData rotulo="De" valor={filtro.de} onMudar={de => mudar({ de })} />
               <CampoData rotulo="Até" valor={filtro.ate} onMudar={ate => mudar({ ate })} />
             </View>
+
+            <Text style={styles.secao}>Ordenar por</Text>
+            <ChipsEscolha opcoes={ORDENS_VIAGEM} valor={filtro.ordem} onEscolher={ordem => mudar({ ordem })} />
+            <Text style={styles.dica}>Mais longas e mais curtas usam o tempo real da viagem. Viagem sem tempo medido vai para o fim.</Text>
 
             {filtroAtivo(filtro) ? (
               <TouchableOpacity
@@ -107,7 +119,8 @@ const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, onMudar, onFec
                 <Text style={styles.limparTexto}>Limpar filtros</Text>
               </TouchableOpacity>
             ) : null}
-
+          </ScrollView>
+          <View style={styles.rodape}>
             <TouchableOpacity
               style={styles.ver}
               onPress={onFechar}
@@ -115,7 +128,7 @@ const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, onMudar, onFec
               accessibilityLabel={`Ver ${quantas} viagens`}>
               <Text style={styles.verTexto}>{quantas === 1 ? 'Ver 1 viagem' : `Ver ${quantas} viagens`}</Text>
             </TouchableOpacity>
-          </ScrollView>
+          </View>
         </View>
       </View>
     </ModalApp>
@@ -132,22 +145,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   alca: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.neutral[300], alignSelf: 'center' },
-  conteudo: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  conteudo: { padding: spacing.lg, paddingBottom: spacing.base },
   titulo: { ...textStyles.h3, fontSize: 24, lineHeight: 30, color: colors.text.primary, marginBottom: spacing.base },
   secao: { ...textStyles.h5, color: colors.text.primary, marginBottom: spacing.sm },
-  atalhos: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.base },
-  atalho: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    borderColor: colors.border.main,
-    backgroundColor: colors.background.paper,
-  },
-  atalhoLigado: { backgroundColor: colors.primary.main, borderColor: colors.primary.main },
-  atalhoTexto: { ...textStyles.button, color: colors.text.secondary },
-  atalhoTextoLigado: { color: '#FFFFFF' },
   datas: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.base },
   campoData: { flex: 1, minWidth: 0, gap: spacing.xs },
   campoRotulo: { ...textStyles.bodySmall, color: colors.text.secondary },
@@ -161,8 +161,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.text.primary,
   },
+  dica: { ...textStyles.caption, color: colors.text.secondary, marginTop: -spacing.sm, marginBottom: spacing.base },
   limpar: { minHeight: 48, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   limparTexto: { ...textStyles.button, fontSize: 18, color: colors.primary.dark },
+  rodape: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.lg },
   ver: {
     minHeight: 60,
     borderRadius: borderRadius.lg,
