@@ -10,7 +10,6 @@ import {
 import TelaSegura from '../../components/TelaSegura';
 import { useAuth } from '../../contexts/AuthContext';
 import {motoristaService} from '../../services/motoristaService';
-import pontoService from '../../services/pontoService';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import { ActionTile, Icon, IconNames, LoadingSpinner, PainelHeader, TripHeroCard } from '../../components';
 import { getNotificacoes } from '../../services/notificacaoService';
@@ -23,6 +22,7 @@ import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 import { organizarViagens } from '../../utils/viagensMotorista';
+import { chaveDoCache, guardarCache, lerCache } from '../../utils/cacheTela';
 
 const DashboardMotorista = ({navigation}) => {
   const { user } = useAuth();
@@ -38,9 +38,12 @@ const DashboardMotorista = ({navigation}) => {
     }
   }, []);
 
-  const [proximaViagem, setProximaViagem] = useState(null);
-  const [proximas, setProximas] = useState([]);
-  const [loadingViagem, setLoadingViagem] = useState(true);
+  // Último dado da home: aparece na hora ao voltar a ela, enquanto o novo é buscado por trás.
+  const chavePainel = chaveDoCache(user?.id, 'painel-motorista');
+  const emCache = lerCache(chavePainel);
+  const [proximaViagem, setProximaViagem] = useState(emCache ? emCache.proximaViagem : null);
+  const [proximas, setProximas] = useState(emCache ? emCache.proximas : []);
+  const [loadingViagem, setLoadingViagem] = useState(!emCache);
   const [alunosInfo, setAlunosInfo] = useState({
     totalAlunos: 0,
     alunosConfirmados: 0,
@@ -59,28 +62,23 @@ const DashboardMotorista = ({navigation}) => {
 
           if (organizadas.proxima) {
             const proxima = organizadas.proxima;
-            const pontos = await pontoService.getPontosByRota(proxima.rota_id).then(unwrapItems);
-            proxima.pontos = pontos;
-            
             let origem = 'N/A';
             let destino = 'N/A';
-            
+
+            // Uma só busca dos pontos: serve ao detalhe da viagem e a origem e destino do cartão.
             try {
               const pontos = await motoristaService.listarPontosRota(proxima.rota_id).then(unwrapItems);
+              proxima.pontos = pontos;
               if (pontos && pontos.length > 0) {
                 origem = pontos[0].nome || 'N/A';
-                if (pontos.length > 1) {
-                  destino = pontos[pontos.length - 1].nome || 'N/A';
-                } else {
-                  destino = origem;
-                }
+                destino = pontos.length > 1 ? pontos[pontos.length - 1].nome || 'N/A' : origem;
               }
             } catch (e) {
               // Silent fail - use default values
             }
-            
+
             const horarioFormatado = formatarHora(proxima.horario_inicio);
-            
+
             // Map backend status to display status
             const statusMap = {
               'AGENDADA': 'A iniciar',
@@ -88,30 +86,37 @@ const DashboardMotorista = ({navigation}) => {
               'FINALIZADA': 'Finalizada',
               'CANCELADA': 'Cancelada',
             };
-            
-            setProximaViagem({
+
+            const nova = {
               ...proxima, // Keep all original data including 'alunos' array
               horario: horarioFormatado,
               status: statusMap[proxima.status] || 'A iniciar',
               statusApi: proxima.status,
               origem: proxima.origem || origem,
               destino: proxima.destino || destino,
-            });
+            };
+            setProximaViagem(nova);
+            guardarCache(chavePainel, { proximaViagem: nova, proximas: organizadas.proximas });
           } else {
             setProximaViagem(null);
+            guardarCache(chavePainel, { proximaViagem: null, proximas: organizadas.proximas });
           }
         } else {
           setProximaViagem(null);
           setProximas([]);
+          guardarCache(chavePainel, { proximaViagem: null, proximas: [] });
         }
       } catch (error) {
-        setProximaViagem(null);
-        setProximas([]);
+        // Sem rede, quem já tem dado na tela fica com ele.
+        if (!lerCache(chavePainel)) {
+          setProximaViagem(null);
+          setProximas([]);
+        }
       } finally {
         setLoadingViagem(false);
       }
     }
-  }, []);
+  }, [chavePainel]);
 
   // Recarrega ao abrir, ao voltar para a tela e ao arrastar para baixo, para o contador do sino
   // e o botão Iniciar/Continuar viagem não ficarem com dados velhos.
