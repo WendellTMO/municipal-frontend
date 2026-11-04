@@ -76,7 +76,8 @@ const MiniMapaOnibus = ({
   }, [rotaId]);
 
   useEffect(() => {
-    if (!viagemId || aBordo) return;
+    // Só aluno confirmado vê o ônibus: sem confirmar, o servidor responde 403 e a espera enganaria.
+    if (!viagemId || aBordo || !confirmada) return;
     let ativo = true;
     const buscar = async () => {
       try {
@@ -93,17 +94,18 @@ const MiniMapaOnibus = ({
       ativo = false;
       clearInterval(intervalo);
     };
-  }, [viagemId, aBordo]);
+  }, [viagemId, aBordo, confirmada]);
 
   if (!posicaoMapa) {
+    const textoEspera = confirmada ? 'Aguardando sinal do ônibus' : 'Confirme sua presença para ver o ônibus';
     return (
       <TouchableOpacity
         style={[styles.caixa, styles.espera, { height: altura }]}
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel="Aguardando sinal do ônibus, toque para abrir o mapa">
+        accessibilityLabel={`${textoEspera}, toque para abrir o mapa`}>
         <Icon name={IconNames.bus} size="lg" color={colors.neutral[400]} style={undefined} />
-        <Text style={styles.esperaTexto}>Aguardando sinal do ônibus</Text>
+        <Text style={styles.esperaTexto}>{textoEspera}</Text>
       </TouchableOpacity>
     );
   }
