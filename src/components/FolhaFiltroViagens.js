@@ -1,15 +1,16 @@
 /**
- * Folha de baixo do funil em "Minhas Viagens": situação (botões que ligam e desligam), sentido, rota,
- * período (atalhos ou datas De / Até) e ordem. Cada toque já vale: o botão do fim só mostra quantas viagens ficaram e fecha.
+ * Folha de baixo do funil em "Minhas Viagens": busca, situação (botões que ligam e desligam), sentido, rota,
+ * motorista, veículo, período (atalhos ou datas De / Até), alunos confirmados e ordem. Cada toque já vale: o botão do fim só mostra quantas viagens ficaram e fecha.
  * Na web as datas usam o seletor do navegador. No celular o motorista digita DD/MM/AAAA.
  */
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { borderRadius, colors, spacing, textStyles } from '../theme';
 import ModalApp from './ModalApp';
 import ChipsFiltro from './ChipsFiltro';
 import ChipsEscolha from './ChipsEscolha';
 import {
+  ALUNOS_VIAGEM,
   CHIPS_VIAGENS,
   ORDENS_VIAGEM,
   PERIODOS_RAPIDOS,
@@ -49,7 +50,7 @@ const CampoData = ({ rotulo, valor, onMudar }) => (
   </View>
 );
 
-const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, rotas = [], onMudar, onFechar }) => {
+const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, opcoes, onMudar, onFechar }) => {
   const mudar = parcial => onMudar({ ...filtro, ...parcial });
   let atalhoLigado = '';
   for (const atalho of PERIODOS_RAPIDOS) {
@@ -66,12 +67,23 @@ const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, rotas = [], on
           accessibilityRole="button"
           accessibilityLabel="Fechar filtros"
         />
-        <View style={styles.folha}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.folha}>
           <View style={styles.alca} accessibilityElementsHidden />
           <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
             <Text style={styles.titulo} accessibilityRole="header">
               Filtrar viagens
             </Text>
+
+            <TextInput
+              style={styles.busca}
+              value={filtro.busca}
+              onChangeText={busca => mudar({ busca })}
+              placeholder="Buscar rota, motorista, placa..."
+              placeholderTextColor={colors.text.hint}
+              returnKeyType="search"
+              autoCorrect={false}
+              accessibilityLabel="Buscar viagens"
+            />
 
             <Text style={styles.secao}>Situação</Text>
             <ChipsFiltro
@@ -84,13 +96,35 @@ const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, rotas = [], on
             <Text style={styles.secao}>Sentido</Text>
             <ChipsEscolha opcoes={TIPOS_VIAGEM} valor={filtro.tipo} onEscolher={tipo => mudar({ tipo })} />
 
-            {rotas.length > 1 ? (
+            {opcoes.rotas.length > 1 ? (
               <>
                 <Text style={styles.secao}>Rota</Text>
                 <ChipsEscolha
-                  opcoes={[{ id: '', texto: 'Todas' }, ...rotas]}
+                  opcoes={[{ id: '', texto: 'Todas' }, ...opcoes.rotas]}
                   valor={filtro.rota}
                   onEscolher={rota => mudar({ rota })}
+                />
+              </>
+            ) : null}
+
+            {opcoes.motoristas.length > 1 ? (
+              <>
+                <Text style={styles.secao}>Motorista</Text>
+                <ChipsEscolha
+                  opcoes={[{ id: '', texto: 'Todos' }, ...opcoes.motoristas]}
+                  valor={filtro.motorista}
+                  onEscolher={motorista => mudar({ motorista })}
+                />
+              </>
+            ) : null}
+
+            {opcoes.veiculos.length > 1 ? (
+              <>
+                <Text style={styles.secao}>Veículo</Text>
+                <ChipsEscolha
+                  opcoes={[{ id: '', texto: 'Todos' }, ...opcoes.veiculos]}
+                  valor={filtro.veiculo}
+                  onEscolher={veiculo => mudar({ veiculo })}
                 />
               </>
             ) : null}
@@ -105,6 +139,9 @@ const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, rotas = [], on
               <CampoData rotulo="De" valor={filtro.de} onMudar={de => mudar({ de })} />
               <CampoData rotulo="Até" valor={filtro.ate} onMudar={ate => mudar({ ate })} />
             </View>
+
+            <Text style={styles.secao}>Alunos confirmados</Text>
+            <ChipsEscolha opcoes={ALUNOS_VIAGEM} valor={filtro.alunos} onEscolher={alunos => mudar({ alunos })} />
 
             <Text style={styles.secao}>Ordenar por</Text>
             <ChipsEscolha opcoes={ORDENS_VIAGEM} valor={filtro.ordem} onEscolher={ordem => mudar({ ordem })} />
@@ -129,7 +166,7 @@ const FolhaFiltroViagens = ({ visible, filtro, contagem, quantas, rotas = [], on
               <Text style={styles.verTexto}>{quantas === 1 ? 'Ver 1 viagem' : `Ver ${quantas} viagens`}</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </View>
     </ModalApp>
   );
@@ -149,6 +186,17 @@ const styles = StyleSheet.create({
   titulo: { ...textStyles.h3, fontSize: 24, lineHeight: 30, color: colors.text.primary, marginBottom: spacing.base },
   secao: { ...textStyles.h5, color: colors.text.primary, marginBottom: spacing.sm },
   datas: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.base },
+  busca: {
+    minHeight: 52,
+    borderWidth: 1.5,
+    borderColor: colors.border.light,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.neutral[50],
+    paddingHorizontal: spacing.md,
+    fontSize: 18,
+    color: colors.text.primary,
+    marginBottom: spacing.base,
+  },
   campoData: { flex: 1, minWidth: 0, gap: spacing.xs },
   campoRotulo: { ...textStyles.bodySmall, color: colors.text.secondary },
   campo: {
