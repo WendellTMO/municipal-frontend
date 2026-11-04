@@ -23,13 +23,16 @@ const situacaoDoHistorico = (viagem, perdida) => {
   return perdida ? 'nao_realizada' : null;
 };
 
-// Devolve { proxima, historico }. `historico` vem do mais recente para o mais antigo.
-export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 15) => {
+// Devolve { proxima, proximas, historico }. `historico` vem do mais recente para o mais antigo.
+// `proximas` são as viagens que vêm depois da próxima (agendadas ou canceladas que ainda não
+// chegaram na hora), da mais perto para a mais longe: o motorista vê o feriado ou o aviso de antemão.
+export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 15, limiteProximas = 3) => {
   let proxima = null;
   let menorDistancia = Infinity;
   const emAndamento = [];
   const agendadas = [];
   const historico = [];
+  const canceladasFuturas = [];
 
   for (const viagem of viagens || []) {
     const inicio = inicioDaViagem(viagem);
@@ -39,6 +42,9 @@ export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 
       agendadas.push({ viagem, inicio });
     } else if (viagem.status === 'FINALIZADA' || viagem.status === 'CANCELADA') {
       historico.push({ viagem, inicio, situacao: situacaoDoHistorico(viagem, false) });
+      if (viagem.status === 'CANCELADA' && inicio && inicio >= agora) {
+        canceladasFuturas.push({ viagem, inicio });
+      }
     }
   }
 
@@ -61,6 +67,17 @@ export const organizarViagens = (viagens, agora = new Date(), limiteHistorico = 
     }
   }
 
+  const candidatas = [];
+  for (const { viagem, inicio } of agendadas) {
+    if (viagem !== proxima && inicio >= agora) candidatas.push({ viagem, inicio });
+  }
+  for (const item of canceladasFuturas) candidatas.push(item);
+  candidatas.sort((a, b) => a.inicio - b.inicio);
+  const proximas = [];
+  for (const { viagem } of candidatas) {
+    if (proximas.length < limiteProximas) proximas.push(viagem);
+  }
+
   historico.sort((a, b) => (b.inicio ? b.inicio.getTime() : 0) - (a.inicio ? a.inicio.getTime() : 0));
-  return { proxima, historico: historico.slice(0, limiteHistorico) };
+  return { proxima, proximas, historico: historico.slice(0, limiteHistorico) };
 };

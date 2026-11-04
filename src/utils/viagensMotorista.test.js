@@ -51,3 +51,22 @@ test('o histórico respeita o limite', () => {
   for (let i = 1; i <= 20; i++) lista.push(viagem('v' + i, '2026-10-' + String(i).padStart(2, '0'), '07:00:00', 'FINALIZADA'));
   expect(organizarViagens(lista, agora, 5).historico).toHaveLength(5);
 });
+
+test('proximas traz até 3 viagens depois da próxima, incluindo cancelada que ainda vai chegar', () => {
+  const lista = [
+    viagem('13h', '2026-11-03', '13:00:00'),
+    viagem('17h', '2026-11-03', '17:30:00'),
+    viagem('amanha', '2026-11-04', '06:00:00', 'CANCELADA'),
+    viagem('depois', '2026-11-05', '06:00:00'),
+    viagem('longe', '2026-11-10', '06:00:00'),
+    viagem('6h', '2026-11-03', '06:00:00'),
+    viagem('ontem', '2026-11-02', '06:00:00', 'CANCELADA'),
+  ];
+  const { proxima, proximas } = organizarViagens(lista, agora);
+  expect(proxima.id).toBe('13h');
+  expect(proximas.map(v => v.id)).toEqual(['17h', 'amanha', 'depois']);
+});
+
+test('proximas fica vazia quando só existe a próxima', () => {
+  expect(organizarViagens([viagem('13h', '2026-11-03', '13:00:00')], agora).proximas).toEqual([]);
+});
