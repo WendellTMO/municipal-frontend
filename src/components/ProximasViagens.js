@@ -15,7 +15,7 @@ const ProximasViagens = ({ viagens, onAbrir }) => {
   return (
     <View style={styles.bloco}>
       <Text style={styles.titulo} accessibilityRole="header">
-        Depois dessa
+        Próximas viagens
       </Text>
       <View style={styles.linha}>
         {viagens.map(viagem => {
