@@ -133,9 +133,9 @@ export function buildLeafletHtml(): string {
             } else {
               const icon = L.divIcon({
                 className: 'onibus-icon',
-                html: '<div style="font-size:26px;line-height:32px;text-align:center;">&#128652;</div>',
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
+                html: '<div style="width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4);font-size:30px;line-height:46px;text-align:center;">&#128652;</div>',
+                iconSize: [46, 46],
+                iconAnchor: [23, 23],
               });
               this.destMarker = L.marker(latLng, { icon }).addTo(this.mapInstance);
             }
