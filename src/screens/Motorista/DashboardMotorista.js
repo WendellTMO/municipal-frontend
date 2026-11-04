@@ -93,6 +93,7 @@ const DashboardMotorista = ({navigation}) => {
               ...proxima, // Keep all original data including 'alunos' array
               horario: horarioFormatado,
               status: statusMap[proxima.status] || 'A iniciar',
+              statusApi: proxima.status,
               origem: proxima.origem || origem,
               destino: proxima.destino || destino,
             });
@@ -186,8 +187,9 @@ const DashboardMotorista = ({navigation}) => {
             subtitle={formatarSentido(proximaViagem.tipo)}
             accessibilityLabel={`Ver detalhes da próxima viagem, ${dayLabel(proximaViagem.data)} às ${proximaViagem.horario}, ${proximaViagem.origem || 'origem'} para ${proximaViagem.destino || 'destino'}, ${proximaViagem.status}`}
             onPress={() =>
+              // O detalhe espera o status da API (AGENDADA...), não o texto do cartão.
               navigation.navigate('DetalheViagemMotorista', {
-                viagem: proximaViagem,
+                viagem: { ...proximaViagem, status: proximaViagem.statusApi },
               })
             }>
             <View style={styles.alunosLinha}>
