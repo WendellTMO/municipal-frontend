@@ -8,7 +8,7 @@ import {
   lerDataDigitada,
   ordenarViagens,
   periodoRapido,
-  rotasDasViagens,
+  opcoesDasViagens,
 } from './filtroViagens';
 
 const viagens = [
@@ -28,13 +28,13 @@ test('ligar Finalizadas traz todas', () => {
   expect(filtrarViagens(viagens, filtro).map(v => v.id)).toEqual(['a', 'b', 'c', 'd', 'e']);
 });
 
-test('desligar A iniciar esconde agendadas e em andamento', () => {
+test('desligar A iniciar esconde só as agendadas que ainda vão sair', () => {
   const filtro = { ...filtroViagensPadrao(), aIniciar: false, finalizadas: true };
-  expect(filtrarViagens(viagens, filtro).map(v => v.id)).toEqual(['c', 'd', 'e']);
+  expect(filtrarViagens(viagens, filtro).map(v => v.id)).toEqual(['b', 'c', 'd', 'e']);
 });
 
 test('conta por grupo', () => {
-  expect(contarViagens(viagens)).toEqual({ aIniciar: 2, canceladas: 1, finalizadas: 1 });
+  expect(contarViagens(viagens)).toEqual({ aIniciar: 1, emAndamento: 1, naoRealizadas: 0, canceladas: 1, finalizadas: 1 });
 });
 
 const comDatas = [
@@ -63,7 +63,7 @@ test('só De ou só Até também funciona e data incompleta é ignorada', () => 
 
 test('a contagem dos botões respeita o período', () => {
   const filtro = { ...filtroViagensPadrao(), de: '2026-11-10' };
-  expect(contarViagens(comDatas, filtro)).toEqual({ aIniciar: 1, canceladas: 1, finalizadas: 0 });
+  expect(contarViagens(comDatas, filtro, new Date(2026, 10, 4))).toEqual({ aIniciar: 1, emAndamento: 0, naoRealizadas: 0, canceladas: 1, finalizadas: 0 });
 });
 
 test('atalhos de período', () => {
@@ -93,7 +93,7 @@ test('filtra por sentido', () => {
 
 test('filtra por rota e a contagem acompanha', () => {
   expect(filtrarViagens(completas, { ...todas, rota: 'r2' }).map(v => v.id)).toEqual(['c']);
-  expect(contarViagens(completas, { ...todas, rota: 'r1' })).toEqual({ aIniciar: 0, canceladas: 0, finalizadas: 2 });
+  expect(contarViagens(completas, { ...todas, rota: 'r1' }, new Date(2026, 10, 4))).toEqual({ aIniciar: 0, emAndamento: 0, naoRealizadas: 0, canceladas: 0, finalizadas: 2 });
 });
 
 test('ordena por data e pela duração medida, sem duração vai para o fim', () => {
@@ -111,11 +111,55 @@ test('duração: só com início e fim reais, e texto em minutos ou horas', () =
 });
 
 test('lista as rotas sem repetir', () => {
-  expect(rotasDasViagens(completas)).toEqual([{ id: 'r2', texto: 'Centro' }, { id: 'r1', texto: 'Galante' }]);
+  expect(opcoesDasViagens(completas).rotas).toEqual([{ id: 'r2', texto: 'Centro' }, { id: 'r1', texto: 'Galante' }]);
 });
 
 test('sentido, rota e ordem acendem o funil', () => {
   expect(filtroAtivo({ ...filtroViagensPadrao(), tipo: 'IDA' })).toBe(true);
   expect(filtroAtivo({ ...filtroViagensPadrao(), rota: 'r1' })).toBe(true);
   expect(filtroAtivo({ ...filtroViagensPadrao(), ordem: 'longas' })).toBe(true);
+});
+
+const agora = new Date(2026, 10, 4, 12, 0);
+const doDia = [
+  { id: 'x', status: 'AGENDADA', data: '2026-11-04', horario_inicio: '07:00', motorista_nome: 'João da Silva', veiculo_placa: 'ABC1D23', alunos_confirmados_count: 0, total_alunos: 5, rota_nome: 'São José' },
+  { id: 'y', status: 'AGENDADA', data: '2026-11-04', horario_inicio: '18:00', motorista_nome: 'Maria', veiculo_placa: 'XYZ9K88', alunos_confirmados_count: 12, total_alunos: 20, rota_nome: 'Centro' },
+  { id: 'z', status: 'CANCELADA', data: '2026-11-05', horario_inicio: '07:00', motorista_nome: 'Maria', veiculo_placa: 'XYZ9K88', alunos_confirmados_count: 3, total_alunos: 20, rota_nome: 'Centro', motivo_cancelamento: 'Ônibus quebrou' },
+];
+
+test('agendada que já passou do horário vira não realizada', () => {
+  expect(contarViagens(doDia, filtroViagensPadrao(), agora)).toEqual({ aIniciar: 1, emAndamento: 0, naoRealizadas: 1, canceladas: 1, finalizadas: 0 });
+  const semAtrasadas = { ...filtroViagensPadrao(), naoRealizadas: false };
+  expect(filtrarViagens(doDia, semAtrasadas, agora).map(v => v.id)).toEqual(['z', 'y']);
+});
+
+test('busca ignora acento e maiúscula e olha rota, motorista, placa e motivo', () => {
+  const com = busca => filtrarViagens(doDia, { ...filtroViagensPadrao(), busca }, agora).map(v => v.id);
+  expect(com('sao jose')).toEqual(['x']);
+  expect(com('JOAO')).toEqual(['x']);
+  expect(com('xyz9')).toEqual(['z', 'y']);
+  expect(com('quebrou')).toEqual(['z']);
+  expect(com('zzz')).toEqual([]);
+});
+
+test('filtra por motorista, veículo e alunos confirmados', () => {
+  const com = parcial => filtrarViagens(doDia, { ...filtroViagensPadrao(), ...parcial }, agora).map(v => v.id);
+  expect(com({ motorista: 'Maria' })).toEqual(['z', 'y']);
+  expect(com({ veiculo: 'ABC1D23' })).toEqual(['x']);
+  expect(com({ alunos: 'nenhum' })).toEqual(['x']);
+  expect(com({ alunos: 'algum' })).toEqual(['z', 'y']);
+  expect(com({ alunos: 'muitos' })).toEqual(['y']);
+});
+
+test('ordena por mais alunos confirmados', () => {
+  expect(ordenarViagens(doDia, 'alunos').map(v => v.id)).toEqual(['y', 'z', 'x']);
+});
+
+test('viagem sem motorista entra como Sem Motorista nas opções', () => {
+  const opcoes = opcoesDasViagens([{ id: 'a', status: 'AGENDADA' }, ...doDia]);
+  expect(opcoes.motoristas.map(o => o.id)).toEqual(['João da Silva', 'Maria', 'Sem Motorista']);
+});
+
+test('mês passado no atalho de período', () => {
+  expect(periodoRapido('mesPassado', new Date(2026, 0, 15))).toEqual({ de: '2025-12-01', ate: '2025-12-31' });
 });

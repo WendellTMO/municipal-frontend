@@ -22,7 +22,7 @@ import { formatarHora } from '../../utils/formatarHora';
 import { formatarData } from '../../utils/dataLocal';
 import { organizarViagens } from '../../utils/viagensMotorista';
 import FolhaFiltroViagens from '../../components/FolhaFiltroViagens';
-import { contarViagens, duracaoDaViagem, filtrarViagens, filtroAtivo, filtroViagensPadrao, formatarDuracao, rotasDasViagens } from '../../utils/filtroViagens';
+import { contarViagens, duracaoDaViagem, filtrarViagens, filtroAtivo, filtroViagensPadrao, formatarDuracao, opcoesDasViagens } from '../../utils/filtroViagens';
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -70,7 +70,8 @@ const ListaViagens = ({navigation, route}) => {
   const comFiltro = !soProximas;
   const contagem = contarViagens(viagens || [], filtro);
   const visiveis = comFiltro ? filtrarViagens(viagens || [], filtro) : viagens || [];
-  const rotas = rotaFiltro ? [] : rotasDasViagens(viagens || []);
+  const opcoes = opcoesDasViagens(viagens || []);
+  if (rotaFiltro) opcoes.rotas = [];
   const temFiltro = comFiltro && filtroAtivo(filtro);
 
   const onRefresh = async () => {
@@ -202,6 +203,14 @@ const ListaViagens = ({navigation, route}) => {
                       </Text>
                     </View>
                   </View>
+                  {viagem.status === 'CANCELADA' && viagem.motivo_cancelamento ? (
+                    <Text style={styles.rotaInfo}>Motivo: {viagem.motivo_cancelamento}</Text>
+                  ) : null}
+                  {viagem.total_alunos > 0 ? (
+                    <Text style={styles.rotaInfo}>
+                      {viagem.alunos_confirmados_count || 0} de {viagem.total_alunos} alunos confirmados
+                    </Text>
+                  ) : null}
                   {viagem.origem && viagem.destino && (
                     <Text style={styles.rotaInfo}>
                       {viagem.origem} → {viagem.destino}
@@ -218,7 +227,7 @@ const ListaViagens = ({navigation, route}) => {
         filtro={filtro}
         contagem={contagem}
         quantas={visiveis.length}
-        rotas={rotas}
+        opcoes={opcoes}
         onMudar={setFiltro}
         onFechar={() => setFiltroAberto(false)}
       />
