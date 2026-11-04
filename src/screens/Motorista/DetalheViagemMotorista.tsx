@@ -35,7 +35,7 @@ import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
-import DialogoConfirmacao from '../../components/DialogoConfirmacao';
+import FolhaMotivos from '../../components/FolhaMotivos';
 import { useToast } from '../../components/Toast';
 import { horaCurta } from '../../utils/viagemPainel';
 import { formatarSentido } from '../../utils/formatarSentido';
@@ -61,6 +61,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
   const toast = useToast();
   const [cancelando, setCancelando] = useState(false);
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
+  const [motivoEnviando, setMotivoEnviando] = useState(-1);
 
   const [pontosRota, setPontosRota] = useState<PontoFlatResponse[]>([]);
   const [carregando, setCarregando] = useState(false);
@@ -84,7 +85,8 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
   }, [viagem?.rota_id]);
 
   // O motivo vai para os alunos e para o gestor junto com o aviso de cancelamento.
-  const cancelarComMotivo = async (motivo: string) => {
+  const cancelarComMotivo = async (motivo: string, indice: number) => {
+    setMotivoEnviando(indice);
     setCancelando(true);
     try {
       await motoristaService.cancelarViagem(viagem.id as string, motivo);
@@ -138,7 +140,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
                 <Text style={styles.avisarTitulo}>Esta viagem não vai acontecer?</Text>
                 <Text style={styles.avisarDescricao}>Avisar os alunos agora</Text>
               </View>
-              <Icon name={IconNames.chevronRight} size="md" color={colors.error.main} />
+              <Icon name={IconNames.chevronRight} size="md" color={colors.warning.dark} />
             </TouchableOpacity>
           )}
 
@@ -289,16 +291,16 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
         </View>
       </ScrollView>
 
-      <DialogoConfirmacao
+      <FolhaMotivos
         visible={confirmandoCancelar}
-        titulo="Avisar que a viagem não vai acontecer?"
-        resumo="Os alunos confirmados e o gestor recebem o aviso agora. Qual é o motivo?"
+        titulo="Por que a viagem não vai acontecer?"
+        resumo="Ao escolher, todos os alunos da rota e o gestor recebem o aviso na hora."
+        carregandoIndice={cancelando ? motivoEnviando : -1}
         onCancelar={() => setConfirmandoCancelar(false)}
-        botoes={[
-          { texto: 'Problema no ônibus', cor: colors.error.main, carregando: cancelando, onPress: () => cancelarComMotivo('problema no ônibus') },
-          { texto: 'Feriado ou sem aula', cor: colors.error.main, onPress: () => cancelarComMotivo('feriado ou sem aula') },
-          { texto: 'Outro motivo', cor: colors.error.main, onPress: () => cancelarComMotivo('imprevisto') },
-          { texto: 'Voltar', cor: colors.neutral[500], onPress: () => setConfirmandoCancelar(false) },
+        opcoes={[
+          { texto: 'Problema no ônibus', descricao: 'Quebrou ou está na oficina', icone: IconNames.bus, onPress: () => cancelarComMotivo('problema no ônibus', 0) },
+          { texto: 'Feriado ou sem aula', descricao: 'Não há aula nesse dia', icone: IconNames.calendarToday, onPress: () => cancelarComMotivo('feriado ou sem aula', 1) },
+          { texto: 'Outro motivo', descricao: 'Você escreve o que aconteceu', icone: IconNames.edit, pedirTexto: true, onPress: (digitado?: string) => cancelarComMotivo(digitado ?? 'imprevisto', 2) },
         ]}
       />
     </TelaSegura>
@@ -465,19 +467,19 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.error.light,
-    backgroundColor: colors.error.lighter,
+    borderColor: colors.warning.main,
+    backgroundColor: colors.warning.light,
   },
   avisarIcone: {
     width: 44,
     height: 44,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.error.main,
+    backgroundColor: colors.warning.dark,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avisarTextos: { flex: 1 },
-  avisarTitulo: { ...textStyles.h5, color: colors.error.dark },
+  avisarTitulo: { ...textStyles.h5, color: colors.warning.dark },
   avisarDescricao: { ...textStyles.bodySmall, color: colors.text.secondary },
   iniciarButtonText: { ...textStyles.button, color: colors.text.inverse, fontSize: fontSize.h4 },
 });
