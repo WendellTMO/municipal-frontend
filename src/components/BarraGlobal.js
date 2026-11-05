@@ -39,6 +39,7 @@ const PAPEIS = {
       SelecaoRotas: 'rotas',
       EditarPerfilAluno: 'perfil',
       ConfigNotificacoesAluno: 'perfil',
+      AlterarSenha: 'perfil',
     },
   },
   MOTORISTA: {
