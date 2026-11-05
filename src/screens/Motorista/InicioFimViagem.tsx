@@ -812,6 +812,11 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               paradas={naoDetectadas}
               marcadas={conferencia}
               onMarcar={(pontoId: string, passou: boolean) => setConferencia((atual) => ({ ...atual, [pontoId]: passou }))}
+              onMarcarTodos={() => {
+                const todos: Record<string, boolean> = {};
+                for (const parada of naoDetectadas) todos[parada.ponto.id] = true;
+                setConferencia(todos);
+              }}
             />
           ) : null}
         </DialogoConfirmacao>
