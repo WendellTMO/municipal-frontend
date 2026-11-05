@@ -60,6 +60,7 @@ import {
 import { horaCurta } from '../../utils/viagemPainel';
 import { lerPosicao, PERMISSAO_NEGADA } from '../../utils/lerPosicao';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
+import { Storage } from '../../utils/storage';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
 import CronometroViagem from '../../components/CronometroViagem';
@@ -95,6 +96,8 @@ try {
     Geolocation = navigator.geolocation;
   }
 }
+
+const CHAVE_AVISO_BATERIA = 'aviso_bateria_respondido';
 
 const GPS_SEND_INTERVAL_MS = 20_000;
 const AVISO_MIN = 3;
@@ -156,6 +159,12 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [erroGps, setErroGps] = useState<'negada' | 'indisponivel' | null>(null);
   // Aviso de que a localização pode parar com a tela bloqueada (serviço não subiu ou bateria restrita).
   const [avisoBloqueio, setAvisoBloqueio] = useState<'servico' | 'bateria' | null>(null);
+  // Responder ao aviso de bateria uma vez basta: alguns celulares (realme, Xiaomi) seguem dizendo
+  // "restrito" mesmo depois do motorista liberar, e o aviso voltaria a cada viagem.
+  const dispensarAvisoBloqueio = () => {
+    if (avisoBloqueio === 'bateria') Storage.setItem(CHAVE_AVISO_BATERIA, true);
+    setAvisoBloqueio(null);
+  };
   // Cada aumento reinicia a leitura do GPS (voltar de outro app, botão Tentar de novo).
   const [reinicioGps, setReinicioGps] = useState(0);
 
@@ -274,7 +283,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       if (parado) return;
       if (resultado !== 'ok') {
         setAvisoBloqueio('servico');
-      } else if (await bateriaRestringida()) {
+      } else if ((await bateriaRestringida()) && !(await Storage.getItem(CHAVE_AVISO_BATERIA))) {
         setAvisoBloqueio('bateria');
       }
     });
@@ -666,33 +675,32 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
         <View style={styles.floatingBottom} onLayout={(e) => setAlturaPainel(e.nativeEvent.layout.height)}>
           {avisoBloqueio ? (
-            <View style={styles.avisoGps} accessibilityRole="alert">
-              <View style={styles.avisoGpsTextos}>
-                <Text style={styles.avisoGpsTitulo}>Com a tela bloqueada o sinal pode parar</Text>
-                <Text style={styles.avisoGpsTexto}>
-                  {avisoBloqueio === 'servico'
-                    ? 'Mantenha o BusKá aberto e permita a localização para o ônibus continuar aparecendo para os alunos.'
-                    : 'Tire a restrição de bateria do BusKá para o ônibus continuar aparecendo para os alunos.'}
-                </Text>
+            <View style={styles.avisoBloqueio} accessibilityRole="alert">
+              <Text style={styles.avisoGpsTexto}>
+                {avisoBloqueio === 'servico'
+                  ? 'Permita a localização para o ônibus continuar aparecendo com a tela bloqueada.'
+                  : 'Para o ônibus continuar aparecendo com a tela bloqueada, deixe o BusKá sem restrição de bateria.'}
+              </Text>
+              <View style={styles.avisoBloqueioBotoes}>
+                <TouchableOpacity
+                  style={styles.avisoBloqueioBotao}
+                  onPress={() => {
+                    if (avisoBloqueio === 'servico') abrirAjustesDoApp();
+                    else abrirAjustesDeBateria();
+                    dispensarAvisoBloqueio();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Abrir os ajustes">
+                  <Text style={styles.avisoGpsBotaoTexto}>Ajustar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.avisoBloqueioBotao, styles.avisoBloqueioBotaoSecundario]}
+                  onPress={dispensarAvisoBloqueio}
+                  accessibilityRole="button"
+                  accessibilityLabel="Agora não">
+                  <Text style={[styles.avisoGpsBotaoTexto, { color: colors.warning.dark }]}>Agora não</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.avisoGpsBotao}
-                onPress={() => {
-                  if (avisoBloqueio === 'servico') abrirAjustesDoApp();
-                  else abrirAjustesDeBateria();
-                  setAvisoBloqueio(null);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Abrir os ajustes">
-                <Text style={styles.avisoGpsBotaoTexto}>Ajustar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.avisoGpsBotao}
-                onPress={() => setAvisoBloqueio(null)}
-                accessibilityRole="button"
-                accessibilityLabel="Agora não">
-                <Text style={styles.avisoGpsBotaoTexto}>Agora não</Text>
-              </TouchableOpacity>
             </View>
           ) : null}
 
@@ -1097,6 +1105,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warning.dark,
   },
   avisoGpsBotaoTexto: { ...textStyles.button, color: '#FFFFFF' },
+  avisoBloqueio: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.warning.light,
+    borderWidth: 1,
+    borderColor: colors.warning.main,
+  },
+  avisoBloqueioBotoes: { flexDirection: 'row', gap: spacing.sm },
+  avisoBloqueioBotao: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: colors.warning.dark,
+  },
+  avisoBloqueioBotaoSecundario: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.warning.dark },
   modalSecao: { ...textStyles.h5, color: colors.text.primary, marginTop: spacing.base, marginBottom: spacing.sm },
   problemaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   problemaChip: {
