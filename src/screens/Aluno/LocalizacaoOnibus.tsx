@@ -23,6 +23,7 @@ import { distanciaMetros as haversineMetros, posicaoMudou } from '../../utils/co
 import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
 import { mesmaLista, paradasPendentes } from '../../utils/paradasPendentes';
+import { manterTelaAcesa } from '../../utils/telaAcesa';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -122,6 +123,9 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
 
   const viagemId = (viagem?.id ?? viagem?.viagem_id) as string | undefined;
   const rotaId = rota?.id as string | undefined;
+
+  // A tela do aluno acompanha o ônibus ao vivo: não deixa o celular apagar enquanto está aberta.
+  useEffect(() => manterTelaAcesa(), []);
 
   // Load route stops
   useEffect(() => {
