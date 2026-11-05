@@ -61,7 +61,7 @@ import { horaCurta } from '../../utils/viagemPainel';
 import { lerPosicao, PERMISSAO_NEGADA } from '../../utils/lerPosicao';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
 import { Storage } from '../../utils/storage';
-import { medidasDosBotoes, ROTULOS_DOS_BOTOES, useBotoesDaViagem } from '../../utils/botoesDaViagem';
+import { MEDIDAS_DOS_BOTOES, ROTULOS_DOS_BOTOES } from '../../utils/botoesDaViagem';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
 import CronometroViagem from '../../components/CronometroViagem';
@@ -188,8 +188,6 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   // Por que o GPS não responde: 'negada' (permissão) ou 'indisponivel' (sem sinal). Some ao ler de novo.
   const [erroGps, setErroGps] = useState<'negada' | 'indisponivel' | null>(null);
   // Aviso de que a localização pode parar com a tela bloqueada (serviço não subiu ou bateria restrita).
-  const [varianteBotoes] = useBotoesDaViagem();
-  const medidasBotoes = medidasDosBotoes(varianteBotoes);
   const [avisoBloqueio, setAvisoBloqueio] = useState<'servico' | 'bateria' | null>(null);
   // Responder ao aviso de bateria uma vez basta: alguns celulares (realme, Xiaomi) seguem dizendo
   // "restrito" mesmo depois do motorista liberar, e o aviso voltaria a cada viagem.
@@ -760,7 +758,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
           {/* Só a informação da próxima parada */}
           <View style={styles.proximaCard}>
-            <View style={[styles.proximaIcone, { width: medidasBotoes.iconeProxima, height: medidasBotoes.iconeProxima }]}>
+            <View style={[styles.proximaIcone, { width: MEDIDAS_DOS_BOTOES.iconeProxima, height: MEDIDAS_DOS_BOTOES.iconeProxima }]}>
               <Icon name={IconNames.location} size="md" color={colors.primary.main} />
             </View>
             <View style={styles.proximaTextos}>
@@ -775,20 +773,20 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
 
-          {/* Quatro ações, cada uma com o nome embaixo (variantes B e C em teste) */}
+          {/* Quatro ações, cada uma com o nome embaixo */}
           <View style={styles.acoesRow} accessibilityRole="toolbar">
             <AcaoDaViagem
               cor={colors.solid.teal}
               icone={IconNames.route}
               rotulo={ROTULOS_DOS_BOTOES.roteiro}
-              medidas={medidasBotoes}
+              medidas={MEDIDAS_DOS_BOTOES}
               onPress={() => setRoteiroAberto(true)}
             />
             <AcaoDaViagem
               cor={colors.solid.green}
               icone={IconNames.noPonto}
               rotulo={ROTULOS_DOS_BOTOES.chegada}
-              medidas={medidasBotoes}
+              medidas={MEDIDAS_DOS_BOTOES}
               desabilitada={!proxima}
               onPress={marcarChegada}
             />
@@ -796,7 +794,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               cor={colors.solid.amber}
               icone={IconNames.campaign}
               rotulo={ROTULOS_DOS_BOTOES.aviso}
-              medidas={medidasBotoes}
+              medidas={MEDIDAS_DOS_BOTOES}
               dica="Avisar os alunos ou registrar um problema para a gestão"
               onPress={() => setBroadcastVisible(true)}
             />
@@ -804,13 +802,13 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               cor={colors.solid.blue}
               icone={IconNames.group}
               rotulo={ROTULOS_DOS_BOTOES.alunos}
-              medidas={medidasBotoes}
+              medidas={MEDIDAS_DOS_BOTOES}
               onPress={() => setAlunosAberto(true)}
             />
           </View>
 
           <TouchableOpacity
-            style={[styles.finalizarButton, { minHeight: medidasBotoes.finalizar }, loading && styles.buttonDisabled]}
+            style={[styles.finalizarButton, { minHeight: MEDIDAS_DOS_BOTOES.finalizar }, loading && styles.buttonDisabled]}
             onPress={abrirFinalizar}
             disabled={loading}
             accessibilityRole="button"
