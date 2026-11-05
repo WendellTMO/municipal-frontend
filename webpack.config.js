@@ -88,6 +88,9 @@ module.exports = {
     alias: {
       'react-native$': 'react-native-web',
       'react-native-vector-icons': 'react-native-vector-icons/dist',
+      // A vibração só existe no celular (haptico.js nem chama na web). Sem isso, o webpack tenta
+      // empacotar o módulo ESM dele e falha com o pacote instalado.
+      'react-native-haptic-feedback': false,
       '@': path.resolve(__dirname, 'src'),
     },
     extensions: [

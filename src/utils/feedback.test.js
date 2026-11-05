@@ -53,3 +53,19 @@ test('o aparelho vai no payload e some quando não há dados', () => {
   expect(sem.dispositivo).toBeNull();
   expect(sem.versao_so).toBeNull();
 });
+
+describe('buildFeedbackPayload com captura', () => {
+  const base = { tipo: 'BUG', mensagem: 'O botão não responde', tela: 'Agenda', plataforma: 'web' };
+
+  it('leva o tamanho da janela e a imagem quando existem', () => {
+    const payload = buildFeedbackPayload({ ...base, tamanhoTela: '390x844', captura: 'abc' });
+    expect(payload.tamanho_tela).toBe('390x844');
+    expect(payload.captura).toBe('abc');
+  });
+
+  it('sem imagem manda null', () => {
+    const payload = buildFeedbackPayload(base);
+    expect(payload.tamanho_tela).toBeNull();
+    expect(payload.captura).toBeNull();
+  });
+});

@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -18,6 +19,7 @@ import { borderRadius, colors, spacing, textStyles } from '../theme';
 import feedbackService from '../services/feedbackService';
 import { lerVersaoInstalada } from '../services/versaoApp';
 import { descreverDispositivo } from '../utils/dispositivo';
+import { tamanhoDaTela } from '../utils/capturaTela';
 import { getErrorMessageFromError } from '../utils/errors';
 import {
   TIPOS_FEEDBACK,
@@ -26,12 +28,13 @@ import {
   buildFeedbackPayload,
 } from '../utils/feedback';
 
-const FeedbackSheet = ({ visible, onClose, tela, onSent }) => {
+const FeedbackSheet = ({ visible, onClose, tela, captura, onSent }) => {
   const [tipo, setTipo] = useState('BUG');
   const [mensagem, setMensagem] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
   const [focused, setFocused] = useState(false);
+  const [anexarImagem, setAnexarImagem] = useState(true);
 
   const podeEnviar = isMensagemValida(mensagem) && !loading;
 
@@ -39,6 +42,7 @@ const FeedbackSheet = ({ visible, onClose, tela, onSent }) => {
     setErro('');
     setLoading(true);
     try {
+      const imagem = anexarImagem && captura ? await captura : null;
       await feedbackService.enviarFeedback(
         buildFeedbackPayload({
           tipo,
@@ -51,6 +55,8 @@ const FeedbackSheet = ({ visible, onClose, tela, onSent }) => {
             Platform.constants,
             typeof navigator !== 'undefined' ? navigator.userAgent : '',
           ),
+          tamanhoTela: tamanhoDaTela(),
+          captura: imagem,
         }),
       );
       setMensagem('');
@@ -117,8 +123,25 @@ const FeedbackSheet = ({ visible, onClose, tela, onSent }) => {
             />
 
             <Text style={styles.nota}>
-              Enviamos junto a tela atual, a versão do app e o seu perfil.
+              Enviamos junto o nome da tela, a versão do app, o modelo do aparelho e o seu perfil.
             </Text>
+
+            <View style={styles.linhaImagem}>
+              <View style={styles.linhaImagemTextos}>
+                <Text style={styles.linhaImagemTitulo}>Anexar imagem da tela</Text>
+                <Text style={styles.nota}>
+                  Ajuda a entender o problema. Pode aparecer nome ou dados que estavam na tela; só quem analisa o relato vê.
+                </Text>
+              </View>
+              <Switch
+                value={anexarImagem}
+                onValueChange={setAnexarImagem}
+                trackColor={{ false: colors.border.light, true: colors.primary.dark }}
+                thumbColor={colors.background.paper}
+                accessibilityLabel="Anexar imagem da tela"
+                accessibilityRole="switch"
+              />
+            </View>
 
             {erro ? <Text style={styles.erro}>{erro}</Text> : null}
 
@@ -142,6 +165,9 @@ const FeedbackSheet = ({ visible, onClose, tela, onSent }) => {
 };
 
 const styles = StyleSheet.create({
+  linhaImagem: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.sm },
+  linhaImagemTextos: { flex: 1 },
+  linhaImagemTitulo: { ...textStyles.body, color: colors.text.primary, fontWeight: '600' },
   overlay: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15,23,42,0.5)' },
   sheet: {
