@@ -31,6 +31,7 @@
     "@react-navigation/native-stack": "^6.10.4",
     "axios": "1.6.8",
     "expo-font": "^14.0.11",
+    "html2canvas": "1.4.1",
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
     "react": "18.2.0",
@@ -46,6 +47,7 @@
     "react-native-screens": "3.22.0",
     "react-native-svg": "^13.8.0",
     "react-native-vector-icons": "^10.3.0",
+    "react-native-view-shot": "3.8.0",
     "react-native-webview": "13.5.1"
   },
   "devDependencies": {
