@@ -180,3 +180,18 @@ test('resumo: rota pelo nome e só um dos lados do período', () => {
   const filtro = { ...filtroViagensPadrao(), rota: 'r1', ate: '2026-11-30' };
   expect(resumoDoFiltro(filtro, opcoes).map(i => i.texto)).toEqual(['Galante', 'até 30/11']);
 });
+
+describe('viagem cancelada pelo prazo de 24 horas', () => {
+  it('entra no grupo de não realizadas, não no de canceladas', () => {
+    const viagem = {
+      id: 'x',
+      data: '2026-11-03',
+      horario_inicio: '06:00',
+      status: 'CANCELADA',
+      motivo_cancelamento: 'Não realizada: passaram 24 horas da saída sem a viagem começar',
+    };
+    const contagem = contarViagens([viagem], new Date(2026, 10, 5, 12, 0));
+    expect(contagem.naoRealizadas).toBe(1);
+    expect(contagem.canceladas).toBe(0);
+  });
+});

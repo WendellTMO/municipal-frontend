@@ -6,6 +6,8 @@
  * histórico como "não realizada". Feita e cancelada também entram no histórico.
  */
 
+import { canceladaPeloPrazo } from './canceladaPeloPrazo';
+
 // Início da viagem como Date local (data + horário de saída), ou null se faltar dado.
 export const inicioDaViagem = viagem => {
   if (!viagem || !viagem.data) return null;
@@ -21,6 +23,7 @@ const mesmoDia = (a, b) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 const situacaoDoHistorico = (viagem, perdida) => {
+  if (canceladaPeloPrazo(viagem)) return 'nao_realizada';
   if (viagem.status === 'CANCELADA') return 'cancelada';
   if (viagem.status === 'FINALIZADA') return viagem.realizada_sem_app ? 'feita_sem_app' : 'feita';
   return perdida ? 'nao_realizada' : null;
