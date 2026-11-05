@@ -43,7 +43,7 @@ const PAPEIS = {
   },
   MOTORISTA: {
     itens: itensMotorista,
-    rotas: { DashboardMotorista: 'inicio', HistoricoViagensMotorista: 'inicio', DetalheHistoricoViagem: 'inicio', RotaMotorista: 'rotas', ListaViagens: 'viagens', ConfigNotificacoesMotorista: 'perfil' },
+    rotas: { DashboardMotorista: 'inicio', HistoricoViagensMotorista: 'inicio', DetalheHistoricoViagem: 'inicio', RotaMotorista: 'rotas', ListaViagens: 'viagens', ConfigNotificacoesMotorista: 'perfil', AlterarSenha: 'perfil' },
   },
 };
 

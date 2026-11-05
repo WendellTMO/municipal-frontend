@@ -141,6 +141,16 @@ const ConfigNotificacoes = ({ navigation }) => {
 
         <AccountInfoSection user={user} role={role} />
 
+        <TouchableOpacity
+          style={styles.editProfileBtn}
+          onPress={() => navigation.navigate('AlterarSenha')}
+          accessibilityRole="button"
+          accessibilityLabel="Alterar senha">
+          <Icon name={IconNames.lock} size="md" color={colors.primary.dark} />
+          <Text style={styles.editProfileBtnText}>Alterar senha</Text>
+          <Icon name={IconNames.chevronRight} size="sm" color={colors.text.secondary} />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
           <Icon name={IconNames.logout} size="md" color={colors.error.main} />
           <Text style={styles.logoutButtonText}>Sair da conta</Text>

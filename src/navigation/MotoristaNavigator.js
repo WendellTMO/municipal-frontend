@@ -15,6 +15,7 @@ import HistoricoViagensMotorista from '../screens/Motorista/HistoricoViagensMoto
 import DetalheHistoricoViagem from '../screens/Motorista/DetalheHistoricoViagem';
 import NotificacoesInbox from '../screens/Aluno/NotificacoesAluno';
 import ConfigNotificacoes from '../screens/ConfigNotificacoes';
+import AlterarSenha from '../screens/AlterarSenha';
 import {
   NavigationProvider,
   Navigator,
@@ -66,6 +67,7 @@ const MotoristaNavigator = () => {
             name="ConfigNotificacoesMotorista"
             component={ConfigNotificacoes}
           />
+          <Screen name="AlterarSenha" component={AlterarSenha} />
           <Screen name="NotificacoesMotorista" component={NotificacoesInbox} />
         </Navigator>
       </NavigationProvider>
@@ -109,6 +111,7 @@ const MotoristaNavigator = () => {
         name="ConfigNotificacoesMotorista"
         component={ConfigNotificacoes}
       />
+      <Stack.Screen name="AlterarSenha" component={AlterarSenha} />
       <Stack.Screen name="NotificacoesMotorista" component={NotificacoesInbox} />
     </Stack.Navigator>
   );

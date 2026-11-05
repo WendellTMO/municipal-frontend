@@ -26,7 +26,6 @@ import SubHeader from '../../components/SubHeader';
 import SeletorInstituicao from '../../components/SeletorInstituicao';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { assinaturaDoPerfil, perfilAlterado } from '../../utils/perfilAlterado';
-import { alertar } from '../../utils/alerta';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -210,12 +209,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleAlterarSenha = () => {
-    alertar(
-      'Alterar Senha',
-      'Para alterar sua senha, acesse a tela de configurações.',
-    );
-  };
+  const handleAlterarSenha = () => navigation.navigate('AlterarSenha');
 
   return (
     <TelaSegura style={styles.container}>
