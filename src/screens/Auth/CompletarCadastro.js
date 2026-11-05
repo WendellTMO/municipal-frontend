@@ -1,10 +1,11 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {ActivityIndicator, Platform, ScrollView, Text, TextInput, View, StyleSheet} from 'react-native';
+import {ActivityIndicator, Linking, Platform, ScrollView, Text, TextInput, View, StyleSheet} from 'react-native';
 import {useAuth} from '../../contexts/AuthContext';
 import {Icon, IconNames} from '../../components';
 import Tappable from '../../components/Tappable';
 import {colors, spacing, borderRadius} from '../../theme';
 import {conviteService} from '../../services/conviteService';
+import apiConfig from '../../config/api';
 import {cepService} from '../../services/cepService';
 import {formatCep, formatCpf, formatDate, formatPhone} from '../../utils/masks';
 import {camposDoCep, cepParaConsulta, mensagemErroCep} from '../../utils/cep';
@@ -299,10 +300,26 @@ const CompletarCadastro = ({navigation, route}) => {
         </View>
       ) : null}
 
-      <Text style={styles.sectionTitle}>Termos de uso</Text>
+      <Text style={styles.sectionTitle}>Termos de Serviço e Política de Privacidade</Text>
       <ScrollView style={local.termosCaixa} nestedScrollEnabled>
         <Text style={local.termosTexto}>{termos ? termos.texto : ''}</Text>
       </ScrollView>
+      <View style={local.documentos}>
+        <Tappable
+          onPress={() => Linking.openURL(`${apiConfig.baseUrl}/termos-de-uso`)}
+          sombra={false}
+          accessibilityRole="link"
+          accessibilityLabel="Ler os Termos de Serviço">
+          <Text style={local.documentoLink}>Ler os Termos de Serviço</Text>
+        </Tappable>
+        <Tappable
+          onPress={() => Linking.openURL(`${apiConfig.baseUrl}/politica-de-privacidade`)}
+          sombra={false}
+          accessibilityRole="link"
+          accessibilityLabel="Ler a Política de Privacidade">
+          <Text style={local.documentoLink}>Ler a Política de Privacidade</Text>
+        </Tappable>
+      </View>
       <Tappable
         style={local.aceiteLinha}
         onPress={() => mudar('aceiteTermos', !form.aceiteTermos)}
@@ -314,7 +331,7 @@ const CompletarCadastro = ({navigation, route}) => {
           size="lg"
           color={form.aceiteTermos ? '#0347D0' : colors.neutral[400]}
         />
-        <Text style={local.aceiteTexto}>Li e aceito os termos de uso</Text>
+        <Text style={local.aceiteTexto}>Li e aceito os Termos de Serviço e a Política de Privacidade</Text>
       </Tappable>
       {erroDoCampo('aceiteTermos')}
 
@@ -361,6 +378,8 @@ const local = StyleSheet.create({
   },
   termosTexto: {fontFamily: 'Inter-Regular', fontSize: 13, color: colors.text.secondary, lineHeight: 19},
   cepAviso: {fontFamily: 'Inter-Regular', fontSize: 13, color: colors.text.secondary, marginTop: spacing.xs},
+  documentos: {marginTop: spacing.sm, gap: 2},
+  documentoLink: {fontFamily: 'Inter-Medium', fontSize: 14, color: '#0347D0', textDecorationLine: 'underline', paddingVertical: spacing.sm},
   aceiteLinha: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md},
   aceiteTexto: {flex: 1, fontFamily: 'Inter-Medium', fontSize: 14, color: colors.text.primary},
 });
