@@ -1,3 +1,4 @@
+import { canceladaPeloPrazo } from './canceladaPeloPrazo';
 import { dataLocal } from './dataLocal';
 import { inicioDaViagem } from './viagensMotorista';
 
@@ -21,6 +22,7 @@ export const CHIPS_VIAGENS = [
 // Agendada que ainda vai sair é "a iniciar". Agendada cujo horário já passou sem ninguém iniciar é "não realizada".
 // Status que o app não conhece fica sem grupo e nunca é escondido.
 const grupoDaViagem = (viagem, agora) => {
+  if (canceladaPeloPrazo(viagem)) return 'naoRealizadas';
   if (viagem.status === 'AGENDADA') {
     const inicio = inicioDaViagem(viagem);
     return inicio && inicio < agora ? 'naoRealizadas' : 'aIniciar';
