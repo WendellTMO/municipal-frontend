@@ -61,6 +61,7 @@ import { horaCurta } from '../../utils/viagemPainel';
 import { lerPosicao, PERMISSAO_NEGADA } from '../../utils/lerPosicao';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
 import { Storage } from '../../utils/storage';
+import { medidasDosBotoes, ROTULOS_DOS_BOTOES, useBotoesDaViagem } from '../../utils/botoesDaViagem';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
 import CronometroViagem from '../../components/CronometroViagem';
@@ -81,6 +82,35 @@ import { formatarSentido } from '../../utils/formatarSentido';
 type GrupoConfirmado = { id: string | null; nome: string; tipo: string | null; quantidade: number; semInstituicao: boolean };
 
 type RootParamList = Record<string, object | undefined>;
+type AcaoDaViagemProps = {
+  cor: string;
+  icone: string;
+  rotulo: string;
+  medidas: { botao: number; icone: string };
+  onPress: () => void;
+  desabilitada?: boolean;
+  dica?: string;
+};
+
+// Botão colorido com o nome embaixo. O nome faz parte da área de toque.
+const AcaoDaViagem = ({ cor, icone, rotulo, medidas, onPress, desabilitada, dica }: AcaoDaViagemProps) => (
+  <TouchableOpacity
+    style={[styles.acaoItem, desabilitada && styles.acaoDesabilitada]}
+    onPress={onPress}
+    disabled={desabilitada}
+    accessibilityRole="button"
+    accessibilityState={{ disabled: !!desabilitada }}
+    accessibilityLabel={rotulo}
+    accessibilityHint={dica}>
+    <View style={[styles.acaoIcone, { backgroundColor: cor, height: medidas.botao }]}>
+      <Icon name={icone} size={medidas.icone} color="#FFFFFF" />
+    </View>
+    <Text style={styles.acaoRotulo} numberOfLines={1}>
+      {rotulo}
+    </Text>
+  </TouchableOpacity>
+);
+
 type Props = {
   navigation: NativeStackNavigationProp<RootParamList>;
   route: RouteProp<{ InicioFimViagem: { viagem: Record<string, unknown> } }, 'InicioFimViagem'>;
@@ -158,6 +188,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   // Por que o GPS não responde: 'negada' (permissão) ou 'indisponivel' (sem sinal). Some ao ler de novo.
   const [erroGps, setErroGps] = useState<'negada' | 'indisponivel' | null>(null);
   // Aviso de que a localização pode parar com a tela bloqueada (serviço não subiu ou bateria restrita).
+  const [varianteBotoes] = useBotoesDaViagem();
+  const medidasBotoes = medidasDosBotoes(varianteBotoes);
   const [avisoBloqueio, setAvisoBloqueio] = useState<'servico' | 'bateria' | null>(null);
   // Responder ao aviso de bateria uma vez basta: alguns celulares (realme, Xiaomi) seguem dizendo
   // "restrito" mesmo depois do motorista liberar, e o aviso voltaria a cada viagem.
@@ -728,7 +760,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
           {/* Só a informação da próxima parada */}
           <View style={styles.proximaCard}>
-            <View style={styles.proximaIcone}>
+            <View style={[styles.proximaIcone, { width: medidasBotoes.iconeProxima, height: medidasBotoes.iconeProxima }]}>
               <Icon name={IconNames.location} size="md" color={colors.primary.main} />
             </View>
             <View style={styles.proximaTextos}>
@@ -743,51 +775,42 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
 
-          {/* Ações só com ícone: Paradas, No ponto, Avisar, Alunos */}
+          {/* Quatro ações, cada uma com o nome embaixo (variantes B e C em teste) */}
           <View style={styles.acoesRow} accessibilityRole="toolbar">
-            <View style={styles.acaoItem}>
-              <TouchableOpacity
-                style={[styles.acaoIcone, { backgroundColor: colors.solid.teal }]}
-                onPress={() => setRoteiroAberto(true)}
-                accessibilityRole="button"
-                accessibilityLabel="Roteiro">
-                <Icon name={IconNames.route} size="lg" color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.acaoItem}>
-              <TouchableOpacity
-                style={[styles.acaoIcone, { backgroundColor: colors.solid.green }, !proxima && styles.acaoDesabilitada]}
-                onPress={marcarChegada}
-                disabled={!proxima}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: !proxima }}
-                accessibilityLabel="No ponto">
-                <Icon name={IconNames.noPonto} size="lg" color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.acaoItem}>
-              <TouchableOpacity
-                style={[styles.acaoIcone, { backgroundColor: colors.solid.amber }]}
-                onPress={() => setBroadcastVisible(true)}
-                accessibilityRole="button"
-                accessibilityLabel="Avisar"
-                accessibilityHint="Avisar os alunos ou registrar um problema para a gestão">
-                <Icon name={IconNames.campaign} size="lg" color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.acaoItem}>
-              <TouchableOpacity
-                style={[styles.acaoIcone, { backgroundColor: colors.solid.blue }]}
-                onPress={() => setAlunosAberto(true)}
-                accessibilityRole="button"
-                accessibilityLabel="Alunos">
-                <Icon name={IconNames.group} size="lg" color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
+            <AcaoDaViagem
+              cor={colors.solid.teal}
+              icone={IconNames.route}
+              rotulo={ROTULOS_DOS_BOTOES.roteiro}
+              medidas={medidasBotoes}
+              onPress={() => setRoteiroAberto(true)}
+            />
+            <AcaoDaViagem
+              cor={colors.solid.green}
+              icone={IconNames.noPonto}
+              rotulo={ROTULOS_DOS_BOTOES.chegada}
+              medidas={medidasBotoes}
+              desabilitada={!proxima}
+              onPress={marcarChegada}
+            />
+            <AcaoDaViagem
+              cor={colors.solid.amber}
+              icone={IconNames.campaign}
+              rotulo={ROTULOS_DOS_BOTOES.aviso}
+              medidas={medidasBotoes}
+              dica="Avisar os alunos ou registrar um problema para a gestão"
+              onPress={() => setBroadcastVisible(true)}
+            />
+            <AcaoDaViagem
+              cor={colors.solid.blue}
+              icone={IconNames.group}
+              rotulo={ROTULOS_DOS_BOTOES.alunos}
+              medidas={medidasBotoes}
+              onPress={() => setAlunosAberto(true)}
+            />
           </View>
 
           <TouchableOpacity
-            style={[styles.finalizarButton, loading && styles.buttonDisabled]}
+            style={[styles.finalizarButton, { minHeight: medidasBotoes.finalizar }, loading && styles.buttonDisabled]}
             onPress={abrirFinalizar}
             disabled={loading}
             accessibilityRole="button"
@@ -1081,6 +1104,7 @@ const styles = StyleSheet.create({
   // Quatro botões com flex igual e vão de 8 px: ocupam a largura do Finalizar Viagem, sem sobras.
   acoesRow: { flexDirection: 'row', gap: spacing.sm },
   acaoItem: { flex: 1, alignItems: 'center', gap: 4 },
+  acaoRotulo: { ...textStyles.caption, color: colors.text.secondary, fontWeight: '600' as const, lineHeight: 14 },
   acaoIcone: {
     alignSelf: 'stretch',
     height: 52,

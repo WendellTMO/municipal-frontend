@@ -20,6 +20,8 @@ import VersaoDoApp from '../components/VersaoDoApp';
 import { rotuloAtual } from '../services/biometria';
 import { alertar } from '../utils/alerta';
 import { confirmAction } from '../utils/confirm';
+import ChipsEscolha from '../components/ChipsEscolha';
+import { OPCOES_BOTOES_VIAGEM, useBotoesDaViagem } from '../utils/botoesDaViagem';
 
 const roleLabel = (role?: string) => {
   const map: Record<string, string> = {
@@ -38,6 +40,7 @@ const ConfigNotificacoes = ({ navigation }) => {
 
   const isAluno = role === 'aluno';
   const isMotorista = role === 'motorista';
+  const [varianteBotoes, escolherBotoes] = useBotoesDaViagem();
 
   const [receberNotificacoes, setReceberNotificacoes] = useState<boolean>(
     user?.receber_notificacoes !== false,
@@ -112,6 +115,19 @@ const ConfigNotificacoes = ({ navigation }) => {
           salvando={salvandoPrefs}
           role={role}
         />
+
+        {isMotorista && (
+          <>
+            <SectionHeader title="Tela da viagem" />
+            <View style={styles.section}>
+              <Text style={styles.settingTitle}>Botões da viagem</Text>
+              <Text style={styles.settingDescription}>
+                Em teste: escolha o tamanho dos botões Paradas, Cheguei, Avisar e Alunos. Conte pelo botão amarelo qual ficou melhor.
+              </Text>
+              <ChipsEscolha opcoes={OPCOES_BOTOES_VIAGEM} valor={varianteBotoes} onEscolher={escolherBotoes} />
+            </View>
+          </>
+        )}
 
         {biometria.disponivel && (
           <>
