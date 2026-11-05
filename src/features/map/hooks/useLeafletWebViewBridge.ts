@@ -121,9 +121,11 @@ export function useLeafletWebViewBridge(
     [inject],
   );
 
+  // Sem animação: o zoomstart de uma animação dispara depois do flag programatico voltar a false,
+  // e o mapa largava o ônibus logo após o primeiro toque.
   const centralizarOnibus = useCallback(() => {
     inject(
-      `var m = window.BuskaMap; if (m && m.mapInstance && m.destMarker) { if (m.permitirSeguir && !m.seguindo) { m.seguindo = true; window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'seguir', valor: true })); } m.programatico = true; m.mapInstance.setView(m.destMarker.getLatLng(), Math.max(m.mapInstance.getZoom(), 16)); m.programatico = false; }`,
+      `var m = window.BuskaMap; if (m && m.mapInstance && m.destMarker) { if (m.permitirSeguir && !m.seguindo) { m.seguindo = true; window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'seguir', valor: true })); } m.programatico = true; m.mapInstance.setView(m.destMarker.getLatLng(), Math.max(m.mapInstance.getZoom(), 16), { animate: false }); m.programatico = false; }`,
     );
   }, [inject]);
 

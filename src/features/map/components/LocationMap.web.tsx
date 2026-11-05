@@ -157,6 +157,7 @@ export default function LocationMap({
       map,
       [destinationLatLng.latitude, destinationLatLng.longitude],
       Math.max(map.getZoom(), ZOOM_CENTRALIZAR),
+      false, // animada, o zoomstart chega depois do flag e o mapa larga o ônibus de novo
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [centralizarTick]);
