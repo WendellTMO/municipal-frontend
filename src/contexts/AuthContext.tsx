@@ -24,6 +24,7 @@ import { deveBloquear, deveOferecer } from '../utils/biometriaFluxo';
 import { deveEncerrarSessao } from '../utils/lembrarMe';
 import { Storage, STORAGE_KEYS } from '../utils/storage';
 import { limparCache } from '../utils/cacheTela';
+import { textoDoAviso } from '../utils/avisoPush';
 import type { 
   AlunoResponse,
   AlunoSelfSignupRequest,
@@ -105,7 +106,8 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   const toast = useToast();
 
   const handleForegroundMessage = useCallback(({ title, body }) => {
-    toast.info(`${title}${body ? `\n${body}` : ''}`, 5000);
+    const texto = textoDoAviso({ title, body });
+    if (texto) toast.info(texto, 5000);
   }, [toast]);
 
   usePushNotifications(isAuthenticated, handleForegroundMessage);
