@@ -1,4 +1,5 @@
 import { api } from '../api/client';
+import { Storage, STORAGE_KEYS } from '../utils/storage';
 
 export const userService = {
   /**
@@ -70,16 +71,16 @@ export const userService = {
    * Change password
    * Backend: POST /v1/users/change-password
    */
-  async changePassword(currentPassword, newPassword) {
-    try {
-      const response = await api.post('/users/change-password', {
-        current_password: currentPassword,
-        new_password: newPassword,
-      });
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
+  async changePassword(currentPassword, newPassword, confirmPassword) {
+    // Sem handleError: a tela usa getErrorMessageFromError para mostrar a mensagem do servidor.
+    const response = await api.post('/users/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword ?? newPassword,
+    });
+    // As outras sessões caem com a troca; o token novo mantém este aparelho logado.
+    if (response.data?.token) await Storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.token);
+    return response.data;
   },
 
   handleError(error) {

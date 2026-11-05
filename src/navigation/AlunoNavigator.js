@@ -4,6 +4,7 @@ import DashboardAluno from '../screens/Aluno/DashboardAluno';
 import SelecaoRotas from '../screens/Aluno/SelecaoRotas';
 import RotaAluno from '../screens/Aluno/RotaAluno';
 import ConfigNotificacoes from '../screens/ConfigNotificacoes';
+import AlterarSenha from '../screens/AlterarSenha';
 import NotificacoesAluno from '../screens/Aluno/NotificacoesAluno';
 import DetalheViagem from '../screens/Aluno/DetalheViagem';
 import LocalizacaoOnibus from '../screens/Aluno/LocalizacaoOnibus';
@@ -40,6 +41,7 @@ const AlunoNavigator = () => {
           <Screen name="SelecaoRotas" component={SelecaoRotas} />
           <Screen name="RotaAluno" component={RotaAluno} />
           <Screen name="ConfigNotificacoesAluno" component={ConfigNotificacoes} />
+          <Screen name="AlterarSenha" component={AlterarSenha} />
           <Screen name="NotificacoesAluno" component={NotificacoesAluno} />
           <Screen name="DetalheViagem" component={DetalheViagem} />
           <Screen name="LocalizacaoOnibus" component={LocalizacaoOnibus} />
@@ -70,6 +72,7 @@ const AlunoNavigator = () => {
       <Stack.Screen name="SelecaoRotas" component={SelecaoRotas} />
       <Stack.Screen name="RotaAluno" component={RotaAluno} />
       <Stack.Screen name="ConfigNotificacoesAluno" component={ConfigNotificacoes} />
+      <Stack.Screen name="AlterarSenha" component={AlterarSenha} />
       <Stack.Screen name="NotificacoesAluno" component={NotificacoesAluno} />
       <Stack.Screen name="DetalheViagem" component={DetalheViagem} />
       <Stack.Screen name="LocalizacaoOnibus" component={LocalizacaoOnibus} />

@@ -22,6 +22,7 @@ import ListaViagensMotorista from '../screens/Motorista/ListaViagens';
 import DefinirPontosRota from '../screens/Motorista/DefinirPontosRota';
 import DefinirHorariosRota from '../screens/Motorista/DefinirHorariosRota';
 import ConfigNotificacoes from '../screens/ConfigNotificacoes';
+import AlterarSenha from '../screens/AlterarSenha';
 
 import { colors, spacing } from '../theme';
 import Icon from '../components/Icon';
@@ -130,6 +131,7 @@ function PerfilStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Screen name="ConfigNotificacoesGestor" component={ConfigNotificacoes} />
+      <Stack.Screen name="AlterarSenha" component={AlterarSenha} />
       <Stack.Screen name="NotificacoesGestor" component={NotificacoesGestor} />
       <Stack.Screen name="OcorrenciasGestor" component={OcorrenciasGestor} />
       <Stack.Screen name="ResumoSemana" component={ResumoSemana} />
@@ -162,6 +164,7 @@ const GestorNavigator = () => {
           <Screen name="DetalheAlunoGestor" component={DetalheAlunoGestor} />
           <Screen name="FrotaGestor" component={FrotaGestor} />
           <Screen name="ConfigNotificacoesGestor" component={ConfigNotificacoes} />
+          <Screen name="AlterarSenha" component={AlterarSenha} />
           <Screen name="NotificacoesGestor" component={NotificacoesGestor} />
           <Screen name="OcorrenciasGestor" component={OcorrenciasGestor} />
           <Screen name="CadastrosPendentes" component={CadastrosPendentes} />
