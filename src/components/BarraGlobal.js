@@ -29,7 +29,17 @@ const itensMotorista = [
 const PAPEIS = {
   ALUNO: {
     itens: itensAluno,
-    rotas: { DashboardAluno: 'inicio', RotaAluno: 'viagens', MinhasRotas: 'viagens', SelecaoRotas: 'rotas', EditarPerfilAluno: 'perfil' },
+    rotas: {
+      DashboardAluno: 'inicio',
+      NotificacoesAluno: 'inicio',
+      Notificacoes: 'inicio',
+      RotaAluno: 'viagens',
+      MinhasRotas: 'viagens',
+      DetalheViagem: 'viagens',
+      SelecaoRotas: 'rotas',
+      EditarPerfilAluno: 'perfil',
+      ConfigNotificacoesAluno: 'perfil',
+    },
   },
   MOTORISTA: {
     itens: itensMotorista,
