@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   Switch,
+  Platform,
 } from 'react-native';
 import TelaSegura from '../components/TelaSegura';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,6 +21,7 @@ import VersaoDoApp from '../components/VersaoDoApp';
 import { rotuloAtual } from '../services/biometria';
 import { alertar } from '../utils/alerta';
 import { confirmAction } from '../utils/confirm';
+import { abrirAjustesDeBateria } from '../services/servicoViagem';
 
 const roleLabel = (role?: string) => {
   const map: Record<string, string> = {
@@ -135,6 +137,18 @@ const ConfigNotificacoes = ({ navigation }) => {
               </View>
             </View>
           </>
+        )}
+
+        {isMotorista && Platform.OS === 'android' && (
+          <TouchableOpacity
+            style={styles.editProfileBtn}
+            onPress={() => abrirAjustesDeBateria()}
+            accessibilityRole="button"
+            accessibilityLabel="Localização com a tela bloqueada: abrir ajustes de bateria">
+            <Icon name={IconNames.location} size="md" color={colors.primary.dark} />
+            <Text style={styles.editProfileBtnText}>Localização com a tela bloqueada</Text>
+            <Icon name={IconNames.chevronRight} size="sm" color={colors.text.secondary} />
+          </TouchableOpacity>
         )}
 
         <SectionHeader title="Conta" />

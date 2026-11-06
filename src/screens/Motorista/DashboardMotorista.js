@@ -17,6 +17,7 @@ import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SairDaConta from '../../components/SairDaConta';
+import AvisoBateria from '../../components/AvisoBateria';
 import ProximasViagens from '../../components/ProximasViagens';
 import Tappable from '../../components/Tappable';
 import { formatarSentido } from '../../utils/formatarSentido';
@@ -176,6 +177,8 @@ const DashboardMotorista = ({navigation}) => {
           onBellPress={() => navigation.navigate('NotificacoesMotorista')}
           onOpenConfig={() => navigation.navigate('ConfigNotificacoesMotorista')}
         />
+
+        <AvisoBateria />
 
         {/* Próxima Viagem */}
         {proximaViagem ? (

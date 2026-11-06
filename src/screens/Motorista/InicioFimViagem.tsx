@@ -50,9 +50,7 @@ import { apagarChegadas, lerChegadas, salvarChegadas } from '../../utils/chegada
 import { proximoIntervaloMs } from '../../utils/intervaloEnvio';
 import { limparEnvio, registrarEnvio } from '../../utils/demandaLocalizacao';
 import {
-  abrirAjustesDeBateria,
   abrirAjustesDoApp,
-  bateriaRestringida,
   escutarDemandaPrimeiroPlano,
   iniciarServicoViagem,
   pararServicoViagem,
@@ -60,7 +58,6 @@ import {
 import { horaCurta } from '../../utils/viagemPainel';
 import { lerPosicao, PERMISSAO_NEGADA } from '../../utils/lerPosicao';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
-import { Storage } from '../../utils/storage';
 import { MEDIDAS_DOS_BOTOES, ROTULOS_DOS_BOTOES } from '../../utils/botoesDaViagem';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
@@ -127,7 +124,6 @@ try {
   }
 }
 
-const CHAVE_AVISO_BATERIA = 'aviso_bateria_respondido';
 
 const GPS_SEND_INTERVAL_MS = 20_000;
 const AVISO_MIN = 3;
@@ -187,14 +183,11 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [alturaPainel, setAlturaPainel] = useState(0);
   // Por que o GPS não responde: 'negada' (permissão) ou 'indisponivel' (sem sinal). Some ao ler de novo.
   const [erroGps, setErroGps] = useState<'negada' | 'indisponivel' | null>(null);
-  // Aviso de que a localização pode parar com a tela bloqueada (serviço não subiu ou bateria restrita).
-  const [avisoBloqueio, setAvisoBloqueio] = useState<'servico' | 'bateria' | null>(null);
-  // Responder ao aviso de bateria uma vez basta: alguns celulares (realme, Xiaomi) seguem dizendo
-  // "restrito" mesmo depois do motorista liberar, e o aviso voltaria a cada viagem.
-  const dispensarAvisoBloqueio = () => {
-    if (avisoBloqueio === 'bateria') Storage.setItem(CHAVE_AVISO_BATERIA, true);
-    setAvisoBloqueio(null);
-  };
+  // Aviso de que o serviço de localização não subiu e o sinal pode parar com a tela bloqueada.
+  // A orientação sobre bateria fica na tela inicial (AvisoBateria): o Android não informa se o
+  // motorista já liberou, e o aviso aqui dava alarme falso.
+  const [avisoBloqueio, setAvisoBloqueio] = useState<'servico' | null>(null);
+  const dispensarAvisoBloqueio = () => setAvisoBloqueio(null);
   // Cada aumento reinicia a leitura do GPS (voltar de outro app, botão Tentar de novo).
   const [reinicioGps, setReinicioGps] = useState(0);
 
@@ -309,13 +302,8 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     registrarEnvio(viagemIdRef.current, async () => {
       await lerEEnviar();
     });
-    iniciarServicoViagem().then(async (resultado) => {
-      if (parado) return;
-      if (resultado !== 'ok') {
-        setAvisoBloqueio('servico');
-      } else if ((await bateriaRestringida()) && !(await Storage.getItem(CHAVE_AVISO_BATERIA))) {
-        setAvisoBloqueio('bateria');
-      }
+    iniciarServicoViagem().then((resultado) => {
+      if (!parado && resultado !== 'ok') setAvisoBloqueio('servico');
     });
 
     // Primeiro plano: o handler de segundo plano fica em index.js.
@@ -493,8 +481,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const trajeto = useRotaPlanejada(posMotorista, paradasRestantes, viagemIniciada);
 
   // Escape (web) e voltar do sistema (Android) fecham a camada aberta (Roteiro ou Confirmados).
+  // Com a viagem em andamento e nenhuma camada aberta, o voltar do sistema não sai da tela: o envio
+  // da localização vive nela, e o Finalizar Viagem é a saída.
   useEffect(() => {
-    if (!camadaAberta) return;
+    if (!camadaAberta && !viagemIniciada) return;
     const fechar = () => {
       setRoteiroAberto(false);
       setAlunosAberto(false);
@@ -503,15 +493,18 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       if (e.key === 'Escape') fechar();
     };
     if (Platform.OS === 'web') {
+      if (!camadaAberta) return;
       window.addEventListener('keydown', aoTeclar);
       return () => window.removeEventListener('keydown', aoTeclar);
     }
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      fechar();
+      if (camadaAberta) fechar();
+      else toast.info('Viagem em andamento. Toque em Finalizar Viagem para sair.');
       return true;
     });
     return () => sub.remove();
-  }, [camadaAberta]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [camadaAberta, viagemIniciada]);
 
   // Só o botão da tela de instituições chama o endpoint de iniciar.
   const abrirIniciar = () => {
@@ -707,16 +700,13 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
           {avisoBloqueio ? (
             <View style={styles.avisoBloqueio} accessibilityRole="alert">
               <Text style={styles.avisoGpsTexto}>
-                {avisoBloqueio === 'servico'
-                  ? 'Permita a localização para o ônibus continuar aparecendo com a tela bloqueada.'
-                  : 'Para o ônibus continuar aparecendo com a tela bloqueada, deixe o BusKá sem restrição de bateria.'}
+                Permita a localização para o ônibus continuar aparecendo com a tela bloqueada.
               </Text>
               <View style={styles.avisoBloqueioBotoes}>
                 <TouchableOpacity
                   style={styles.avisoBloqueioBotao}
                   onPress={() => {
-                    if (avisoBloqueio === 'servico') abrirAjustesDoApp();
-                    else abrirAjustesDeBateria();
+                    abrirAjustesDoApp();
                     dispensarAvisoBloqueio();
                   }}
                   accessibilityRole="button"
