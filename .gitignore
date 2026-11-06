@@ -111,3 +111,17 @@ coverage/
 # Editors
 .vscode/
 .idea/
+
+# Backups e chaves: os repositórios são públicos
+*.jks
+*.p12
+*.pfx
+*.pem
+*.dump
+*.pass
+*.tfstate
+*.tfstate.backup
+*.tfvars
+clouds.yaml
+buska-backups/
+
