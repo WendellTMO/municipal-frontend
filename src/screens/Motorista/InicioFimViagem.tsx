@@ -59,6 +59,7 @@ import { horaCurta } from '../../utils/viagemPainel';
 import { lerPosicao, PERMISSAO_NEGADA } from '../../utils/lerPosicao';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
 import { MEDIDAS_DOS_BOTOES, ROTULOS_DOS_BOTOES } from '../../utils/botoesDaViagem';
+import { aindaNaoEhODiaDaViagem } from '../../utils/viagensMotorista';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
 import CronometroViagem from '../../components/CronometroViagem';
@@ -192,6 +193,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   const [reinicioGps, setReinicioGps] = useState(0);
 
   const currentViagem = (viagem ?? viagemParam) as Record<string, unknown>;
+  const aguardaODia = aindaNaoEhODiaDaViagem(currentViagem);
   const viagemId = (currentViagem?.id ?? viagemParam?.id) as string | undefined;
   const rotaId = currentViagem?.rota_id as string | undefined;
 
@@ -956,18 +958,20 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.barraIniciar}>
           {/* Iniciar button */}
           <TouchableOpacity
-            style={[styles.iniciarButton, loading && styles.buttonDisabled]}
+            style={[styles.iniciarButton, (loading || aguardaODia) && styles.buttonDisabled]}
             onPress={abrirIniciar}
-            disabled={loading}
+            disabled={loading || aguardaODia}
             accessibilityRole="button"
-            accessibilityLabel="Iniciar viagem"
-            accessibilityState={{ disabled: loading }}>
+            accessibilityLabel={aguardaODia ? 'Iniciar viagem, disponível só no dia da viagem' : 'Iniciar viagem'}
+            accessibilityState={{ disabled: loading || aguardaODia }}>
             {loading ? (
               <ActivityIndicator size="large" color={colors.text.inverse} />
             ) : (
               <>
-                <Icon name={IconNames.play} size="xl" color={colors.text.inverse} />
-                <Text style={styles.iniciarButtonText}>Iniciar viagem</Text>
+                <Icon name={aguardaODia ? IconNames.schedule : IconNames.play} size="xl" color={colors.text.inverse} />
+                <Text style={styles.iniciarButtonText}>
+                  {aguardaODia ? 'Disponível no dia da viagem' : 'Iniciar viagem'}
+                </Text>
               </>
             )}
           </TouchableOpacity>

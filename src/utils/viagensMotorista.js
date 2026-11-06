@@ -19,6 +19,16 @@ export const inicioDaViagem = viagem => {
   return Number.isNaN(inicio.getTime()) ? null : inicio;
 };
 
+// A viagem de outro dia (amanhã em diante) ainda não pode ser iniciada: o servidor só deixa iniciar
+// no dia dela. Viagem de ontem ainda aberta e a de hoje podem.
+export const aindaNaoEhODiaDaViagem = (viagem, agora = new Date()) => {
+  const inicio = inicioDaViagem(viagem);
+  if (!inicio) return false;
+  const dia = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+  const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+  return dia > hoje;
+};
+
 const mesmoDia = (a, b) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 

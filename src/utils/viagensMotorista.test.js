@@ -1,4 +1,4 @@
-import { inicioDaViagem, organizarViagens } from './viagensMotorista';
+import { aindaNaoEhODiaDaViagem, inicioDaViagem, organizarViagens } from './viagensMotorista';
 
 const viagem = (id, data, horario, status = 'AGENDADA', extra = {}) => ({ id, data, horario_inicio: horario, status, ...extra });
 const agora = new Date(2026, 10, 3, 12, 0); // 3/nov 12:00
@@ -86,4 +86,23 @@ test('cancelada de outro dia não vira a próxima e fica nas próximas', () => {
   const { proxima, proximas } = organizarViagens([cancelada, hoje], agora);
   expect(proxima.id).toBe('hoje');
   expect(proximas.map(v => v.id)).toEqual(['c']);
+});
+
+describe('aindaNaoEhODiaDaViagem', () => {
+  const agora = new Date(2026, 10, 5, 22, 0);
+
+  it('amanhã ainda não pode iniciar, nem às 06:00 e nem pelo horário', () => {
+    expect(aindaNaoEhODiaDaViagem({ data: '2026-11-06', horario_inicio: '06:00' }, agora)).toBe(true);
+    expect(aindaNaoEhODiaDaViagem({ data: '2026-11-06', horario_inicio: '00:01' }, agora)).toBe(true);
+  });
+
+  it('hoje, mesmo já passada ou ainda longe, pode iniciar', () => {
+    expect(aindaNaoEhODiaDaViagem({ data: '2026-11-05', horario_inicio: '06:00' }, agora)).toBe(false);
+    expect(aindaNaoEhODiaDaViagem({ data: '2026-11-05', horario_inicio: '23:50' }, agora)).toBe(false);
+  });
+
+  it('ontem ou sem data não bloqueia', () => {
+    expect(aindaNaoEhODiaDaViagem({ data: '2026-11-04', horario_inicio: '18:00' }, agora)).toBe(false);
+    expect(aindaNaoEhODiaDaViagem({}, agora)).toBe(false);
+  });
 });
