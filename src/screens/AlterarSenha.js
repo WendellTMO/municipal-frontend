@@ -22,6 +22,7 @@ import { userService } from '../services/userService';
 import { getErrorMessageFromError } from '../utils/errors';
 import { SENHA_MIN, validarTrocaDeSenha } from '../utils/senha';
 import { withFabSpace } from '../config/feedback';
+import { registrarAcao } from '../utils/telemetriaFila';
 import { borderRadius, colors, spacing, textStyles } from '../theme';
 
 const Campo = ({ rotulo, valor, onChange, autoComplete, textContentType, desabilitado, onEnviar }) => {
@@ -79,9 +80,11 @@ const AlterarSenha = ({ navigation }) => {
     setLoading(true);
     try {
       await userService.changePassword(atual, nova, confirmar);
+      registrarAcao('senha_alterar_ok');
       toast.success('Senha alterada. Enviamos um aviso para o seu e-mail.');
       navigation.goBack();
     } catch (e) {
+      registrarAcao('senha_alterar_falha');
       setErro(getErrorMessageFromError(e));
       setLoading(false);
     }

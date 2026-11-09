@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   View,
@@ -22,6 +22,7 @@ import { rotuloAtual } from '../services/biometria';
 import { alertar } from '../utils/alerta';
 import { confirmAction } from '../utils/confirm';
 import { abrirAjustesDeBateria } from '../services/servicoViagem';
+import { definirTelemetria, lerPreferenciaDeTelemetria } from '../services/telemetriaService';
 
 const roleLabel = (role?: string) => {
   const map: Record<string, string> = {
@@ -45,6 +46,10 @@ const ConfigNotificacoes = ({ navigation }) => {
     user?.receber_notificacoes !== false,
   );
   const [salvandoPrefs, setSalvandoPrefs] = useState(false);
+  const [telemetria, setTelemetria] = useState(true);
+  useEffect(() => {
+    lerPreferenciaDeTelemetria().then(setTelemetria);
+  }, []);
 
   const headerSubtitle = useMemo(() => {
     if (isAluno) return 'Perfil e notificações';
@@ -138,6 +143,29 @@ const ConfigNotificacoes = ({ navigation }) => {
             </View>
           </>
         )}
+
+        <SectionHeader title="Privacidade" />
+        <View style={styles.section}>
+          <View style={styles.settingRowTopAligned}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingTitle}>Ajudar a melhorar o app</Text>
+              <Text style={styles.settingDescription}>
+                Envia quais telas e botões são usados e quanto o app demora, sem nome, e-mail, CPF nem localização. Os dados são apagados em 90 dias.
+              </Text>
+            </View>
+            <Switch
+              value={telemetria}
+              onValueChange={ligada => {
+                setTelemetria(ligada);
+                void definirTelemetria(ligada);
+              }}
+              trackColor={{ false: colors.border.light, true: colors.primary.dark }}
+              thumbColor={colors.background.paper}
+              accessibilityLabel="Ajudar a melhorar o app"
+              accessibilityRole="switch"
+            />
+          </View>
+        </View>
 
         {isMotorista && Platform.OS === 'android' && (
           <TouchableOpacity

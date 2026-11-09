@@ -1,3 +1,4 @@
+import { registrarAcao } from '../utils/telemetriaFila';
 import { useCallback, useEffect, useState } from 'react';
 import { alunoService } from '../services';
 import { useToast } from '../components/Toast';
@@ -88,6 +89,7 @@ export function usePresencaViagem(
     setSalvando(true);
     try {
       await alunoService.alterarPresencaViagem(viagem.id, confirmar, corpo);
+      registrarAcao(confirmar ? 'presenca_confirmar' : 'presenca_cancelar');
       setConfirmada(confirmar);
       if (nova) setEscolha(nova);
       if (corpo.lembrar_escolha) setPedirEscolha(false);

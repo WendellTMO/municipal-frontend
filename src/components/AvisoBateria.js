@@ -8,6 +8,7 @@ import { borderRadius, colors, spacing, textStyles } from '../theme';
 import { Storage } from '../utils/storage';
 import { CHAVE_AVISO_BATERIA, deveMostrarAvisoDeBateria } from '../utils/avisoBateria';
 import { abrirAjustesDeBateria } from '../services/servicoViagem';
+import { registrarAcao } from '../utils/telemetriaFila';
 
 const AvisoBateria = () => {
   const [visivel, setVisivel] = useState(false);
@@ -23,6 +24,7 @@ const AvisoBateria = () => {
   }, []);
 
   const encerrar = abrir => {
+    registrarAcao('aviso_bateria_respondido', { abriu_ajustes: !!abrir });
     Storage.setItem(CHAVE_AVISO_BATERIA, true);
     setVisivel(false);
     if (abrir) abrirAjustesDeBateria();

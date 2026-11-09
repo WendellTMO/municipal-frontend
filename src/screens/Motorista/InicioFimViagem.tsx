@@ -60,6 +60,7 @@ import { lerPosicao, PERMISSAO_NEGADA } from '../../utils/lerPosicao';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
 import { MEDIDAS_DOS_BOTOES, ROTULOS_DOS_BOTOES } from '../../utils/botoesDaViagem';
 import { aindaNaoEhODiaDaViagem } from '../../utils/viagensMotorista';
+import { registrarAcao } from '../../utils/telemetriaFila';
 import { mesclarOrdem, montarListaPut, ordemMudou, reordenarPontosPorInstituicao } from '../../utils/ordemInstituicoes';
 import RoteiroLista from '../../components/RoteiroLista';
 import CronometroViagem from '../../components/CronometroViagem';
@@ -289,6 +290,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               .catch(() => resolve(null));
           },
           (erro) => {
+            registrarAcao('gps_erro', { tipo: erro?.code === PERMISSAO_NEGADA ? 'negada' : 'indisponivel' });
             setErroGps(erro?.code === PERMISSAO_NEGADA ? 'negada' : 'indisponivel');
             resolve(null);
           },
@@ -305,6 +307,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       await lerEEnviar();
     });
     iniciarServicoViagem().then((resultado) => {
+      registrarAcao('servico_localizacao', { resultado: String(resultado) });
       if (!parado && resultado !== 'ok') setAvisoBloqueio('servico');
     });
 
@@ -372,6 +375,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
   // Botão "Cheguei": marca a próxima parada da lista.
   const marcarChegada = () => {
     if (!proxima) return;
+    registrarAcao('chegada_marcar_manual');
     mudarChegadas((estado) => registrarChegada(estado, proxima.ponto, 'manual', posMotorista));
   };
 
@@ -501,7 +505,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     }
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (camadaAberta) fechar();
-      else toast.info('Viagem em andamento. Toque em Finalizar Viagem para sair.');
+      else {
+        registrarAcao('voltar_bloqueado');
+        toast.info('Viagem em andamento. Toque em Finalizar Viagem para sair.');
+      }
       return true;
     });
     return () => sub.remove();
@@ -537,6 +544,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       setLoading(true);
       await salvarOrdemSeMudou();
       await motoristaService.iniciarViagem(viagemId);
+      registrarAcao('viagem_iniciar');
       setViagemIniciada(true);
 
       // Fetch points if not loaded yet
@@ -574,6 +582,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
       if (chegadasRef.current.pendentes.length === 0) apagarChegadas(viagemId!);
       setFinalizarVisivel(false);
       AccessibilityInfo.announceForAccessibility('Viagem finalizada');
+      registrarAcao('viagem_finalizar', { nao_detectadas: naoDetectadas.length });
       toast.success('Viagem finalizada!');
       navigation.goBack();
     } catch (err: unknown) {
@@ -836,6 +845,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
               onMarcarTodos={() => {
                 const todos: Record<string, boolean> = {};
                 for (const parada of naoDetectadas) todos[parada.ponto.id] = true;
+                registrarAcao('marcar_todos_pontos', { total: naoDetectadas.length });
                 setConferencia(todos);
               }}
             />
