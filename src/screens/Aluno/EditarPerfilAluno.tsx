@@ -24,6 +24,7 @@ import SairDaConta from '../../components/SairDaConta';
 import VersaoDoApp from '../../components/VersaoDoApp';
 import SubHeader from '../../components/SubHeader';
 import SeletorInstituicao from '../../components/SeletorInstituicao';
+import { esquecerCompartilhada } from '../../utils/requisicaoCompartilhada';
 import DialogoConfirmacao from '../../components/DialogoConfirmacao';
 import { assinaturaDoPerfil, perfilAlterado } from '../../utils/perfilAlterado';
 
@@ -203,6 +204,7 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     try {
       setSalvando(true);
       await alunoService.atualizarPerfil(payload as Parameters<typeof alunoService.atualizarPerfil>[0]);
+      esquecerCompartilhada('perfil-aluno');
       if (refreshUser) await refreshUser();
       toast.success('Perfil atualizado com sucesso!');
       navigation.goBack();

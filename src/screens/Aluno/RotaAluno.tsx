@@ -140,6 +140,8 @@ const PresencaDaViagem: React.FC<{ viagem: ViagemAgendaUI; onMudou: (confirmada:
   );
 };
 
+const VIAGENS_POR_PAGINA = 20;
+
 const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
   const rota = route?.params?.rota;
   const toast = useToast();
@@ -165,6 +167,10 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
     emCache ? statusDePresenca(filtrarDaRota(emCache)) : {},
   );
   const [loading, setLoading] = useState(!emCache);
+  // Há mais viagens além das já mostradas: o servidor devolveu uma página cheia.
+  const [temMais, setTemMais] = useState(false);
+  const [carregandoMais, setCarregandoMais] = useState(false);
+  const quantidadeRef = useRef(0);
   const [refreshing, setRefreshing] = useState(false);
   const [meuPonto, setMeuPonto] = useState<MeuPonto | null>(null);
   const [esquecerAberto, setEsquecerAberto] = useState(false);
@@ -176,10 +182,18 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
 
   const loadViagens = useCallback(async () => {
     try {
-      const todasViagens = await alunoService.listarViagens();
-      guardarCache(chaveViagens, todasViagens);
+      // Recarregar (depois de confirmar, ao puxar) mantém as páginas que o aluno já abriu.
+      const limit = Math.max(VIAGENS_POR_PAGINA, quantidadeRef.current);
+      const todasViagens = await alunoService.listarViagens({
+        limit,
+        rotaId: isAllTrips ? undefined : (rota.id as string),
+      });
+      // A lista da rota é só um pedaço: o cache compartilhado com a Home guarda a lista inteira.
+      if (isAllTrips) guardarCache(chaveViagens, todasViagens);
       const viagensFiltradas = filtrarDaRota(todasViagens);
 
+      quantidadeRef.current = viagensFiltradas.length;
+      setTemMais(todasViagens.length >= limit);
       setViagens(viagensFiltradas);
       setPresencasStatus(statusDePresenca(viagensFiltradas));
 
@@ -216,6 +230,29 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
     });
     return unsubscribe as (() => void) | undefined;
   }, [navigation, loadViagens]);
+
+  const carregarMais = async () => {
+    if (carregandoMais) return;
+    setCarregandoMais(true);
+    try {
+      const proxima = await alunoService.listarViagens({
+        limit: VIAGENS_POR_PAGINA,
+        offset: viagens.length,
+        rotaId: isAllTrips ? undefined : (rota.id as string),
+      });
+      const vistas = new Set(viagens.map((v) => v.id));
+      const novas = proxima.filter((v) => !vistas.has(v.id));
+      const todas = [...viagens, ...novas];
+      quantidadeRef.current = todas.length;
+      setViagens(todas);
+      setPresencasStatus((atual) => ({ ...atual, ...statusDePresenca(novas) }));
+      setTemMais(proxima.length >= VIAGENS_POR_PAGINA);
+    } catch {
+      toast.error('Não foi possível carregar mais viagens.');
+    } finally {
+      setCarregandoMais(false);
+    }
+  };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -285,7 +322,7 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
     <TelaSegura style={styles.container}>
       <SubHeader
         titulo={screenTitle}
-        subtitulo={`${viagens.length} viage${viagens.length !== 1 ? 'ns' : 'm'}`}
+        subtitulo={`${viagens.length}${temMais ? '+' : ''} viage${viagens.length !== 1 ? 'ns' : 'm'}`}
         onBack={() => navigation.goBack()}
       />
 
@@ -415,6 +452,20 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
               </Text>
             </View>
           )}
+          {temMais ? (
+            <Tappable
+              style={styles.verMais}
+              onPress={carregarMais}
+              disabled={carregandoMais}
+              sombra={false}
+              accessibilityLabel="Ver mais viagens">
+              {carregandoMais ? (
+                <ActivityIndicator color={colors.primary.main} />
+              ) : (
+                <Text style={styles.verMaisTexto}>Ver mais viagens</Text>
+              )}
+            </Tappable>
+          ) : null}
         </View>
       </ScrollView>
       <DialogoConfirmacao
@@ -435,6 +486,16 @@ const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
+  verMais: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.primary.main,
+  },
+  verMaisTexto: { ...textStyles.body, color: colors.primary.main, fontWeight: '700' as const },
   meusPontos: {
     backgroundColor: colors.background.paper,
     borderRadius: borderRadius.lg,

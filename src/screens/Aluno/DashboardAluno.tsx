@@ -120,7 +120,8 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
       // As duas buscas não dependem uma da outra: vão juntas.
       const [respostaRotas, todasViagens] = await Promise.all([
         alunoService.listarMinhasRotas(),
-        alunoService.listarViagens(),
+        // A home só precisa das próximas: o resto a tela Viagens busca por páginas.
+        alunoService.listarViagens({ limit: 20 }),
       ]);
       const rotas = unwrapItems(respostaRotas) as ViagemAgendaUI[];
       guardarCache(chavePainel, { rotas, viagens: todasViagens });
