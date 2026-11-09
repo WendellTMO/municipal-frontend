@@ -10,6 +10,8 @@ import {
   retirarLote,
   rotaDaApi,
   tamanhoDaFila,
+  celulaDoToque,
+  registrarToque,
   zerarParaTeste,
 } from './telemetriaFila';
 
@@ -82,6 +84,34 @@ describe('agregação da API', () => {
 
   it('a própria telemetria não entra na conta', () => {
     registrarApi('post', '/telemetria', 200, 20);
+    expect(retirarLote()).toEqual([]);
+  });
+});
+
+describe('toques', () => {
+  it('célula da grade 6x10, com bordas dentro da grade', () => {
+    expect(celulaDoToque(0, 0, 600, 1000)).toBe('c0r0');
+    expect(celulaDoToque(350, 550, 600, 1000)).toBe('c3r5');
+    expect(celulaDoToque(600, 1000, 600, 1000)).toBe('c5r9');
+    expect(celulaDoToque(10, 10, 0, 0)).toBeNull();
+  });
+
+  it('toques na mesma tela e célula viram um evento com contagem', () => {
+    registrarToque('DashboardAluno', 'c1r2');
+    registrarToque('DashboardAluno', 'c1r2');
+    registrarToque('DashboardAluno', 'c4r8');
+    const lote = retirarLote();
+    expect(lote).toEqual([
+      expect.objectContaining({ tipo: 'toque', nome: 'dashboard_aluno', props: { celula: 'c1r2', n: 2 } }),
+      expect.objectContaining({ tipo: 'toque', nome: 'dashboard_aluno', props: { celula: 'c4r8', n: 1 } }),
+    ]);
+    expect(retirarLote()).toEqual([]);
+  });
+
+  it('desligada, não guarda toque', () => {
+    ligarTelemetria(false);
+    registrarToque('Login', 'c0r0');
+    ligarTelemetria(true);
     expect(retirarLote()).toEqual([]);
   });
 });
