@@ -68,11 +68,29 @@ export const escolhaCompleta = (sentido, escolha) => {
   return true;
 };
 
-// Campos do corpo do PUT de confirmação e do PUT de meu-ponto-embarque, por sentido.
-export const montarPontosDaEscolha = (sentido, escolha) => {
+// Na VOLTA o embarque é a instituição; o aluno pode trocá-lo por outro ponto da rota nessa viagem.
+// Ponto sem instituição é um embarque escolhido por ele.
+export const embarqueForaDaInstituicao = (pontos, embarqueId) => {
+  if (!embarqueId) return false;
+  for (const ponto of pontos || []) {
+    if (ponto.id === embarqueId) return !ponto.instituicao;
+  }
+  return false;
+};
+
+// Campos do PUT de meu-ponto-embarque (padrão lembrado), por sentido. O embarque da VOLTA vale só
+// para a viagem e nunca vira padrão: o padrão de embarque é o da ida.
+export const montarPontosPadrao = (sentido, escolha) => {
   const campos = {};
   if (pedeEmbarque(sentido)) campos.ponto_embarque_id = escolha.embarqueId;
   if (pedeDesembarque(sentido)) campos.ponto_desembarque_id = escolha.desembarqueId;
+  return campos;
+};
+
+// Campos do corpo do PUT de confirmação, por sentido.
+export const montarPontosDaEscolha = (sentido, escolha) => {
+  const campos = montarPontosPadrao(sentido, escolha);
+  if (sentido === 'VOLTA' && escolha.embarqueId) campos.ponto_embarque_id = escolha.embarqueId;
   return campos;
 };
 
@@ -101,9 +119,9 @@ export const erroDeCampoPonto = erro => {
 };
 
 // Linha pequena do card: "Embarca em X", "Desce em Y" ou as duas na circular.
-export const linhaDosPontos = (sentido, nomeEmbarque, nomeDesembarque) => {
+export const linhaDosPontos = (sentido, nomeEmbarque, nomeDesembarque, embarqueLivre = false) => {
   const partes = [];
-  if (pedeEmbarque(sentido) && nomeEmbarque) partes.push(`Embarca em ${nomeEmbarque}`);
+  if ((pedeEmbarque(sentido) || embarqueLivre) && nomeEmbarque) partes.push(`Embarca em ${nomeEmbarque}`);
   if (pedeDesembarque(sentido) && nomeDesembarque) partes.push(`Desce em ${nomeDesembarque}`);
   return partes.join(' · ');
 };

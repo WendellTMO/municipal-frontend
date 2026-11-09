@@ -10,6 +10,7 @@ import Icon, { IconNames } from './Icon';
 import ModalApp from './ModalApp';
 import Tappable from './Tappable';
 import {
+  embarqueForaDaInstituicao,
   escolhaCompleta,
   instituicaoDiferente,
   pedeDesembarque,
@@ -101,6 +102,8 @@ const EscolhaPontoSheet = ({
   const [instituicaoId, setInstituicaoId] = useState<string | null>(instituicaoAtualId);
   const [trocando, setTrocando] = useState(false);
   const [buscandoOutra, setBuscandoOutra] = useState(false);
+  // VOLTA: o aluno abriu a lista para embarcar em outro ponto que não a instituição.
+  const [outroEmbarque, setOutroEmbarque] = useState(false);
   const [textoBusca, setTextoBusca] = useState('');
   // Pergunta de instituição diferente: vive dentro da folha, sem abrir outra janela por cima.
   const [confirmandoOutra, setConfirmandoOutra] = useState(false);
@@ -112,6 +115,7 @@ const EscolhaPontoSheet = ({
       setInstituicaoId(instituicaoAtualId);
       setTrocando(false);
       setBuscandoOutra(false);
+      setOutroEmbarque(false);
       setTextoBusca('');
       setConfirmandoOutra(false);
     }
@@ -144,7 +148,17 @@ const EscolhaPontoSheet = ({
     setInstituicaoId(id);
     setTrocando(false);
   };
-  const completa = escolhaCompleta(sentido, escolha) && (!comInstituicao || escolhida !== null);
+  const volta = sentido === 'VOLTA';
+  const embarqueLivre = volta && embarqueForaDaInstituicao(pontos, escolha.embarqueId);
+  const mostrarOutroEmbarque = volta && (outroEmbarque || embarqueLivre);
+  // Sem ponto marcado na lista de embarque, o embarque continua sendo a instituição.
+  const escolhaFinal: Escolha = volta
+    ? { ...escolha, embarqueId: embarqueLivre ? escolha.embarqueId : null }
+    : escolha;
+  const completa =
+    escolhaCompleta(sentido, escolha) &&
+    (!comInstituicao || escolhida !== null) &&
+    !(outroEmbarque && !embarqueLivre);
   const verbo = sentido === 'IDA' ? 'desce' : 'embarca';
   const linhaInstituicao =
     !comInstituicao && instituicaoNome && sentido === 'IDA'
@@ -158,7 +172,7 @@ const EscolhaPontoSheet = ({
     const cadastrada = !!instituicaoId && instituicoesDoAlunoIds.includes(instituicaoId);
     const outra = !cadastrada && instituicaoDiferente(instituicaoId, instituicaoPropriaId);
     if (!outra) {
-      onConfirmar(escolha, lembrar, instituicaoId);
+      onConfirmar(escolhaFinal, lembrar, instituicaoId);
       return;
     }
     setConfirmandoOutra(true);
@@ -187,7 +201,7 @@ const EscolhaPontoSheet = ({
               <Text style={styles.outraTexto}>{mensagemOutra}</Text>
               <Tappable
                 style={styles.confirmar}
-                onPress={() => onConfirmar(escolha, lembrar, instituicaoId)}
+                onPress={() => onConfirmar(escolhaFinal, lembrar, instituicaoId)}
                 disabled={salvando}
                 accessibilityLabel="Sim, confirmar">
                 {salvando ? (
@@ -208,7 +222,7 @@ const EscolhaPontoSheet = ({
             <ActivityIndicator color={colors.primary.main} style={styles.carregando} />
           ) : (
             <ScrollView style={styles.lista} nestedScrollEnabled>
-              {comInstituicao ? (
+              {comInstituicao && !mostrarOutroEmbarque ? (
                 <View style={styles.instituicaoBloco}>
                   <Text style={styles.blocoTitulo}>
                     {sentido === 'IDA' ? 'Você desce em' : 'Você embarca em'}
@@ -267,6 +281,36 @@ const EscolhaPontoSheet = ({
                         </View>
                       ) : null}
                     </>
+                  )}
+                </View>
+              ) : null}
+              {volta ? (
+                <View style={styles.instituicaoBloco}>
+                  {mostrarOutroEmbarque ? (
+                    <>
+                      <Lista
+                        titulo="Onde você embarca"
+                        pontos={lista}
+                        marcado={embarqueLivre ? escolha.embarqueId : null}
+                        onMarcar={(id) => setEscolha((atual) => ({ ...atual, embarqueId: id }))}
+                      />
+                      <Tappable
+                        onPress={() => {
+                          setOutroEmbarque(false);
+                          setEscolha((atual) => ({ ...atual, embarqueId: null }));
+                        }}
+                        sombra={false}
+                        accessibilityLabel="Embarcar na instituição">
+                        <Text style={styles.linhaAlterar}>Embarcar na instituição</Text>
+                      </Tappable>
+                    </>
+                  ) : (
+                    <Tappable
+                      onPress={() => setOutroEmbarque(true)}
+                      sombra={false}
+                      accessibilityLabel="Embarcar em outro ponto">
+                      <Text style={styles.linhaAlterar}>Embarcar em outro ponto</Text>
+                    </Tappable>
                   )}
                 </View>
               ) : null}

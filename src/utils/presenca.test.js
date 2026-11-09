@@ -5,7 +5,9 @@ import {
   instituicaoDoSentido,
   instituicaoDiferente,
   instituicoesDaRota,
+  embarqueForaDaInstituicao,
   linhaDosPontos,
+  montarPontosPadrao,
   mensagemDeErroPonto,
   montarCorpoConfirmacao,
   nomeDoPonto,
@@ -37,7 +39,14 @@ test('o sentido vem de tipo ou sentido e assume IDA', () => {
 test('o corpo da confirmação muda com o sentido', () => {
   const escolha = {embarqueId: 'e1', desembarqueId: 'd1'};
   expect(montarCorpoConfirmacao('IDA', escolha, false)).toEqual({ponto_embarque_id: 'e1'});
-  expect(montarCorpoConfirmacao('VOLTA', escolha, false)).toEqual({ponto_desembarque_id: 'd1'});
+  // Na VOLTA o embarque só vai no corpo quando o aluno escolheu um ponto (a folha manda null senão).
+  expect(montarCorpoConfirmacao('VOLTA', {embarqueId: null, desembarqueId: 'd1'}, false)).toEqual({
+    ponto_desembarque_id: 'd1',
+  });
+  expect(montarCorpoConfirmacao('VOLTA', escolha, false)).toEqual({
+    ponto_embarque_id: 'e1',
+    ponto_desembarque_id: 'd1',
+  });
   expect(montarCorpoConfirmacao('CIRCULAR', escolha, true)).toEqual({
     ponto_embarque_id: 'e1',
     ponto_desembarque_id: 'd1',
@@ -124,4 +133,26 @@ test('separa as instituições do aluno das outras da rota e filtra as outras pe
   expect(tudo.outras.map(i => i.id)).toEqual(['b']);
   expect(separarInstituicoes(rota, [], 'SAO jose').outras.map(i => i.id)).toEqual(['b']);
   expect(separarInstituicoes(rota, [], 'zzz').outras).toEqual([]);
+});
+
+test('embarque da VOLTA em ponto sem instituição conta como escolha do aluno', () => {
+  const pontos = [
+    {id: 'inst', apelido: 'Escola', instituicao: {id: 'i1', nome: 'UFCG'}},
+    {id: 'rua', apelido: 'Praça', instituicao: null},
+  ];
+  expect(embarqueForaDaInstituicao(pontos, 'rua')).toBe(true);
+  expect(embarqueForaDaInstituicao(pontos, 'inst')).toBe(false);
+  expect(embarqueForaDaInstituicao(pontos, null)).toBe(false);
+  expect(embarqueForaDaInstituicao(null, 'rua')).toBe(false);
+});
+
+test('o embarque da VOLTA nunca entra no padrão lembrado', () => {
+  const escolha = {embarqueId: 'rua', desembarqueId: 'd1'};
+  expect(montarPontosPadrao('VOLTA', escolha)).toEqual({ponto_desembarque_id: 'd1'});
+  expect(montarPontosPadrao('IDA', escolha)).toEqual({ponto_embarque_id: 'rua'});
+});
+
+test('a linha do card mostra o embarque da VOLTA só quando é um ponto escolhido', () => {
+  expect(linhaDosPontos('VOLTA', 'Praça', 'Casa')).toBe('Desce em Casa');
+  expect(linhaDosPontos('VOLTA', 'Praça', 'Casa', true)).toBe('Embarca em Praça · Desce em Casa');
 });
