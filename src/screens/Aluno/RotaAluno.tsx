@@ -140,7 +140,7 @@ const PresencaDaViagem: React.FC<{ viagem: ViagemAgendaUI; onMudou: (confirmada:
   );
 };
 
-const VIAGENS_POR_PAGINA = 20;
+const VIAGENS_POR_PAGINA = 10;
 
 const RotaAluno: React.FC<Props> = ({ navigation, route }) => {
   const rota = route?.params?.rota;
