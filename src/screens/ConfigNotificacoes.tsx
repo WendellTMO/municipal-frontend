@@ -8,7 +8,9 @@ import {
   ScrollView,
   Switch,
   Platform,
+  Linking,
 } from 'react-native';
+import apiConfig from '../config/api';
 import TelaSegura from '../components/TelaSegura';
 import { useAuth } from '../contexts/AuthContext';
 import { userService } from '../services/userService';
@@ -150,7 +152,21 @@ const ConfigNotificacoes = ({ navigation }) => {
             <View style={styles.settingInfo}>
               <Text style={styles.settingTitle}>Ajudar a melhorar o app</Text>
               <Text style={styles.settingDescription}>
-                Para saber mais, veja os Termos de Uso e a Política de Privacidade.
+                Para saber mais, veja os{' '}
+                <Text
+                  style={styles.link}
+                  accessibilityRole="link"
+                  onPress={() => Linking.openURL(`${apiConfig.baseUrl}/termos-de-uso`)}>
+                  Termos de Uso
+                </Text>{' '}
+                e a{' '}
+                <Text
+                  style={styles.link}
+                  accessibilityRole="link"
+                  onPress={() => Linking.openURL(`${apiConfig.baseUrl}/politica-de-privacidade`)}>
+                  Política de Privacidade
+                </Text>
+                .
               </Text>
             </View>
             <Switch
@@ -647,6 +663,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.light,
     ...shadows.sm,
   },
+  link: { color: colors.primary.dark, textDecorationLine: 'underline' as const },
   editProfileBtnText: {
     ...textStyles.body,
     color: colors.primary.dark,
