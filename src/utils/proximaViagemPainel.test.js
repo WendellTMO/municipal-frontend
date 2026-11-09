@@ -51,3 +51,25 @@ test('viagem sem horário de hoje agendada continua', () => {
 test('lista vazia', () => {
   expect(proximaViagemDoPainel([], agora)).toBeNull();
 });
+
+test('atrasada cede lugar à seguinte depois do ponto médio entre as duas', () => {
+  const lista = [v('seis', '2026-10-28', '06:00:00'), v('quatorze', '2026-10-28', '14:00:00')];
+  // ponto médio: 10:00
+  expect(proximaViagemDoPainel(lista, new Date(2026, 9, 28, 9, 59)).id).toBe('seis');
+  expect(proximaViagemDoPainel(lista, new Date(2026, 9, 28, 10, 0)).id).toBe('quatorze');
+});
+
+test('sem viagem seguinte a atrasada continua', () => {
+  const so = v('seis', '2026-10-28', '06:00:00');
+  expect(proximaViagemDoPainel([so], new Date(2026, 9, 28, 20, 0))).toBe(so);
+});
+
+test('a seguinte também atrasada pode ceder a uma terceira', () => {
+  const lista = [
+    v('a', '2026-10-28', '06:00:00'),
+    v('b', '2026-10-28', '08:00:00'),
+    v('c', '2026-10-29', '07:00:00'),
+  ];
+  expect(proximaViagemDoPainel(lista, new Date(2026, 9, 28, 7, 30)).id).toBe('b');
+  expect(proximaViagemDoPainel(lista, new Date(2026, 9, 28, 20, 0)).id).toBe('c');
+});
