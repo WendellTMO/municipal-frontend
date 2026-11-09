@@ -20,6 +20,7 @@ import feedbackService from '../services/feedbackService';
 import { lerVersaoInstalada } from '../services/versaoApp';
 import { descreverDispositivo } from '../utils/dispositivo';
 import { tamanhoDaTela } from '../utils/capturaTela';
+import { registrarAcao } from '../utils/telemetriaFila';
 import { getErrorMessageFromError } from '../utils/errors';
 import {
   TIPOS_FEEDBACK,
@@ -59,6 +60,7 @@ const FeedbackSheet = ({ visible, onClose, tela, captura, onSent }) => {
           captura: imagem,
         }),
       );
+      registrarAcao('feedback_enviar', { tipo, com_imagem: !!imagem });
       setMensagem('');
       setTipo('BUG');
       onSent();

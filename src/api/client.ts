@@ -12,6 +12,7 @@ import axios, {
     requiresReauth,
     errorLogger,
   } from '../utils/errors';
+import { registrarApi } from '../utils/telemetriaFila';
 
 // Create axios instance with /v1 prefix
 export const api: AxiosInstance = axios.create({
@@ -57,9 +58,20 @@ async function clearAuthStorage(): Promise<void> {
     ]);
 }
 
+// Telemetria: tempo e resultado de cada chamada, agrupados por rota. Só conta, não guarda dados da resposta.
+function medirChamada(
+  config: (AxiosRequestConfig & { horaDeSaida?: number }) | undefined,
+  status: number
+): void {
+  if (!config || !config.horaDeSaida) return;
+  registrarApi(config.method ?? 'get', config.url ?? '', status, Date.now() - config.horaDeSaida);
+}
+
 // Request interceptor to add auth token and log requests
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
+    // Hora de saída da chamada, para a telemetria medir quanto ela demorou.
+    (config as InternalAxiosRequestConfig & { horaDeSaida?: number }).horaDeSaida = Date.now();
     const configWithAuthToken = await attachAuthToken(config);
 
     // Log request in development
@@ -78,6 +90,7 @@ api.interceptors.response.use(
   (response) => {
     // Log successful response in development
     logResponse(response.config?.url, response.status);
+    medirChamada(response.config, response.status);
     return response;
   },
   async (error: unknown) => {
@@ -85,6 +98,8 @@ api.interceptors.response.use(
     const parsedError = parseApiError(error);
 
     const axiosError = axios.isAxiosError(error) ? error : undefined;
+
+    medirChamada(axiosError?.config, axiosError?.response?.status ?? 0);
 
     // Log the error
     errorLogger.apiError(parsedError, {

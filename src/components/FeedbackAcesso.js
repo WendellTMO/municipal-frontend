@@ -4,6 +4,7 @@
  */
 import React, { useState } from 'react';
 import { capturarTela } from '../utils/capturaTela';
+import { registrarAcao } from '../utils/telemetriaFila';
 import FeedbackButton from './FeedbackButton';
 import FeedbackSheet from './FeedbackSheet';
 import { useToast } from './Toast';
@@ -19,6 +20,7 @@ const FeedbackAcesso = () => {
 
   const abrirSheet = () => {
     setTela(getCurrentRouteName());
+    registrarAcao('feedback_abrir', { tela: String(getCurrentRouteName() || '') });
     setCaptura(capturarTela());
     setSheetVisible(true);
   };

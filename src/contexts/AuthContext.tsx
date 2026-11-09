@@ -25,6 +25,8 @@ import { deveEncerrarSessao } from '../utils/lembrarMe';
 import { Storage, STORAGE_KEYS } from '../utils/storage';
 import { limparCache } from '../utils/cacheTela';
 import { textoDoAviso } from '../utils/avisoPush';
+import { registrarAcao } from '../utils/telemetriaFila';
+import { iniciarTelemetria, pararTelemetria } from '../services/telemetriaService';
 import type { 
   AlunoResponse,
   AlunoSelfSignupRequest,
@@ -107,10 +109,18 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
 
   const handleForegroundMessage = useCallback(({ title, body }) => {
     const texto = textoDoAviso({ title, body });
-    if (texto) toast.info(texto, 5000);
+    if (texto) {
+      registrarAcao('push_recebido_com_app_aberto');
+      toast.info(texto, 5000);
+    }
   }, [toast]);
 
   usePushNotifications(isAuthenticated, handleForegroundMessage);
+
+  // Telemetria de uso: começa com a sessão. Ao sair da conta, logout() manda o que sobrou e desliga.
+  useEffect(() => {
+    if (isAuthenticated) void iniciarTelemetria();
+  }, [isAuthenticated]);
 
   const checkAuthStatus = useCallback(async (): Promise<void> => {
     try {
@@ -203,6 +213,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
     async (loginData: LoginRequest, lembrar = true): Promise<LoginResult> => {
       try {
         const { user: loggedInUser } = await authService.login(loginData);
+        registrarAcao('login_ok');
         await Storage.setItem(STORAGE_KEYS.SESSAO_TEMPORARIA, !lembrar);
         // Lembrar-me guarda também o e-mail, para a tela de login voltar preenchida depois de sair.
         if (lembrar) await Storage.setItem(STORAGE_KEYS.ULTIMO_EMAIL, loginData.email);
@@ -237,6 +248,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
         }
       } catch (error: unknown) {
         const parsedError = parseApiError(error);
+        registrarAcao('login_falha', { codigo: String(parsedError.code) });
         errorLogger.userError('login', parsedError, { email: loginData.email });
 
         const message =
@@ -287,6 +299,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   const logout = useCallback(async (): Promise<void> => {
     try {
       errorLogger.info('Logout initiated', { userId: user?.id });
+      await pararTelemetria();
       await authService.logout();
       await Storage.removeItem(STORAGE_KEYS.SESSAO_TEMPORARIA);
       await desligarNoLogout();
