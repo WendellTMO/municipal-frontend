@@ -12,6 +12,7 @@ export const MAX_POR_LOTE = 50;
 
 let fila = [];
 let agregados = {};
+let toques = {};
 let ligada = true;
 
 export const ligarTelemetria = valor => {
@@ -19,6 +20,7 @@ export const ligarTelemetria = valor => {
   if (!ligada) {
     fila = [];
     agregados = {};
+    toques = {};
   }
 };
 
@@ -72,6 +74,24 @@ export const registrarApi = (metodo, url, status, ms) => {
   agregados[chave] = atual;
 };
 
+// Grade de 6 colunas por 10 linhas sobre a tela: "c2r7" é a 3ª coluna e a 8ª linha. Só a
+// célula é guardada, nunca a coordenada exata.
+export const COLUNAS = 6;
+export const LINHAS = 10;
+export const celulaDoToque = (x, y, largura, altura) => {
+  if (!(largura > 0) || !(altura > 0)) return null;
+  const col = Math.min(COLUNAS - 1, Math.max(0, Math.floor((x / largura) * COLUNAS)));
+  const lin = Math.min(LINHAS - 1, Math.max(0, Math.floor((y / altura) * LINHAS)));
+  return `c${col}r${lin}`;
+};
+
+// Um toque na tela. Fica só na contagem por tela e célula; vira um evento por par no envio.
+export const registrarToque = (tela, celula) => {
+  if (!ligada || !celula) return;
+  const chave = `${nomeEmMinusculas(tela || 'sem_tela')}|${celula}`;
+  toques[chave] = (toques[chave] || 0) + 1;
+};
+
 // Tira da fila o que vai no próximo envio, já com os agregados da API virados em eventos.
 export const retirarLote = (max = MAX_POR_LOTE) => {
   const agora = Date.now();
@@ -85,6 +105,11 @@ export const retirarLote = (max = MAX_POR_LOTE) => {
     });
   }
   agregados = {};
+  for (const chave of Object.keys(toques)) {
+    const [tela, celula] = chave.split('|');
+    fila.push({ tipo: 'toque', nome: tela, props: { celula, n: toques[chave] }, em: agora });
+  }
+  toques = {};
   const lote = fila.slice(0, max);
   fila = fila.slice(max);
   return lote;
@@ -100,5 +125,6 @@ export const tamanhoDaFila = () => fila.length;
 export const zerarParaTeste = () => {
   fila = [];
   agregados = {};
+  toques = {};
   ligada = true;
 };

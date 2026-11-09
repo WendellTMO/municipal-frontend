@@ -1,13 +1,22 @@
 // Envia a telemetria de uso ao backend (POST /v1/telemetria). Tudo aqui é em segundo plano: nada
 // espera por ele e qualquer falha é engolida. Ver src/utils/telemetriaFila.js para o que entra.
-import { AppState, Platform } from 'react-native';
+import { AppState, Dimensions, Platform } from 'react-native';
 import { api } from '../api/client';
 import { Storage } from '../utils/storage';
 import { assinarRotaAtual, lerRotaAtual } from '../navigation/rotaAtual';
 import { descreverDispositivo } from '../utils/dispositivo';
 import { APP_VERSION, textoDaVersao } from '../utils/feedback';
 import { lerVersaoInstalada } from './versaoApp';
-import { devolverLote, ligarTelemetria, limparTexto, registrar, retirarLote, telemetriaLigada } from '../utils/telemetriaFila';
+import {
+  celulaDoToque,
+  devolverLote,
+  ligarTelemetria,
+  limparTexto,
+  registrar,
+  registrarToque,
+  retirarLote,
+  telemetriaLigada,
+} from '../utils/telemetriaFila';
 
 export const CHAVE_TELEMETRIA = 'telemetria_ligada';
 const INTERVALO_MS = 30000;
@@ -44,6 +53,29 @@ const aoMudarRota = () => {
   inicioDaTela = agora;
 };
 
+// Toque na tela, para saber onde as pessoas mais tocam. Arrastar (rolar a lista) não conta.
+let inicioDoToque = null;
+const MOVIMENTO_MAXIMO = 12;
+
+const contarToque = (x, y) => {
+  if (!ativo) return;
+  const { width, height } = Dimensions.get('window');
+  registrarToque(rotaAnterior, celulaDoToque(x, y, width, height));
+};
+
+export const aoIniciarToque = evento => {
+  const t = evento && evento.nativeEvent;
+  inicioDoToque = t ? { x: t.pageX, y: t.pageY } : null;
+};
+
+export const aoTerminarToque = evento => {
+  const t = evento && evento.nativeEvent;
+  if (!t || !inicioDoToque) return;
+  const andou = Math.abs(t.pageX - inicioDoToque.x) + Math.abs(t.pageY - inicioDoToque.y);
+  inicioDoToque = null;
+  if (andou <= MOVIMENTO_MAXIMO) contarToque(t.pageX, t.pageY);
+};
+
 export const enviarTelemetria = async () => {
   if (!ativo || !telemetriaLigada()) return;
   const lote = retirarLote();
@@ -60,6 +92,8 @@ const instalarCapturaDeErros = () => {
   errosInstalados = true;
   if (Platform.OS === 'web') {
     if (typeof window === 'undefined') return;
+    // Na web o clique cobre mouse e toque. Instalado uma vez só (a captura de erros também é).
+    window.addEventListener('click', e => contarToque(e.clientX, e.clientY), true);
     window.addEventListener('error', e => registrar('erro', 'js_erro', { msg: limparTexto(e.message), tela: rotaAnterior || '' }));
     window.addEventListener('unhandledrejection', e =>
       registrar('erro', 'promessa_rejeitada', { msg: limparTexto(e.reason && e.reason.message ? e.reason.message : e.reason), tela: rotaAnterior || '' }),

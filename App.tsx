@@ -17,6 +17,7 @@ import { Platform, StatusBar, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AvisoAtualizacao from './src/components/AvisoAtualizacao';
 import AlertaProvider from './src/components/AlertaProvider';
+import { aoIniciarToque, aoTerminarToque } from './src/services/telemetriaService';
 import { limparUrl } from './src/navigation/rotaDaUrl';
 
 const Root: React.FC = () => {
@@ -43,7 +44,7 @@ const Root: React.FC = () => {
       {/* Android: desenha sob a barra de status; o inset dela vira o topo do cabeçalho. */}
       {isAuthenticated ? <StatusBar translucent backgroundColor="transparent" barStyle="light-content" /> : null}
       {/* A barra inferior é única e fica fora do navegador: só o conteúdo muda por cima. */}
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }} onTouchStart={aoIniciarToque} onTouchEnd={aoTerminarToque}>
         <View style={{ flex: 1 }}>
           <MainNavigator />
         </View>
