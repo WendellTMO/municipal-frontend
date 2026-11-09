@@ -150,7 +150,7 @@ const ConfigNotificacoes = ({ navigation }) => {
             <View style={styles.settingInfo}>
               <Text style={styles.settingTitle}>Ajudar a melhorar o app</Text>
               <Text style={styles.settingDescription}>
-                Envia quais telas e botões são usados e quanto o app demora, sem nome, e-mail, CPF nem localização. Os dados são apagados em 90 dias.
+                Envia quais telas e botões são usados e quanto o app demora, sem nome, e-mail, CPF nem localização. Você pode desligar quando quiser.
               </Text>
             </View>
             <Switch
