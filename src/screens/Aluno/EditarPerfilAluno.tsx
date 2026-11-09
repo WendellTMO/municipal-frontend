@@ -378,11 +378,12 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Segurança</Text>
             <TouchableOpacity
-              style={styles.changePasswordBtn}
+              style={styles.alterarSenhaBtn}
               onPress={handleAlterarSenha}
-              accessibilityRole="button">
-              <Icon name={IconNames.lock} size="sm" color={ALUNO_COLOR} />
-              <Text style={styles.changePasswordText}>Alterar senha</Text>
+              accessibilityRole="button"
+              accessibilityLabel="Alterar senha">
+              <Icon name={IconNames.lock} size="md" color={colors.primary.dark} />
+              <Text style={styles.alterarSenhaTexto}>Alterar senha</Text>
               <Icon name={IconNames.chevronRight} size="sm" color={colors.text.secondary} />
             </TouchableOpacity>
             <TouchableOpacity
@@ -540,6 +541,24 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     backgroundColor: colors.background.default,
     paddingHorizontal: spacing.md,
+  },
+  // Igual ao botão "Alterar senha" do motorista (ConfigNotificacoes).
+  alterarSenhaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.background.paper,
+    borderRadius: borderRadius.lg,
+    padding: spacing.base,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    ...shadows.sm,
+  },
+  alterarSenhaTexto: {
+    ...textStyles.body,
+    color: colors.primary.dark,
+    flex: 1,
+    fontWeight: '600' as const,
   },
   changePasswordText: {
     ...textStyles.body,
