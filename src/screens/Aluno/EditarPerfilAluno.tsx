@@ -387,12 +387,12 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
               <Icon name={IconNames.chevronRight} size="sm" color={colors.text.secondary} />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.changePasswordBtn}
+              style={styles.alterarSenhaBtn}
               onPress={() => navigation.navigate('ConfigNotificacoesAluno')}
               accessibilityRole="button"
               accessibilityLabel="Configurações de notificações e biometria">
-              <Icon name={IconNames.settings} size="sm" color={ALUNO_COLOR} />
-              <Text style={styles.changePasswordText}>Configurações</Text>
+              <Icon name={IconNames.settings} size="md" color={colors.primary.dark} />
+              <Text style={styles.alterarSenhaTexto}>Configurações</Text>
               <Icon name={IconNames.chevronRight} size="sm" color={colors.text.secondary} />
             </TouchableOpacity>
           </View>
@@ -533,16 +533,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
-  changePasswordBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.background.default,
-    paddingHorizontal: spacing.md,
-  },
-  // Igual ao botão "Alterar senha" do motorista (ConfigNotificacoes).
+  // Botões de Segurança, no estilo do "Alterar senha" do motorista (ConfigNotificacoes).
   alterarSenhaBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -560,11 +551,6 @@ const styles = StyleSheet.create({
     color: colors.primary.dark,
     flex: 1,
     fontWeight: '600' as const,
-  },
-  changePasswordText: {
-    ...textStyles.body,
-    color: ALUNO_COLOR,
-    flex: 1,
   },
   saveBtn: {
     flexDirection: 'row',
