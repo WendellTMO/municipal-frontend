@@ -11,6 +11,7 @@ import {
   nomeDoPonto,
   precisaEscolher,
   sentidoDe,
+  separarInstituicoes,
 } from './presenca';
 
 test('só viagem agendada ou em andamento aceita presença', () => {
@@ -110,4 +111,17 @@ test('o corpo da confirmação leva a instituição só fora da circular', () =>
   expect(montarCorpoConfirmacao('VOLTA', {desembarqueId: 'p1'}, false, 'i2').instituicao_id).toBe('i2');
   expect(montarCorpoConfirmacao('CIRCULAR', {embarqueId: 'a', desembarqueId: 'b'}, false, 'i2').instituicao_id).toBeUndefined();
   expect(montarCorpoConfirmacao('IDA', {embarqueId: 'p1'}, false).instituicao_id).toBeUndefined();
+});
+
+test('separa as instituições do aluno das outras da rota e filtra as outras pelo texto', () => {
+  const rota = [
+    {id: 'a', nome: 'UFCG', pontoId: '1'},
+    {id: 'b', nome: 'Faculdade São José', pontoId: '2'},
+    {id: 'c', nome: 'Escola Técnica', pontoId: '3'},
+  ];
+  const tudo = separarInstituicoes(rota, ['c', 'x', 'a'], '');
+  expect(tudo.minhas.map(i => i.id)).toEqual(['c', 'a']);
+  expect(tudo.outras.map(i => i.id)).toEqual(['b']);
+  expect(separarInstituicoes(rota, [], 'SAO jose').outras.map(i => i.id)).toEqual(['b']);
+  expect(separarInstituicoes(rota, [], 'zzz').outras).toEqual([]);
 });

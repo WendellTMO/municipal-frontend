@@ -4,7 +4,7 @@
  * Também exporta a linha pequena "Embarca em X · Alterar" que os cards mostram depois.
  */
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../theme';
 import Icon, { IconNames } from './Icon';
 import ModalApp from './ModalApp';
@@ -15,6 +15,7 @@ import {
   pedeDesembarque,
   pedeEmbarque,
   pedeInstituicao,
+  separarInstituicoes,
   tituloEscolha,
 } from '../utils/presenca';
 
@@ -33,6 +34,8 @@ export type EscolhaPontoSheetProps = {
   /** Instituições da rota: o aluno pode usar uma que não é a dele */
   instituicoes: InstituicaoDaRota[];
   instituicaoPropriaId: string | null;
+  /** Instituições cadastradas pelo aluno: aparecem primeiro na lista de troca */
+  instituicoesDoAlunoIds: string[];
   instituicaoAtualId: string | null;
   inicial: Escolha;
   erro: string;
@@ -85,6 +88,7 @@ const EscolhaPontoSheet = ({
   instituicaoNome,
   instituicoes,
   instituicaoPropriaId,
+  instituicoesDoAlunoIds,
   instituicaoAtualId,
   inicial,
   erro,
@@ -96,6 +100,8 @@ const EscolhaPontoSheet = ({
   const [lembrar, setLembrar] = useState(false);
   const [instituicaoId, setInstituicaoId] = useState<string | null>(instituicaoAtualId);
   const [trocando, setTrocando] = useState(false);
+  const [buscandoOutra, setBuscandoOutra] = useState(false);
+  const [textoBusca, setTextoBusca] = useState('');
   // Pergunta de instituição diferente: vive dentro da folha, sem abrir outra janela por cima.
   const [confirmandoOutra, setConfirmandoOutra] = useState(false);
 
@@ -105,6 +111,8 @@ const EscolhaPontoSheet = ({
       setLembrar(false);
       setInstituicaoId(instituicaoAtualId);
       setTrocando(false);
+      setBuscandoOutra(false);
+      setTextoBusca('');
       setConfirmandoOutra(false);
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -129,6 +137,13 @@ const EscolhaPontoSheet = ({
       lista.push(ponto);
     }
   }
+  const { minhas, outras } = separarInstituicoes(instituicoes, instituicoesDoAlunoIds, textoBusca);
+  // Sem nenhuma cadastrada na rota, a busca já vem aberta.
+  const mostrarBusca = buscandoOutra || minhas.length === 0;
+  const escolherInstituicao = (id: string) => {
+    setInstituicaoId(id);
+    setTrocando(false);
+  };
   const completa = escolhaCompleta(sentido, escolha) && (!comInstituicao || escolhida !== null);
   const verbo = sentido === 'IDA' ? 'desce' : 'embarca';
   const linhaInstituicao =
@@ -139,7 +154,9 @@ const EscolhaPontoSheet = ({
         : '';
 
   const confirmar = () => {
-    const outra = instituicaoDiferente(instituicaoId, instituicaoPropriaId);
+    // Instituição que o aluno cadastrou não pede confirmação extra.
+    const cadastrada = !!instituicaoId && instituicoesDoAlunoIds.includes(instituicaoId);
+    const outra = !cadastrada && instituicaoDiferente(instituicaoId, instituicaoPropriaId);
     if (!outra) {
       onConfirmar(escolha, lembrar, instituicaoId);
       return;
@@ -210,15 +227,46 @@ const EscolhaPontoSheet = ({
                       ) : null}
                     </View>
                   ) : (
-                    <Lista
-                      titulo=""
-                      pontos={instituicoes.map((i) => ({ id: i.id, apelido: i.nome }))}
-                      marcado={instituicaoId}
-                      onMarcar={(id) => {
-                        setInstituicaoId(id);
-                        setTrocando(false);
-                      }}
-                    />
+                    <>
+                      {minhas.length > 0 ? (
+                        <Lista
+                          titulo="Suas instituições"
+                          pontos={minhas.map((i) => ({ id: i.id, apelido: i.nome }))}
+                          marcado={instituicaoId}
+                          onMarcar={escolherInstituicao}
+                        />
+                      ) : null}
+                      {minhas.length > 0 && !buscandoOutra ? (
+                        <Tappable
+                          onPress={() => setBuscandoOutra(true)}
+                          sombra={false}
+                          accessibilityLabel="Buscar outra instituição">
+                          <Text style={styles.linhaAlterar}>Outra instituição</Text>
+                        </Tappable>
+                      ) : null}
+                      {mostrarBusca ? (
+                        <View>
+                          <TextInput
+                            style={styles.busca}
+                            value={textoBusca}
+                            onChangeText={setTextoBusca}
+                            placeholder="Buscar outra instituição da rota"
+                            placeholderTextColor={colors.text.hint}
+                            autoCorrect={false}
+                            accessibilityLabel="Buscar outra instituição"
+                          />
+                          <Lista
+                            titulo=""
+                            pontos={outras.map((i) => ({ id: i.id, apelido: i.nome }))}
+                            marcado={instituicaoId}
+                            onMarcar={escolherInstituicao}
+                          />
+                          {outras.length === 0 ? (
+                            <Text style={styles.instituicao}>Nenhuma instituição da rota com esse nome.</Text>
+                          ) : null}
+                        </View>
+                      ) : null}
+                    </>
                   )}
                 </View>
               ) : null}
@@ -349,6 +397,16 @@ const styles = StyleSheet.create({
   opcaoTexto: { ...textStyles.body, flex: 1, color: colors.text.primary },
   opcaoTextoAtiva: { color: '#FFFFFF', fontWeight: '700' as const },
   instituicao: { ...textStyles.body, color: colors.text.secondary, marginTop: spacing.sm },
+  busca: {
+    ...textStyles.body,
+    color: colors.text.primary,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
   instituicaoBloco: { marginBottom: spacing.sm },
   outraTexto: { ...textStyles.body, color: colors.text.secondary, lineHeight: 24, marginBottom: spacing.base },
   voltarBotao: { alignItems: 'center', justifyContent: 'center', minHeight: 52, marginTop: spacing.sm },

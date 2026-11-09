@@ -33,6 +33,31 @@ export const instituicoesDaRota = pontos => {
   return lista;
 };
 
+const semAcento = texto =>
+  String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+// Instituições da rota em dois grupos: as do aluno (na ordem do cadastro dele) e as outras,
+// estas filtradas pelo texto digitado (sem diferenciar maiúsculas e acentos).
+export const separarInstituicoes = (instituicoesDaRota, idsDoAluno, texto) => {
+  const minhas = [];
+  for (const id of idsDoAluno) {
+    for (const inst of instituicoesDaRota) {
+      if (inst.id === id) minhas.push(inst);
+    }
+  }
+  const busca = semAcento(texto).trim();
+  const outras = [];
+  for (const inst of instituicoesDaRota) {
+    if (idsDoAluno.includes(inst.id)) continue;
+    if (busca && !semAcento(inst.nome).includes(busca)) continue;
+    outras.push(inst);
+  }
+  return {minhas, outras};
+};
+
 // A instituição escolhida não é a do aluno: o app pede uma confirmação antes de enviar.
 export const instituicaoDiferente = (escolhidaId, propriaId) =>
   !!escolhidaId && !!propriaId && escolhidaId !== propriaId;
