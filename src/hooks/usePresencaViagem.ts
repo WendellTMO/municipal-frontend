@@ -48,6 +48,7 @@ export function usePresencaViagem(
   const [erroFolha, setErroFolha] = useState('');
   const [pontos, setPontos] = useState<PontoApi[] | null>(null);
   const [instituicaoPropriaId, setInstituicaoPropriaId] = useState<string | null>(null);
+  const [instituicoesDoAlunoIds, setInstituicoesDoAlunoIds] = useState<string[]>([]);
   const [pedirEscolha, setPedirEscolha] = useState(precisaEscolher(viagem));
   const [escolha, setEscolha] = useState<Escolha>({
     embarqueId: viagem?.ponto_embarque_id ?? null,
@@ -62,10 +63,15 @@ export function usePresencaViagem(
       setPontos(lista);
       // Instituição do cadastro: é a sugerida na folha e a que não pede confirmação extra.
       try {
-        const perfil = await alunoService.obterPerfil();
-        setInstituicaoPropriaId((perfil as { instituicao_id?: string | null }).instituicao_id ?? null);
+        const perfil = (await alunoService.obterPerfil()) as {
+          instituicao_id?: string | null;
+          instituicoes?: { id: string }[];
+        };
+        setInstituicaoPropriaId(perfil.instituicao_id ?? null);
+        setInstituicoesDoAlunoIds((perfil.instituicoes ?? []).map(i => i.id));
       } catch {
         setInstituicaoPropriaId(null);
+        setInstituicoesDoAlunoIds([]);
       }
     } catch (e) {
       setErroFolha(`Não foi possível buscar os pontos da rota: ${getErrorMessageFromError(e)}`);
@@ -162,6 +168,7 @@ export function usePresencaViagem(
       instituicaoNome: instituicao.nome,
       instituicoes: instituicoesDaRota(pontos),
       instituicaoPropriaId,
+      instituicoesDoAlunoIds,
       instituicaoAtualId: instituicao.id ?? instituicaoPropriaId,
       inicial: escolha,
       erro: erroFolha,

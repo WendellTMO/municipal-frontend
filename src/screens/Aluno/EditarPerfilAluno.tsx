@@ -62,9 +62,10 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     complemento: '',
   });
   const [salvando, setSalvando] = useState(false);
-  const [instituicaoNome, setInstituicaoNome] = useState('');
-  const [instituicaoId, setInstituicaoId] = useState('');
-  const [instituicaoOriginal, setInstituicaoOriginal] = useState('');
+  // Instituições do aluno: a primeira é a principal.
+  const [instituicoes, setInstituicoes] = useState<{ id: string; nome: string }[]>([]);
+  const [instituicoesOriginais, setInstituicoesOriginais] = useState('');
+  const instituicaoId = instituicoes.map(i => i.id).join(',');
   // Assinatura do que está salvo no servidor; null até o perfil terminar de carregar.
   const [salva, setSalva] = useState<string | null>(null);
   const [carregado, setCarregado] = useState(false);
@@ -82,12 +83,18 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
     const carregarEndereco = async () => {
       try {
         const perfil = await alunoService.obterPerfil();
-        const dados = perfil as { instituicao_id?: string; escola?: string };
-        const idAtual = dados.instituicao_id ?? '';
+        const dados = perfil as {
+          instituicao_id?: string;
+          escola?: string;
+          instituicoes?: { id: string; nome: string }[];
+        };
+        let lista = dados.instituicoes ?? [];
+        if (lista.length === 0 && dados.instituicao_id) {
+          lista = [{ id: dados.instituicao_id, nome: dados.escola ?? '' }];
+        }
         if (!cancelado) {
-          setInstituicaoId(idAtual);
-          setInstituicaoOriginal(idAtual);
-          setInstituicaoNome(dados.escola ?? '');
+          setInstituicoes(lista);
+          setInstituicoesOriginais(lista.map(i => i.id).join(','));
         }
         const e = perfil.endereco;
         if (cancelado || !e) return;
@@ -157,7 +164,9 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
       telefone: onlyDigits(form.telefone) || undefined,
     };
 
-    if (instituicaoId && instituicaoId !== instituicaoOriginal) payload.instituicao_id = instituicaoId;
+    if (instituicoes.length > 0 && instituicaoId !== instituicoesOriginais) {
+      payload.instituicao_ids = instituicoes.map(i => i.id);
+    }
 
     const temEndereco =
       form.logradouro.trim() ||
@@ -260,14 +269,31 @@ const EditarPerfilAluno: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Instituição de ensino</Text>
+              <Text style={styles.label}>
+                {instituicoes.length > 1 ? 'Instituições de ensino' : 'Instituição de ensino'}
+              </Text>
+              {instituicoes.map((inst, indice) => (
+                <View key={inst.id} style={styles.instituicaoLinha}>
+                  <Text style={styles.instituicaoTexto}>
+                    {inst.nome}
+                    {indice === 0 && instituicoes.length > 1 ? ' (principal)' : ''}
+                  </Text>
+                  {instituicoes.length > 1 ? (
+                    <TouchableOpacity
+                      onPress={() => setInstituicoes(lista => lista.filter(i => i.id !== inst.id))}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remover ${inst.nome}`}>
+                      <Text style={styles.instituicaoRemover}>Remover</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ))}
               <SeletorInstituicao
-                nomeAtual={instituicaoNome}
-                valorId={instituicaoId}
+                nomeAtual={instituicoes.length === 0 ? '' : 'Adicionar outra instituição'}
+                valorId=""
                 buscar={alunoService.buscarInstituicoes}
                 onEscolher={(id: string, nome: string) => {
-                  setInstituicaoId(id);
-                  setInstituicaoNome(nome);
+                  setInstituicoes(lista => (lista.some(i => i.id === id) ? lista : [...lista, { id, nome }]));
                 }}
               />
             </View>
@@ -517,6 +543,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.light,
   },
+  instituicaoLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+    backgroundColor: colors.background.default,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  instituicaoTexto: { ...textStyles.body, flex: 1, color: colors.text.primary },
+  instituicaoRemover: { ...textStyles.body, color: colors.error.main, fontWeight: '700' as const },
   readOnlyGroup: {
     marginBottom: spacing.md,
   },
