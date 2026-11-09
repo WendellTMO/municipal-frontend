@@ -552,6 +552,7 @@ const styles = StyleSheet.create({
     padding: spacing.base,
     borderWidth: 1,
     borderColor: colors.border.light,
+    marginBottom: spacing.md,
     ...shadows.sm,
   },
   alterarSenhaTexto: {
