@@ -11,10 +11,11 @@ import {
   erroDeCampoPonto,
   instituicaoDoSentido,
   instituicoesDaRota,
+  embarqueForaDaInstituicao,
   linhaDosPontos,
   mensagemDeErroPonto,
   montarCorpoConfirmacao,
-  montarPontosDaEscolha,
+  montarPontosPadrao,
   nomeDoPonto,
   precisaEscolher,
   sentidoDe,
@@ -138,7 +139,7 @@ export function usePresencaViagem(
     // Em Alterar o aluno já está confirmado: o padrão é gravado antes e a confirmação segue o novo ponto.
     if (folha === 'alterar' && lembrar) {
       try {
-        await alunoService.salvarMeuPonto(viagem.rota_id, montarPontosDaEscolha(sentido, nova));
+        await alunoService.salvarMeuPonto(viagem.rota_id, montarPontosPadrao(sentido, nova));
       } catch (e) {
         setErroFolha(mensagemDeErroPonto(e, getErrorMessageFromError(e) || 'Não foi possível salvar a escolha.'));
         return;
@@ -154,6 +155,7 @@ export function usePresencaViagem(
     sentido,
     nomeDoPonto(pontos, escolha.embarqueId),
     nomeDoPonto(pontos, escolha.desembarqueId),
+    sentido === 'VOLTA' && embarqueForaDaInstituicao(pontos, escolha.embarqueId),
   );
 
   return {
