@@ -6,6 +6,7 @@ import type { Escolha, PontoEscolha } from '../components/EscolhaPontoSheet';
 import type { EscolhaPontos } from '../services/alunoService';
 import { unwrapItems } from '../types';
 import { getErrorMessageFromError } from '../utils/errors';
+import { compartilhar } from '../utils/requisicaoCompartilhada';
 import {
   erroDeCampoPonto,
   instituicaoDoSentido,
@@ -59,11 +60,14 @@ export function usePresencaViagem(
   const carregarPontos = useCallback(async () => {
     if (pontos || !viagem?.rota_id) return;
     try {
-      const lista = (await alunoService.listarPontosRota(viagem.rota_id).then(unwrapItems)) as PontoApi[];
+      // Vários cards da mesma rota abrem juntos: dividem a mesma busca.
+      const lista = (await compartilhar(`pontos:${viagem.rota_id}`, () =>
+        alunoService.listarPontosRota(viagem.rota_id as string).then(unwrapItems),
+      )) as PontoApi[];
       setPontos(lista);
       // Instituição do cadastro: é a sugerida na folha e a que não pede confirmação extra.
       try {
-        const perfil = (await alunoService.obterPerfil()) as {
+        const perfil = (await compartilhar('perfil-aluno', () => alunoService.obterPerfil())) as {
           instituicao_id?: string | null;
           instituicoes?: { id: string }[];
         };

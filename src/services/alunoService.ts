@@ -126,8 +126,14 @@ export const alunoService = {
    * Backend: GET /v1/viagens/aluno/agenda
    * Normalizes backend response to frontend format
    */
-  async listarViagens(): Promise<ViagemAgendaUI[]> {
-    const response = await api.get<ViagemAgendaAlunoListResponse>('/viagens/aluno/agenda');
+  async listarViagens(
+    pagina: { limit?: number; offset?: number; rotaId?: string } = {},
+  ): Promise<ViagemAgendaUI[]> {
+    const params: Record<string, string | number> = {};
+    if (pagina.limit) params.limit = pagina.limit;
+    if (pagina.offset) params.offset = pagina.offset;
+    if (pagina.rotaId) params.rota_id = pagina.rotaId;
+    const response = await api.get<ViagemAgendaAlunoListResponse>('/viagens/aluno/agenda', { params });
     return unwrapItems(response.data).map(normalizeViagemAgenda);
   },
 
