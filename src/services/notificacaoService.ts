@@ -2,7 +2,7 @@ import { api } from '../api/client';
 import type { Notificacao, NotificacaoInput } from '../types';
 
 export const getNotificacoes = async (
-  filters: { enviada?: boolean; limit?: number; offset?: number } = {},
+  filters: { enviada?: boolean; limit?: number; offset?: number; estado?: 'todas' | 'nao_lidas' | 'lidas' } = {},
 ): Promise<Notificacao[]> => {
   const params: Record<string, string | number> = {};
   if (filters.enviada !== undefined) {
@@ -10,6 +10,7 @@ export const getNotificacoes = async (
   }
   if (filters.limit) params.limit = filters.limit;
   if (filters.offset) params.offset = filters.offset;
+  if (filters.estado && filters.estado !== 'todas') params.estado = filters.estado;
   const response = await api.get<Notificacao[]>('/notificacoes', { params });
   return response.data;
 };

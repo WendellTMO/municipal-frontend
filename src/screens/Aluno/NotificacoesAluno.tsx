@@ -22,6 +22,7 @@ import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import { confirmAction } from '../../utils/confirm';
 import DeslizarParaExcluir from '../../components/DeslizarParaExcluir';
+import FiltroEstadoNotificacoes, { type EstadoNotificacoes } from '../../components/FiltroEstadoNotificacoes';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -44,6 +45,11 @@ const formatDate = (dateStr: string | null | undefined): string => {
 };
 
 const NOTIFICACOES_POR_PAGINA = 20;
+const VAZIO_POR_ESTADO: Record<EstadoNotificacoes, string> = {
+  todas: 'Quando houver avisos sobre as suas viagens eles aparecerão aqui.',
+  nao_lidas: 'Você leu todos os avisos.',
+  lidas: 'Nenhum aviso lido ainda.',
+};
 
 const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
@@ -54,12 +60,13 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
   const unreadCount = notificacoes.filter((n) => !n.enviada).length;
 
   const [temMais, setTemMais] = useState(false);
+  const [estado, setEstado] = useState<EstadoNotificacoes>('todas');
   const carregandoMaisRef = useRef(false);
 
   const loadNotificacoes = useCallback(async () => {
     setError(false);
     try {
-      const data = await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA });
+      const data = await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA, estado });
       const lista = Array.isArray(data) ? data : [];
       setNotificacoes(lista);
       setTemMais(lista.length >= NOTIFICACOES_POR_PAGINA);
@@ -69,7 +76,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [estado]);
 
   useEffect(() => {
     loadNotificacoes();
@@ -80,7 +87,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
     if (!temMais || carregandoMaisRef.current) return;
     carregandoMaisRef.current = true;
     try {
-      const proxima = await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA, offset: notificacoes.length });
+      const proxima = await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA, offset: notificacoes.length, estado });
       const vistas = new Set(notificacoes.map((n) => n.id));
       const novas = proxima.filter((n) => !vistas.has(n.id));
       setNotificacoes((prev) => [...prev, ...novas]);
@@ -96,8 +103,11 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
     if (notificacao.enviada) return;
     try {
       await markNotificacaoAsSent(notificacao.id);
+      // Na lista de não lidas, a que acabou de ser lida sai dela.
       setNotificacoes((prev) =>
-        prev.map((n) => (n.id === notificacao.id ? { ...n, enviada: true } : n)),
+        estado === 'nao_lidas'
+          ? prev.filter((n) => n.id !== notificacao.id)
+          : prev.map((n) => (n.id === notificacao.id ? { ...n, enviada: true } : n)),
       );
     } catch {
       // non-fatal
@@ -234,6 +244,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
         }
       />
 
+      <FiltroEstadoNotificacoes valor={estado} onMudar={setEstado} />
       <FlatList
         data={notificacoes}
         keyExtractor={(item) => String(item.id)}
@@ -259,7 +270,7 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
           <EmptyState
             icon={IconNames.notifications}
             title="Sem notificações"
-            description="Quando houver avisos sobre as suas viagens eles aparecerão aqui."
+            description={VAZIO_POR_ESTADO[estado]}
           />
         }
         accessibilityLabel="Lista de notificações"
