@@ -2,7 +2,7 @@
  * Tela "Histórico de viagens" do motorista: feitas, canceladas e as que passaram sem registro
  * (em vermelho, com o botão para marcar como feita).
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
 import SubHeader from '../../components/SubHeader';
@@ -10,14 +10,15 @@ import HistoricoViagens from '../../components/HistoricoViagens';
 import { useToast } from '../../components/Toast';
 import { motoristaService } from '../../services/motoristaService';
 import { unwrapItems } from '../../types';
-import { organizarViagens } from '../../utils/viagensMotorista';
+import { itensDoHistorico } from '../../utils/viagensMotorista';
 import { contarPorGrupo, filtrarHistorico, filtroPadrao } from '../../utils/filtroHistorico';
 import ChipsFiltro from '../../components/ChipsFiltro';
 import { withFabSpace } from '../../config/feedback';
-import { colors, spacing, textStyles } from '../../theme';
+import Tappable from '../../components/Tappable';
+import { borderRadius, colors, spacing, textStyles } from '../../theme';
 
 // Sobra espaço para o filtro: com as feitas escondidas, as mais antigas não realizadas não podem ser cortadas.
-const LIMITE = 200;
+const POR_PAGINA = 10;
 
 const CHIPS = [
   { id: 'naoRealizadas', texto: 'Não realizadas' },
@@ -34,10 +35,18 @@ const HistoricoViagensMotorista = ({ navigation }) => {
   const contagem = contarPorGrupo(itens);
   const visiveis = filtrarHistorico(itens, filtro);
 
+  const [temMais, setTemMais] = useState(false);
+  const [carregandoMais, setCarregandoMais] = useState(false);
+  const quantidadeRef = useRef(0);
+
+  // Recarregar (depois de marcar como feita, ao puxar) mantém as páginas já abertas.
   const carregar = useCallback(async () => {
     try {
-      const viagens = await motoristaService.listarViagens().then(unwrapItems);
-      setItens(organizarViagens(viagens, new Date(), LIMITE).historico);
+      const limit = Math.min(100, Math.max(POR_PAGINA, quantidadeRef.current));
+      const viagens = await motoristaService.listarViagens({ periodo: 'historico', limit }).then(unwrapItems);
+      quantidadeRef.current = viagens.length;
+      setTemMais(viagens.length >= limit);
+      setItens(itensDoHistorico(viagens));
     } catch (e) {
       toast.error('Não foi possível carregar o histórico.');
     } finally {
@@ -51,6 +60,23 @@ const HistoricoViagensMotorista = ({ navigation }) => {
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  const carregarMais = async () => {
+    if (carregandoMais) return;
+    setCarregandoMais(true);
+    try {
+      const proxima = await motoristaService
+        .listarViagens({ periodo: 'historico', limit: POR_PAGINA, offset: quantidadeRef.current })
+        .then(unwrapItems);
+      quantidadeRef.current += proxima.length;
+      setTemMais(proxima.length >= POR_PAGINA);
+      setItens(atuais => [...atuais, ...itensDoHistorico(proxima)]);
+    } catch (e) {
+      toast.error('Não foi possível carregar mais viagens.');
+    } finally {
+      setCarregandoMais(false);
+    }
+  };
 
   // O motorista confirma que a viagem passada foi feita, mesmo sem ter registrado pelo app.
   const confirmarFeita = async viagem => {
@@ -102,6 +128,20 @@ const HistoricoViagensMotorista = ({ navigation }) => {
               onAbrir={(viagem, situacao) => navigation.navigate('DetalheHistoricoViagem', { viagem, situacao })}
             />
           )}
+          {temMais ? (
+            <Tappable
+              style={styles.verMais}
+              onPress={carregarMais}
+              disabled={carregandoMais}
+              sombra={false}
+              accessibilityLabel="Ver mais viagens">
+              {carregandoMais ? (
+                <ActivityIndicator color={colors.primary.main} />
+              ) : (
+                <Text style={styles.verMaisTexto}>Ver mais viagens</Text>
+              )}
+            </Tappable>
+          ) : null}
         </ScrollView>
       )}
     </TelaSegura>
@@ -112,6 +152,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.default },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   conteudo: { padding: spacing.base },
+  verMais: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.primary.main,
+  },
+  verMaisTexto: { ...textStyles.body, color: colors.primary.main, fontWeight: '700' },
   vazio: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginTop: spacing.xl },
 });
 

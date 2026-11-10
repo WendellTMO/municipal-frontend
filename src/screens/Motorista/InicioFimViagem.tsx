@@ -209,7 +209,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         setLoadingStatus(true);
 
         // Fetch fresh trip state
-        const viagens = await motoristaService.listarViagens().then(unwrapItems);
+        const viagens = await motoristaService.listarViagens({ viagemId: viagemParam.id as string }).then(unwrapItems);
         const viagemAtual = (viagens as Record<string, unknown>[]).find(
           (v) => v.id === viagemParam.id,
         );
@@ -329,7 +329,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
     if (!viagemIniciada || !viagemId) return;
     const atualizar = async () => {
       try {
-        const viagens = await motoristaService.listarViagens().then(unwrapItems);
+        const viagens = await motoristaService.listarViagens({ viagemId: viagemId as string }).then(unwrapItems);
         const atual = (viagens as Record<string, unknown>[]).find((v) => v.id === viagemId);
         if (!atual) return;
         setViagem((anterior) => {

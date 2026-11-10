@@ -167,8 +167,22 @@ export const motoristaService = {
    * List trips assigned to the driver
    * Backend: GET /v1/viagens/minhas
    */
-  async listarViagens(): Promise<ViagemListResponse> {
-    const response = await api.get<ViagemListResponse>('/viagens/minhas');
+  async listarViagens(
+    opcoes: {
+      periodo?: 'proximas' | 'historico';
+      limit?: number;
+      offset?: number;
+      viagemId?: string;
+      rotaId?: string;
+    } = {},
+  ): Promise<ViagemListResponse> {
+    const params: Record<string, string | number> = {};
+    if (opcoes.periodo) params.periodo = opcoes.periodo;
+    if (opcoes.limit) params.limit = opcoes.limit;
+    if (opcoes.offset) params.offset = opcoes.offset;
+    if (opcoes.viagemId) params.viagem_id = opcoes.viagemId;
+    if (opcoes.rotaId) params.rota_id = opcoes.rotaId;
+    const response = await api.get<ViagemListResponse>('/viagens/minhas', { params });
     return response.data;
   },
 
