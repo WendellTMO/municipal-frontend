@@ -2,6 +2,7 @@ import {
   aceitaPresenca,
   erroDeCampoPonto,
   escolhaCompleta,
+  filtrarPontos,
   instituicaoDoSentido,
   instituicaoDiferente,
   instituicoesDaRota,
@@ -155,4 +156,26 @@ test('o embarque da VOLTA nunca entra no padrão lembrado', () => {
 test('a linha do card mostra o embarque da VOLTA só quando é um ponto escolhido', () => {
   expect(linhaDosPontos('VOLTA', 'Praça', 'Casa')).toBe('Desce em Casa');
   expect(linhaDosPontos('VOLTA', 'Praça', 'Casa', true)).toBe('Embarca em Praça · Desce em Casa');
+});
+
+test('a caixa de pontos ordena em ordem alfabética e filtra sem acento nem maiúsculas', () => {
+  const pontos = [
+    {id: '1', apelido: 'Praça da Matriz'},
+    {id: '2', apelido: 'Água Branca'},
+    {id: '3', apelido: 'bairro novo'},
+    {id: '4', apelido: 'Avenida Central'},
+  ];
+  expect(filtrarPontos(pontos, '').itens.map(p => p.id)).toEqual(['2', '4', '3', '1']);
+  expect(filtrarPontos(pontos, 'agua').itens.map(p => p.id)).toEqual(['2']);
+  expect(filtrarPontos(pontos, 'AV').itens.map(p => p.id)).toEqual(['4']);
+  expect(filtrarPontos(pontos, 'zzz')).toEqual({itens: [], total: 0});
+});
+
+test('a caixa de pontos mostra no máximo o limite e informa o total', () => {
+  const pontos = [];
+  for (let i = 0; i < 60; i++) pontos.push({id: String(i), apelido: `Ponto ${String(i).padStart(2, '0')}`});
+  const r = filtrarPontos(pontos, '', 50);
+  expect(r.itens.length).toBe(50);
+  expect(r.total).toBe(60);
+  expect(filtrarPontos(pontos, '5', 50).total).toBe(15);
 });

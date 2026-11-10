@@ -44,16 +44,22 @@ const formatDate = (dateStr: string | null | undefined): string => {
   }
 };
 
+const NOTIFICACOES_POR_PAGINA = 20;
+
 const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [temMais, setTemMais] = useState(false);
+  const carregandoMaisRef = React.useRef(false);
+
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
-      const data = await getNotificacoes();
-      setNotificacoes(data ?? []);
+      const data = (await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA })) ?? [];
+      setNotificacoes(data);
+      setTemMais(data.length >= NOTIFICACOES_POR_PAGINA);
     } catch {
       // non-blocking
     } finally {
@@ -65,6 +71,23 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
   React.useEffect(() => {
     load();
   }, [load]);
+
+  // Rolou até o fim: busca a página seguinte (as mais antigas).
+  const carregarMais = async () => {
+    if (!temMais || carregandoMaisRef.current) return;
+    carregandoMaisRef.current = true;
+    try {
+      const proxima = (await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA, offset: notificacoes.length })) ?? [];
+      const vistas = new Set(notificacoes.map(n => n.id));
+      const novas = proxima.filter(n => !vistas.has(n.id));
+      setNotificacoes(prev => [...prev, ...novas]);
+      setTemMais(proxima.length >= NOTIFICACOES_POR_PAGINA);
+    } catch {
+      // a próxima rolagem tenta de novo
+    } finally {
+      carregandoMaisRef.current = false;
+    }
+  };
 
   const handleMarkRead = async (n: Notificacao) => {
     if (n.enviada) return;
@@ -165,6 +188,8 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
           data={notificacoes}
           keyExtractor={item => String(item.id)}
           renderItem={renderItem}
+          onEndReached={carregarMais}
+          onEndReachedThreshold={0.5}
           contentContainerStyle={withFabSpace(styles.listContent)}
           refreshControl={
             <RefreshControl

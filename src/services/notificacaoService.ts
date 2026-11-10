@@ -2,14 +2,22 @@ import { api } from '../api/client';
 import type { Notificacao, NotificacaoInput } from '../types';
 
 export const getNotificacoes = async (
-  filters: { enviada?: boolean } = {},
+  filters: { enviada?: boolean; limit?: number; offset?: number } = {},
 ): Promise<Notificacao[]> => {
-  const params: Record<string, string> = {};
+  const params: Record<string, string | number> = {};
   if (filters.enviada !== undefined) {
     params.enviada = String(filters.enviada);
   }
+  if (filters.limit) params.limit = filters.limit;
+  if (filters.offset) params.offset = filters.offset;
   const response = await api.get<Notificacao[]>('/notificacoes', { params });
   return response.data;
+};
+
+/** Quantas notificações ainda não foram lidas, sem baixar a lista (para o selo). */
+export const getNaoLidas = async (): Promise<number> => {
+  const response = await api.get<{ count: number }>('/notificacoes/nao-lidas');
+  return response.data.count;
 };
 
 export const getNotificacao = async (notificacaoId: string): Promise<Notificacao> => {

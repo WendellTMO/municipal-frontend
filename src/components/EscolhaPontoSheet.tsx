@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../theme';
+import CaixaPontos from './CaixaPontos';
 import Icon, { IconNames } from './Icon';
 import ModalApp from './ModalApp';
 import Tappable from './Tappable';
@@ -288,7 +289,7 @@ const EscolhaPontoSheet = ({
                 <View style={styles.instituicaoBloco}>
                   {mostrarOutroEmbarque ? (
                     <>
-                      <Lista
+                      <CaixaPontos
                         titulo="Onde você embarca"
                         pontos={lista}
                         marcado={embarqueLivre ? escolha.embarqueId : null}
@@ -315,7 +316,7 @@ const EscolhaPontoSheet = ({
                 </View>
               ) : null}
               {pedeEmbarque(sentido) ? (
-                <Lista
+                <CaixaPontos
                   titulo={circular ? 'Onde você vai embarcar?' : comInstituicao ? 'Onde você embarca' : ''}
                   pontos={lista}
                   marcado={escolha.embarqueId}
@@ -323,7 +324,7 @@ const EscolhaPontoSheet = ({
                 />
               ) : null}
               {pedeDesembarque(sentido) ? (
-                <Lista
+                <CaixaPontos
                   titulo={circular ? 'Onde você vai descer?' : comInstituicao ? 'Onde você desce' : ''}
                   pontos={lista}
                   marcado={escolha.desembarqueId}
