@@ -7,7 +7,6 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  Switch,
 } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
 import { alunoService } from '../../services';
@@ -25,7 +24,6 @@ const POR_PAGINA = 20;
 const SelecaoRotas = ({navigation}) => {
   const { user } = useAuth();
   const [busca, setBusca] = useState('');
-  const [incluirOutras, setIncluirOutras] = useState(false);
   const [temMais, setTemMais] = useState(false);
   const [carregandoMais, setCarregandoMais] = useState(false);
   const buscaAtual = useRef(0);
@@ -37,11 +35,11 @@ const SelecaoRotas = ({navigation}) => {
   const [unsubscribing, setUnsubscribing] = useState(null);
 
   // Primeira página da busca (nome da rota ou do município; outros municípios só se o aluno pedir).
-  const loadRotas = async (texto = busca, outras = incluirOutras) => {
+  const loadRotas = async (texto = busca) => {
     const minha = ++buscaAtual.current;
     try {
       const [rotas, rotasInscritasData] = await Promise.all([
-        alunoService.listarRotas({ limit: POR_PAGINA, q: texto.trim(), incluirOutras: outras }).then(unwrapItems),
+        alunoService.listarRotas({ limit: POR_PAGINA, q: texto.trim(), incluirOutras: true }).then(unwrapItems),
         alunoService.listarMinhasRotas().then(unwrapItems),
       ]);
       if (minha !== buscaAtual.current) return; // chegou uma busca mais nova
@@ -57,19 +55,19 @@ const SelecaoRotas = ({navigation}) => {
     }
   };
 
-  // Digitou ou mudou "outros municípios": busca de novo depois de uma pausa curta.
+  // Digitou: busca de novo depois de uma pausa curta.
   useEffect(() => {
-    const espera = setTimeout(() => loadRotas(busca, incluirOutras), 250);
+    const espera = setTimeout(() => loadRotas(busca), 250);
     return () => clearTimeout(espera);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busca, incluirOutras]);
+  }, [busca]);
 
   const carregarMais = async () => {
     if (carregandoMais) return;
     setCarregandoMais(true);
     try {
       const proxima = await alunoService
-        .listarRotas({ limit: POR_PAGINA, offset: rotasDisponiveis.length, q: busca.trim(), incluirOutras })
+        .listarRotas({ limit: POR_PAGINA, offset: rotasDisponiveis.length, q: busca.trim(), incluirOutras: true })
         .then(unwrapItems);
       const vistas = new Set(rotasDisponiveis.map((r) => r.id));
       setRotasDisponiveis((atuais) => [...atuais, ...proxima.filter((r) => !vistas.has(r.id))]);
@@ -160,15 +158,6 @@ const SelecaoRotas = ({navigation}) => {
             </Tappable>
           )}
         </View>
-      </View>
-
-      <View style={styles.outrasLinha}>
-        <Text style={styles.outrasTexto}>Incluir outros municípios</Text>
-        <Switch
-          value={incluirOutras}
-          onValueChange={setIncluirOutras}
-          accessibilityLabel="Incluir rotas de outros municípios"
-        />
       </View>
 
       {loading ? (
@@ -312,14 +301,6 @@ const SelecaoRotas = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  outrasLinha: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing.sm,
-  },
-  outrasTexto: { ...textStyles.body, color: colors.text.primary },
   verMais: {
     alignItems: 'center',
     justifyContent: 'center',
