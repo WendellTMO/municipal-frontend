@@ -16,6 +16,7 @@ import { unwrapItems } from '../../types';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
 import Icon, { IconNames } from '../../components/Icon';
 import ActionTile from '../../components/ActionTile';
+import AberturaMunicipalCard from '../../components/AberturaMunicipalCard';
 import PainelHeader from '../../components/PainelHeader';
 import EnviarAvisoSheet from '../../components/EnviarAvisoSheet';
 import MaisSheet from '../../components/MaisSheet';
@@ -234,6 +235,7 @@ const DashboardGestor = ({ navigation }) => {
             })
           )}
 
+          <AberturaMunicipalCard />
           <SairDaConta />
         </View>
       </ScrollView>

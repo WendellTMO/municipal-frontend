@@ -12,6 +12,20 @@ export const gestorService = {
     return response.data;
   },
 
+  /** GET /v1/rotas/abertura-municipal: se a prefeitura aceita alunos de outras prefeituras */
+  async obterAberturaMunicipal(): Promise<{ aceita_alunos_de_fora: boolean }> {
+    const response = await api.get<{ aceita_alunos_de_fora: boolean }>('/rotas/abertura-municipal');
+    return response.data;
+  },
+
+  /** PATCH /v1/rotas/abertura-municipal: liga ou desliga a entrada de alunos de outras prefeituras */
+  async definirAberturaMunicipal(aceita: boolean): Promise<{ aceita_alunos_de_fora: boolean }> {
+    const response = await api.patch<{ aceita_alunos_de_fora: boolean }>('/rotas/abertura-municipal', {
+      aceita_alunos_de_fora: aceita,
+    });
+    return response.data;
+  },
+
   /**
    * List all trips with optional filters
    * Backend: GET /v1/viagens/
