@@ -84,8 +84,16 @@ export const alunoService = {
    * Backend: GET /v1/rotas/
    * Note: Backend filters by role - ALUNOs see routes they can subscribe to
    */
-  async listarRotas(): Promise<RotaListResponse> {
-    const response = await api.get<RotaListResponse>('/rotas/');
+  async listarRotas(
+    opcoes: { limit?: number; offset?: number; q?: string; uf?: string; incluirOutras?: boolean } = {},
+  ): Promise<RotaListResponse> {
+    const params: Record<string, string | number | boolean> = {};
+    if (opcoes.limit) params.limit = opcoes.limit;
+    if (opcoes.offset) params.offset = opcoes.offset;
+    if (opcoes.q) params.q = opcoes.q;
+    if (opcoes.uf) params.uf = opcoes.uf;
+    if (opcoes.incluirOutras) params.incluir_outras = true;
+    const response = await api.get<RotaListResponse>('/rotas/', { params });
     return response.data;
   },
 

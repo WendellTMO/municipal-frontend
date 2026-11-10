@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Switch,
 } from 'react-native';
 import TelaSegura from '../../components/TelaSegura';
 import { alunoService } from '../../services';
@@ -17,9 +18,17 @@ import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import { alertar } from '../../utils/alerta';
+import { useAuth } from '../../contexts/AuthContext';
+
+const POR_PAGINA = 20;
 
 const SelecaoRotas = ({navigation}) => {
+  const { user } = useAuth();
   const [busca, setBusca] = useState('');
+  const [incluirOutras, setIncluirOutras] = useState(false);
+  const [temMais, setTemMais] = useState(false);
+  const [carregandoMais, setCarregandoMais] = useState(false);
+  const buscaAtual = useRef(0);
   const [rotasDisponiveis, setRotasDisponiveis] = useState([]);
   const [rotasInscritas, setRotasInscritas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,11 +36,17 @@ const SelecaoRotas = ({navigation}) => {
   const [subscribing, setSubscribing] = useState(null);
   const [unsubscribing, setUnsubscribing] = useState(null);
 
-  const loadRotas = async () => {
+  // Primeira página da busca (nome da rota ou do município; outros municípios só se o aluno pedir).
+  const loadRotas = async (texto = busca, outras = incluirOutras) => {
+    const minha = ++buscaAtual.current;
     try {
-      const rotas = await alunoService.listarRotas().then(unwrapItems);
-      const rotasInscritasData = await alunoService.listarMinhasRotas().then(unwrapItems);
+      const [rotas, rotasInscritasData] = await Promise.all([
+        alunoService.listarRotas({ limit: POR_PAGINA, q: texto.trim(), incluirOutras: outras }).then(unwrapItems),
+        alunoService.listarMinhasRotas().then(unwrapItems),
+      ]);
+      if (minha !== buscaAtual.current) return; // chegou uma busca mais nova
       setRotasDisponiveis(rotas);
+      setTemMais(rotas.length >= POR_PAGINA);
       setRotasInscritas(rotasInscritasData);
     } catch (error) {
       console.error('Error loading routes:', error);
@@ -42,18 +57,38 @@ const SelecaoRotas = ({navigation}) => {
     }
   };
 
+  // Digitou ou mudou "outros municípios": busca de novo depois de uma pausa curta.
   useEffect(() => {
-    loadRotas();
-  }, []);
+    const espera = setTimeout(() => loadRotas(busca, incluirOutras), 250);
+    return () => clearTimeout(espera);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busca, incluirOutras]);
+
+  const carregarMais = async () => {
+    if (carregandoMais) return;
+    setCarregandoMais(true);
+    try {
+      const proxima = await alunoService
+        .listarRotas({ limit: POR_PAGINA, offset: rotasDisponiveis.length, q: busca.trim(), incluirOutras })
+        .then(unwrapItems);
+      const vistas = new Set(rotasDisponiveis.map((r) => r.id));
+      setRotasDisponiveis((atuais) => [...atuais, ...proxima.filter((r) => !vistas.has(r.id))]);
+      setTemMais(proxima.length >= POR_PAGINA);
+    } catch (error) {
+      alertar('Erro', 'Não foi possível carregar mais rotas.');
+    } finally {
+      setCarregandoMais(false);
+    }
+  };
 
   const rotasIdsInscritas = rotasInscritas.map((r) => r.id);
   const rotasDisponiveisFiltradas = rotasDisponiveis.filter(
     (rota) => !rotasIdsInscritas.includes(rota.id),
   );
 
-  const rotasFiltradas = rotasDisponiveisFiltradas.filter(
-    (rota) => rota.nome.toLowerCase().includes(busca.toLowerCase()),
-  );
+  // A busca já vem filtrada do servidor.
+  const rotasFiltradas = rotasDisponiveisFiltradas;
+  const deOutroMunicipio = (rota) => !!user?.prefeitura_id && rota.prefeitura_id !== user.prefeitura_id;
 
   const handleCadastrar = async (rota) => {
     try {
@@ -114,7 +149,7 @@ const SelecaoRotas = ({navigation}) => {
           <Icon name={IconNames.search} size="md" color={colors.text.hint} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar rota..."
+            placeholder="Buscar rota ou município..."
             placeholderTextColor={colors.text.hint}
             value={busca}
             onChangeText={setBusca}
@@ -125,6 +160,15 @@ const SelecaoRotas = ({navigation}) => {
             </Tappable>
           )}
         </View>
+      </View>
+
+      <View style={styles.outrasLinha}>
+        <Text style={styles.outrasTexto}>Incluir outros municípios</Text>
+        <Switch
+          value={incluirOutras}
+          onValueChange={setIncluirOutras}
+          accessibilityLabel="Incluir rotas de outros municípios"
+        />
       </View>
 
       {loading ? (
@@ -213,6 +257,7 @@ const SelecaoRotas = ({navigation}) => {
                           {rota.municipio_nome 
                             ? `${rota.municipio_nome}${rota.municipio_uf ? ` - ${rota.municipio_uf}` : ''}`
                             : 'Município não informado'}
+                          {deOutroMunicipio(rota) ? '  ·  outro município' : ''}
                         </Text>
                       </View>
                     </View>
@@ -235,6 +280,21 @@ const SelecaoRotas = ({navigation}) => {
               );
             })}
 
+            {temMais ? (
+              <Tappable
+                style={styles.verMais}
+                onPress={carregarMais}
+                disabled={carregandoMais}
+                sombra={false}
+                accessibilityLabel="Ver mais rotas">
+                {carregandoMais ? (
+                  <ActivityIndicator color={colors.secondary.main} />
+                ) : (
+                  <Text style={styles.verMaisTexto}>Ver mais rotas</Text>
+                )}
+              </Tappable>
+            ) : null}
+
             {rotasFiltradas.length === 0 && (
               <View style={styles.emptyState}>
                 <View style={styles.emptyIconContainer}>
@@ -252,6 +312,24 @@ const SelecaoRotas = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
+  outrasLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.base,
+    paddingBottom: spacing.sm,
+  },
+  outrasTexto: { ...textStyles.body, color: colors.text.primary },
+  verMais: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.secondary.main,
+  },
+  verMaisTexto: { ...textStyles.body, color: colors.secondary.main, fontWeight: '700' },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
