@@ -39,6 +39,17 @@ const situacaoDoHistorico = (viagem, perdida) => {
   return perdida ? 'nao_realizada' : null;
 };
 
+// Itens do histórico a partir de uma página que o servidor já separou como histórico
+// (`periodo=historico`): agendada de dia passado conta como não realizada.
+export const itensDoHistorico = viagens => {
+  const itens = [];
+  for (const viagem of viagens || []) {
+    const situacao = situacaoDoHistorico(viagem, viagem.status === 'AGENDADA');
+    if (situacao) itens.push({ viagem, inicio: inicioDaViagem(viagem), situacao });
+  }
+  return itens;
+};
+
 // Devolve { proxima, proximas, historico }. `historico` vem do mais recente para o mais antigo.
 // `proximas` são as viagens que vêm depois da próxima (agendadas ou canceladas que ainda não
 // chegaram na hora), da mais perto para a mais longe: o motorista vê o feriado ou o aviso de antemão.

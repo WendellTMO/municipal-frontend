@@ -53,7 +53,8 @@ const DashboardMotorista = ({navigation}) => {
   const loadProximaViagem = useCallback(async () => {
     {
       try {
-        const viagens = await motoristaService.listarViagens().then(unwrapItems);
+        // Só a janela que a home usa: em andamento e as próximas (o histórico tem tela própria).
+        const viagens = await motoristaService.listarViagens({ periodo: 'proximas', limit: 10 }).then(unwrapItems);
         
         if (viagens && viagens.length > 0) {
           // A próxima é a mais perto de agora; as que passaram sem registro vão para o histórico.

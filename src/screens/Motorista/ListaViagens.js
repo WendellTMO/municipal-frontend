@@ -1,5 +1,6 @@
 import React, {useState, useCallback} from 'react';
 import {
+  ActivityIndicator,
   View,
   Text,
   StyleSheet,
@@ -17,6 +18,7 @@ import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
 import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
+import { alertar } from '../../utils/alerta';
 import { formatarSentido } from '../../utils/formatarSentido';
 import { formatarHora } from '../../utils/formatarHora';
 import { formatarData } from '../../utils/dataLocal';
@@ -24,6 +26,8 @@ import { organizarViagens } from '../../utils/viagensMotorista';
 import FolhaFiltroViagens from '../../components/FolhaFiltroViagens';
 import FiltrosAtivos from '../../components/FiltrosAtivos';
 import { contarViagens, duracaoDaViagem, filtrarViagens, filtroAtivo, filtroViagensPadrao, formatarDuracao, opcoesDasViagens, resumoDoFiltro } from '../../utils/filtroViagens';
+
+const POR_PAGINA = 10;
 
 const ListaViagens = ({navigation, route}) => {
   const { user } = useAuth();
@@ -36,6 +40,11 @@ const ListaViagens = ({navigation, route}) => {
   const [filtro, setFiltro] = useState(filtroViagensPadrao());
   const [filtroAberto, setFiltroAberto] = useState(false);
 
+  // Páginas seguintes ao tocar em "Ver mais viagens" (a primeira vem do useFetch).
+  const [extras, setExtras] = useState([]);
+  const [temMais, setTemMais] = useState(false);
+  const [carregandoMais, setCarregandoMais] = useState(false);
+
   // Fetch function
   const fetchViagens = useCallback(async () => {
     let viagensData;
@@ -44,14 +53,18 @@ const ListaViagens = ({navigation, route}) => {
       const filters = rotaFiltro?.id ? { rota_id: rotaFiltro.id } : {};
       viagensData = await motoristaService.listarTodasViagens(filters).then(unwrapItems);
     } else {
-      // Motorista uses /viagens/minhas
-      viagensData = await motoristaService.listarViagens().then(unwrapItems);
-      // Filter by route if specified (client-side for motorista)
-      if (rotaFiltro?.id) {
-        viagensData = (viagensData || []).filter(v => v.rota_id === rotaFiltro.id);
+      // Motorista: /viagens/minhas em páginas; a rota é filtrada no servidor.
+      const rotaId = rotaFiltro?.id;
+      if (soProximas) {
+        viagensData = await motoristaService.listarViagens({ periodo: 'proximas', limit: POR_PAGINA, rotaId }).then(unwrapItems);
+        setTemMais(false);
+      } else {
+        viagensData = await motoristaService.listarViagens({ limit: POR_PAGINA, rotaId }).then(unwrapItems);
+        setTemMais((viagensData || []).length >= POR_PAGINA);
       }
     }
-    
+
+    setExtras([]);
     if (soProximas) {
       const organizadas = organizarViagens(viagensData, new Date(), 0, Infinity);
       return organizadas.proxima ? [organizadas.proxima, ...organizadas.proximas] : organizadas.proximas;
@@ -61,11 +74,30 @@ const ListaViagens = ({navigation, route}) => {
   }, [isGestor, rotaFiltro?.id, soProximas]);
 
   // Use the useFetch hook
-  const { data: viagens, isLoading, isError, error, refetch } = useFetch(
+  const { data: primeiraPagina, isLoading, isError, error, refetch } = useFetch(
     fetchViagens,
     [rotaFiltro?.id, isGestor, soProximas],
     { showErrorToast: true }
   );
+
+  const viagens = [...(primeiraPagina || []), ...extras];
+
+  const carregarMais = async () => {
+    if (carregandoMais) return;
+    setCarregandoMais(true);
+    try {
+      const proxima = await motoristaService
+        .listarViagens({ limit: POR_PAGINA, offset: viagens.length, rotaId: rotaFiltro?.id })
+        .then(unwrapItems);
+      const vistas = new Set(viagens.map(v => v.id));
+      setExtras(atuais => [...atuais, ...(proxima || []).filter(v => !vistas.has(v.id))]);
+      setTemMais((proxima || []).length >= POR_PAGINA);
+    } catch (e) {
+      alertar('Erro', 'Não foi possível carregar mais viagens.');
+    } finally {
+      setCarregandoMais(false);
+    }
+  };
 
   // "Próximas viagens" já é só o que vem pela frente: o filtro por situação não se aplica.
   const comFiltro = !soProximas;
@@ -223,6 +255,20 @@ const ListaViagens = ({navigation, route}) => {
                 </Tappable>
               );
             })}
+            {temMais ? (
+              <Tappable
+                style={styles.verMais}
+                onPress={carregarMais}
+                disabled={carregandoMais}
+                sombra={false}
+                accessibilityLabel="Ver mais viagens">
+                {carregandoMais ? (
+                  <ActivityIndicator color={colors.primary.dark} />
+                ) : (
+                  <Text style={styles.verMaisTexto}>Ver mais viagens</Text>
+                )}
+              </Tappable>
+            ) : null}
           </View>
         </ScrollView>
       )}
@@ -241,6 +287,16 @@ const ListaViagens = ({navigation, route}) => {
 };
 
 const styles = StyleSheet.create({
+  verMais: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.primary.dark,
+  },
+  verMaisTexto: { ...textStyles.body, color: colors.primary.dark, fontWeight: '700' },
   funil: {
     width: 46,
     height: 46,

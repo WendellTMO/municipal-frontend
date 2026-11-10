@@ -106,3 +106,22 @@ describe('aindaNaoEhODiaDaViagem', () => {
     expect(aindaNaoEhODiaDaViagem({}, agora)).toBe(false);
   });
 });
+
+describe('itensDoHistorico', () => {
+  const { itensDoHistorico } = require('./viagensMotorista');
+
+  test('agendada de dia passado vira não realizada e feita e cancelada mantêm a situação', () => {
+    const itens = itensDoHistorico([
+      { id: 'a', status: 'AGENDADA', data: '2026-11-01', horario_inicio: '07:00:00' },
+      { id: 'b', status: 'FINALIZADA', data: '2026-11-02', horario_inicio: '07:00:00' },
+      { id: 'c', status: 'CANCELADA', data: '2026-11-03', horario_inicio: '07:00:00' },
+    ]);
+    expect(itens.map(i => i.situacao)).toEqual(['nao_realizada', 'feita', 'cancelada']);
+    expect(itens.map(i => i.viagem.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  test('lista vazia ou ausente não quebra', () => {
+    expect(itensDoHistorico([])).toEqual([]);
+    expect(itensDoHistorico(undefined)).toEqual([]);
+  });
+});
