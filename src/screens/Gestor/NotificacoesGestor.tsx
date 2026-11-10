@@ -22,6 +22,7 @@ import SubHeader from '../../components/SubHeader';
 import Tappable from '../../components/Tappable';
 import { confirmAction } from '../../utils/confirm';
 import DeslizarParaExcluir from '../../components/DeslizarParaExcluir';
+import FiltroEstadoNotificacoes, { type EstadoNotificacoes } from '../../components/FiltroEstadoNotificacoes';
 
 type Props = { navigation: NativeStackNavigationProp<Record<string, object | undefined>> };
 
@@ -52,12 +53,13 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const [temMais, setTemMais] = useState(false);
+  const [estado, setEstado] = useState<EstadoNotificacoes>('todas');
   const carregandoMaisRef = React.useRef(false);
 
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
-      const data = (await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA })) ?? [];
+      const data = (await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA, estado })) ?? [];
       setNotificacoes(data);
       setTemMais(data.length >= NOTIFICACOES_POR_PAGINA);
     } catch {
@@ -66,7 +68,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [estado]);
 
   React.useEffect(() => {
     load();
@@ -77,7 +79,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
     if (!temMais || carregandoMaisRef.current) return;
     carregandoMaisRef.current = true;
     try {
-      const proxima = (await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA, offset: notificacoes.length })) ?? [];
+      const proxima = (await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA, offset: notificacoes.length, estado })) ?? [];
       const vistas = new Set(notificacoes.map(n => n.id));
       const novas = proxima.filter(n => !vistas.has(n.id));
       setNotificacoes(prev => [...prev, ...novas]);
@@ -175,6 +177,7 @@ const NotificacoesGestor: React.FC<Props> = ({ navigation }) => {
         }
       />
 
+      <FiltroEstadoNotificacoes valor={estado} onMudar={setEstado} cor={GESTOR_COLOR} />
       {loading ? (
         <LoadingSpinner message="Carregando notificações..." />
       ) : notificacoes.length === 0 ? (
