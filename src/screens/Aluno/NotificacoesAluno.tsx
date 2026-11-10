@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
@@ -43,6 +43,8 @@ const formatDate = (dateStr: string | null | undefined): string => {
   }
 };
 
+const NOTIFICACOES_POR_PAGINA = 20;
+
 const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,11 +53,16 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
 
   const unreadCount = notificacoes.filter((n) => !n.enviada).length;
 
+  const [temMais, setTemMais] = useState(false);
+  const carregandoMaisRef = useRef(false);
+
   const loadNotificacoes = useCallback(async () => {
     setError(false);
     try {
-      const data = await getNotificacoes();
-      setNotificacoes(Array.isArray(data) ? data : []);
+      const data = await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA });
+      const lista = Array.isArray(data) ? data : [];
+      setNotificacoes(lista);
+      setTemMais(lista.length >= NOTIFICACOES_POR_PAGINA);
     } catch {
       setError(true);
     } finally {
@@ -67,6 +74,23 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     loadNotificacoes();
   }, [loadNotificacoes]);
+
+  // Rolou até o fim: busca a página seguinte (as mais antigas).
+  const carregarMais = async () => {
+    if (!temMais || carregandoMaisRef.current) return;
+    carregandoMaisRef.current = true;
+    try {
+      const proxima = await getNotificacoes({ limit: NOTIFICACOES_POR_PAGINA, offset: notificacoes.length });
+      const vistas = new Set(notificacoes.map((n) => n.id));
+      const novas = proxima.filter((n) => !vistas.has(n.id));
+      setNotificacoes((prev) => [...prev, ...novas]);
+      setTemMais(proxima.length >= NOTIFICACOES_POR_PAGINA);
+    } catch {
+      // a próxima rolagem tenta de novo
+    } finally {
+      carregandoMaisRef.current = false;
+    }
+  };
 
   const handleMarkAsRead = async (notificacao: Notificacao) => {
     if (notificacao.enviada) return;
@@ -214,6 +238,8 @@ const NotificacoesAluno: React.FC<Props> = ({ navigation }) => {
         data={notificacoes}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
+        onEndReached={carregarMais}
+        onEndReachedThreshold={0.5}
         contentContainerStyle={withFabSpace([
           styles.listContent,
           notificacoes.length === 0 && styles.emptyContent,

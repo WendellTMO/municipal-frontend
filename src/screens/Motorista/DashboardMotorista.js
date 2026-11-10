@@ -12,7 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import {motoristaService} from '../../services/motoristaService';
 import { colors, spacing, borderRadius, shadows, textStyles, fontSize, fontWeight } from '../../theme';
 import { ActionTile, Icon, IconNames, LoadingSpinner, PainelHeader, TripHeroCard } from '../../components';
-import { getNotificacoes } from '../../services/notificacaoService';
+import { getNaoLidas } from '../../services/notificacaoService';
 import { dayLabel } from '../../utils/dayLabel';
 import { unwrapItems } from '../../types';
 import { withFabSpace } from '../../config/feedback';
@@ -32,8 +32,7 @@ const DashboardMotorista = ({navigation}) => {
 
   const carregarNaoLidas = useCallback(async () => {
     try {
-      const notifs = await getNotificacoes();
-      setUnreadCount(notifs.filter((n) => !n.enviada).length);
+      setUnreadCount(await getNaoLidas());
     } catch (e) {
       // o contador é secundário
     }

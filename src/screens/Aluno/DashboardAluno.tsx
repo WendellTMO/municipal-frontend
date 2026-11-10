@@ -9,7 +9,7 @@ import {
 import TelaSegura from '../../components/TelaSegura';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { alunoService } from '../../services';
-import { getNotificacoes } from '../../services/notificacaoService';
+import { getNaoLidas, getNotificacoes } from '../../services/notificacaoService';
 import { useAuth } from '../../contexts/AuthContext';
 import { borderRadius, colors, shadows, spacing, textStyles } from '../../theme';
 import {
@@ -89,9 +89,10 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
 
   const loadNotifBadge = useCallback(async () => {
     try {
-      const notifs = await getNotificacoes();
-      const count = notifs.filter((n) => !n.enviada).length;
+      const count = await getNaoLidas();
       if (count > prevUnreadRef.current && prevUnreadRef.current > 0) {
+        // Só quando chegou aviso novo é que a lista (as mais novas) é buscada.
+        const notifs = await getNotificacoes({ limit: 10 });
         const newest = notifs.find((n) => !n.enviada);
         if (newest) {
           const isUrgent = ['Iniciada', 'Cancelada', 'Aviso'].some((kw) =>
