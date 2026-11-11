@@ -1,5 +1,5 @@
 import { api } from '../api/client';
-import { Storage, STORAGE_KEYS } from '../utils/storage';
+import { gravarToken } from '../utils/tokenSeguro';
 
 export const userService = {
   /**
@@ -79,7 +79,7 @@ export const userService = {
       confirm_password: confirmPassword ?? newPassword,
     });
     // As outras sessões caem com a troca; o token novo mantém este aparelho logado.
-    if (response.data?.token) await Storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.token);
+    if (response.data?.token) await gravarToken(response.data.token);
     return response.data;
   },
 

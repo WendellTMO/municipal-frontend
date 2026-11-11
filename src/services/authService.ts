@@ -1,5 +1,6 @@
 import { api } from '../api/client';
 import { Storage, STORAGE_KEYS } from '../utils/storage';
+import { gravarToken, lerToken, apagarToken } from '../utils/tokenSeguro';
 import { ValidationError, errorLogger } from '../utils/errors';
 import type {
   AlunoResponse,
@@ -47,7 +48,7 @@ export const authService = {
     const { token, user } = response.data;
 
     // Store token
-    await Storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+    await gravarToken(token);
     
     let loginUser: UserResponse | undefined = user;
     try {
@@ -124,7 +125,7 @@ export const authService = {
    */
   async logout(): Promise<void> {
     errorLogger.info('User logging out...');
-    await Storage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    await apagarToken();
     await Storage.removeItem(STORAGE_KEYS.USER);
     errorLogger.info('User logged out successfully');
   },
@@ -158,14 +159,14 @@ export const authService = {
    * Get stored access token
    */
   async getAccessToken(): Promise<string | null> {
-    return await Storage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    return await lerToken();
   },
 
   /**
    * Check if user is authenticated
    */
   async isAuthenticated(): Promise<boolean> {
-    const token = await Storage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    const token = await lerToken();
     return !!token;
   },
 
