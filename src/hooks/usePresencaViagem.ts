@@ -8,17 +8,11 @@ import { unwrapItems } from '../types';
 import { getErrorMessageFromError } from '../utils/errors';
 import { compartilhar } from '../utils/requisicaoCompartilhada';
 import {
+  corpoConfirmacao,
   erroDeCampoPonto,
-  instituicaoDoSentido,
-  instituicoesDaRota,
-  embarqueForaDaInstituicao,
-  linhaDosPontos,
   mensagemDeErroPonto,
-  montarCorpoConfirmacao,
-  montarPontosPadrao,
   nomeDoPonto,
   precisaEscolher,
-  sentidoDe,
 } from '../utils/presenca';
 
 type ViagemPresenca = {
@@ -31,12 +25,11 @@ type ViagemPresenca = {
 };
 
 type ModoFolha = 'confirmar' | 'alterar' | null;
-type PontoApi = PontoEscolha & { instituicao?: { nome?: string } | null };
 
 /**
- * Confirmar e cancelar presença numa viagem, com a escolha de ponto do aluno. Sem padrão salvo
- * (precisa_escolher_ponto) o Confirmar abre a folha de escolha; com padrão confirma direto.
- * Usado na home, no detalhe da viagem e na lista de viagens da rota.
+ * Confirmar e cancelar presença numa viagem, com a escolha de pontos do aluno. Sem pontos
+ * lembrados para o horário (precisa_escolher_ponto) o Confirmar abre a tela de pontos; com eles
+ * confirma direto. Usado na home, no detalhe da viagem e na lista de viagens da rota.
  */
 export function usePresencaViagem(
   viagem: ViagemPresenca | null | undefined,
@@ -48,15 +41,12 @@ export function usePresencaViagem(
   const [salvando, setSalvando] = useState(false);
   const [folha, setFolha] = useState<ModoFolha>(null);
   const [erroFolha, setErroFolha] = useState('');
-  const [pontos, setPontos] = useState<PontoApi[] | null>(null);
-  const [instituicaoPropriaId, setInstituicaoPropriaId] = useState<string | null>(null);
-  const [instituicoesDoAlunoIds, setInstituicoesDoAlunoIds] = useState<string[]>([]);
+  const [pontos, setPontos] = useState<PontoEscolha[] | null>(null);
   const [pedirEscolha, setPedirEscolha] = useState(precisaEscolher(viagem));
   const [escolha, setEscolha] = useState<Escolha>({
     embarqueId: viagem?.ponto_embarque_id ?? null,
     desembarqueId: viagem?.ponto_destino_id ?? null,
   });
-  const sentido = sentidoDe(viagem);
 
   const carregarPontos = useCallback(async () => {
     if (pontos || !viagem?.rota_id) return;
@@ -64,20 +54,8 @@ export function usePresencaViagem(
       // Vários cards da mesma rota abrem juntos: dividem a mesma busca.
       const lista = (await compartilhar(`pontos:${viagem.rota_id}`, () =>
         alunoService.listarPontosRota(viagem.rota_id as string).then(unwrapItems),
-      )) as PontoApi[];
+      )) as PontoEscolha[];
       setPontos(lista);
-      // Instituição do cadastro: é a sugerida na folha e a que não pede confirmação extra.
-      try {
-        const perfil = (await compartilhar('perfil-aluno', () => alunoService.obterPerfil())) as {
-          instituicao_id?: string | null;
-          instituicoes?: { id: string }[];
-        };
-        setInstituicaoPropriaId(perfil.instituicao_id ?? null);
-        setInstituicoesDoAlunoIds((perfil.instituicoes ?? []).map(i => i.id));
-      } catch {
-        setInstituicaoPropriaId(null);
-        setInstituicoesDoAlunoIds([]);
-      }
     } catch (e) {
       setErroFolha(`Não foi possível buscar os pontos da rota: ${getErrorMessageFromError(e)}`);
       setPontos([]);
@@ -103,7 +81,7 @@ export function usePresencaViagem(
       registrarAcao(confirmar ? 'presenca_confirmar' : 'presenca_cancelar');
       setConfirmada(confirmar);
       if (nova) setEscolha(nova);
-      if (corpo.lembrar_escolha) setPedirEscolha(false);
+      if (confirmar) setPedirEscolha(false);
       setFolha(null);
       toast.success(confirmar ? 'Presença confirmada!' : 'Presença cancelada.');
       aoMudar?.(confirmar);
@@ -133,30 +111,18 @@ export function usePresencaViagem(
     return enviar(true, {});
   };
 
-  const confirmarEscolha = async (nova: Escolha, lembrar: boolean, instituicaoId: string | null) => {
+  // Os dois pontos vão na confirmação e o backend lembra para este horário. Em Alterar o aluno
+  // já está confirmado: confirmar de novo troca os pontos da viagem.
+  const confirmarEscolha = async (nova: Escolha) => {
     if (!viagem?.rota_id) return;
     setErroFolha('');
-    // Em Alterar o aluno já está confirmado: o padrão é gravado antes e a confirmação segue o novo ponto.
-    if (folha === 'alterar' && lembrar) {
-      try {
-        await alunoService.salvarMeuPonto(viagem.rota_id, montarPontosPadrao(sentido, nova));
-      } catch (e) {
-        setErroFolha(mensagemDeErroPonto(e, getErrorMessageFromError(e) || 'Não foi possível salvar a escolha.'));
-        return;
-      }
-      await enviar(true, montarCorpoConfirmacao(sentido, nova, false, instituicaoId), nova);
-      return;
-    }
-    await enviar(true, montarCorpoConfirmacao(sentido, nova, lembrar, instituicaoId), nova);
+    await enviar(true, corpoConfirmacao(nova), nova);
   };
 
-  const instituicao = instituicaoDoSentido(sentido, viagem ?? {}, pontos);
-  const linhaPontos = linhaDosPontos(
-    sentido,
-    nomeDoPonto(pontos, escolha.embarqueId),
-    nomeDoPonto(pontos, escolha.desembarqueId),
-    sentido === 'VOLTA' && embarqueForaDaInstituicao(pontos, escolha.embarqueId),
-  );
+  const nomesPontos = {
+    embarque: nomeDoPonto(pontos, escolha.embarqueId),
+    desembarque: nomeDoPonto(pontos, escolha.desembarqueId),
+  };
 
   return {
     confirmada,
@@ -165,17 +131,10 @@ export function usePresencaViagem(
     confirmar,
     cancelar: () => enviar(false, {}),
     alterar: () => abrirFolha('alterar'),
-    linhaPontos,
+    nomesPontos,
     folhaProps: {
       visible: folha !== null,
-      sentido,
       pontos,
-      fixoId: instituicao.pontoId,
-      instituicaoNome: instituicao.nome,
-      instituicoes: instituicoesDaRota(pontos),
-      instituicaoPropriaId,
-      instituicoesDoAlunoIds,
-      instituicaoAtualId: instituicao.id ?? instituicaoPropriaId,
       inicial: escolha,
       erro: erroFolha,
       salvando,

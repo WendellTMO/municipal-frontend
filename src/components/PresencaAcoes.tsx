@@ -27,7 +27,7 @@ type Props = {
 };
 
 const PresencaAcoes = ({ viagem, confirmadaInicial, onMudou }: Props) => {
-  const { confirmada, salvando, confirmar, cancelar, alterar, linhaPontos, folhaProps } = usePresencaViagem(
+  const { confirmada, salvando, confirmar, cancelar, alterar, nomesPontos, folhaProps } = usePresencaViagem(
     viagem,
     confirmadaInicial,
     onMudou,
@@ -58,7 +58,12 @@ const PresencaAcoes = ({ viagem, confirmadaInicial, onMudou }: Props) => {
 
   return (
     <>
-      <LinhaDosPontos texto={linhaPontos} onAlterar={alterar} claro />
+      <LinhaDosPontos
+        embarque={nomesPontos.embarque}
+        desembarque={nomesPontos.desembarque}
+        onAlterar={alterar}
+        claro
+      />
       <Tappable
         style={styles.cancelar}
         onPress={() => setDialogo(true)}
