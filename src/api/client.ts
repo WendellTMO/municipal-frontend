@@ -6,6 +6,7 @@ import axios, {
     InternalAxiosRequestConfig,
   } from 'axios';
   import { Storage, STORAGE_KEYS } from '../utils/storage';
+import { lerToken, apagarToken } from '../utils/tokenSeguro';
   import apiConfig from '../config/api';
   import {
     parseApiError,
@@ -27,7 +28,7 @@ export const api: AxiosInstance = axios.create({
 async function attachAuthToken(
     config: InternalAxiosRequestConfig
   ): Promise<InternalAxiosRequestConfig> {
-    const token = await Storage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    const token = await lerToken();
 
     if (token) {
       config.headers = config.headers ?? {};
@@ -54,7 +55,7 @@ function logResponse(url: string | undefined, status: number): void {
 
 async function clearAuthStorage(): Promise<void> {
     await Promise.all([
-      Storage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),
+      apagarToken(),
       Storage.removeItem(STORAGE_KEYS.USER),
     ]);
 }

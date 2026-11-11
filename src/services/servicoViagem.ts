@@ -5,7 +5,7 @@
 import { Linking, PermissionsAndroid, Platform } from 'react-native';
 import { aguardarCondicao } from '../utils/aguardarCondicao';
 import { tratarMensagemDemanda } from '../utils/demandaLocalizacao';
-import { Storage, STORAGE_KEYS } from '../utils/storage';
+import { lerToken } from '../utils/tokenSeguro';
 
 let resolverServico: (() => void) | null = null;
 // Muda a cada início ou parada: uma espera pela permissão que ficou para trás desiste sozinha.
@@ -124,7 +124,7 @@ export async function pararServicoViagem(): Promise<void> {
 // Push de demanda: só envia se a mensagem, a viagem e o login conferirem.
 export async function tratarDemandaComLogin(mensagem: { data?: Record<string, string> }): Promise<void> {
   try {
-    const logado = !!(await Storage.getItem(STORAGE_KEYS.ACCESS_TOKEN));
+    const logado = !!(await lerToken());
     await tratarMensagemDemanda(mensagem, logado);
   } catch {
     // O intervalo adaptativo cobre a falha.
