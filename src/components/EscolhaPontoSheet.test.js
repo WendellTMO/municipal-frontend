@@ -170,3 +170,14 @@ test('mostra o erro recebido', () => {
   const {arvore} = montar({erro: 'Escolha um ponto de descida diferente do embarque.'});
   expect(textos(arvore)).toContain('Escolha um ponto de descida diferente do embarque.');
 });
+
+test('Embarque e Desembarque aparecem como selos ao lado do nome do ponto', () => {
+  const {arvore} = montar({inicial: {embarqueId: 'p1', desembarqueId: 'p2'}});
+  const t = textos(arvore);
+  expect(t).toContain('Embarque');
+  expect(t).toContain('Desembarque');
+  expect(t).toContain('Ponto do mercadinho');
+  // O selo e o nome ficam na mesma linha (mesmo pai), com o endereço abaixo.
+  const topo = arvore.root.findAll(n => n.type === 'View' && Array.isArray(n.props.children) && n.props.children.length === 2 && n.props.children[0].type && n.props.children[0].type.name === 'Selo');
+  expect(topo.length).toBe(2);
+});
