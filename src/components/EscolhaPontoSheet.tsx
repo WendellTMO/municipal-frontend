@@ -10,6 +10,19 @@ import CaixaPontos from './CaixaPontos';
 import Icon, { IconNames } from './Icon';
 import ModalApp from './ModalApp';
 import Tappable from './Tappable';
+import { formatarDistancia, pontoMaisProximo } from '../utils/pontoProximo';
+import { lerPosicao, PERMISSAO_NEGADA } from '../utils/lerPosicao';
+import { requestLocationPermission } from '../features/map/hooks/useLocationPermission';
+
+// Mesmo jeito do iniciar viagem: o módulo nativo no celular e o do navegador na web.
+let Geolocation: typeof navigator.geolocation | null = null;
+try {
+  Geolocation = require('@react-native-community/geolocation').default;
+} catch {
+  if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    Geolocation = navigator.geolocation;
+  }
+}
 import {
   embarqueForaDaInstituicao,
   escolhaCompleta,
@@ -82,6 +95,67 @@ const Lista = ({
     })}
   </View>
 );
+
+// Pede a posição uma vez e marca o ponto da lista mais perto do aluno. Ele pode trocar depois.
+const SugerirPerto = ({
+  pontos,
+  onEscolher,
+}: {
+  pontos: PontoEscolha[];
+  onEscolher: (id: string) => void;
+}) => {
+  const [aviso, setAviso] = useState('');
+  const [lendo, setLendo] = useState(false);
+
+  const sugerir = async () => {
+    setAviso('');
+    if (!Geolocation) {
+      setAviso('Este aparelho não informa a localização.');
+      return;
+    }
+    setLendo(true);
+    const permitido = await requestLocationPermission();
+    if (!permitido) {
+      setLendo(false);
+      setAviso('Permita a localização para sugerir o ponto mais próximo.');
+      return;
+    }
+    lerPosicao(
+      Geolocation,
+      (pos) => {
+        setLendo(false);
+        const perto = pontoMaisProximo(pontos as never[], pos.coords.latitude, pos.coords.longitude);
+        if (!perto) {
+          setAviso('Nenhum ponto da rota tem localização para comparar.');
+          return;
+        }
+        onEscolher((perto.ponto as PontoEscolha).id);
+        setAviso(`Mais perto de você: ${(perto.ponto as PontoEscolha).apelido}, a ${formatarDistancia(perto.metros)}.`);
+      },
+      (erro: { code?: number }) => {
+        setLendo(false);
+        setAviso(
+          erro?.code === PERMISSAO_NEGADA
+            ? 'Permita a localização para sugerir o ponto mais próximo.'
+            : 'Não foi possível ler sua localização agora.',
+        );
+      },
+    );
+  };
+
+  return (
+    <View>
+      <Tappable
+        onPress={sugerir}
+        disabled={lendo}
+        sombra={false}
+        accessibilityLabel="Usar o ponto mais próximo de mim">
+        <Text style={styles.linhaAlterar}>{lendo ? 'Buscando sua localização...' : 'Usar o ponto mais próximo de mim'}</Text>
+      </Tappable>
+      {aviso ? <Text style={styles.instituicao}>{aviso}</Text> : null}
+    </View>
+  );
+};
 
 const EscolhaPontoSheet = ({
   visible,
@@ -316,6 +390,12 @@ const EscolhaPontoSheet = ({
                   )}
                 </View>
               ) : null}
+              {!volta ? (
+                <SugerirPerto
+                  pontos={lista}
+                  onEscolher={(id) => setEscolha((atual) => ({ ...atual, embarqueId: id }))}
+                />
+              ) : null}
               {pedeEmbarque(sentido) ? (
                 <CaixaPontos
                   titulo={circular ? 'Onde você vai embarcar?' : comInstituicao ? 'Onde você embarca' : ''}
@@ -331,6 +411,12 @@ const EscolhaPontoSheet = ({
                   accessibilityLabel="Inverter embarque e descida">
                   <Text style={styles.linhaAlterar}>Inverter (volta para casa)</Text>
                 </Tappable>
+              ) : null}
+              {volta ? (
+                <SugerirPerto
+                  pontos={lista}
+                  onEscolher={(id) => setEscolha((atual) => ({ ...atual, desembarqueId: id }))}
+                />
               ) : null}
               {pedeDesembarque(sentido) ? (
                 <CaixaPontos
