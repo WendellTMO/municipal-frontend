@@ -2,6 +2,7 @@ import {
   aceitaPresenca,
   erroDeCampoPonto,
   escolhaCompleta,
+  inverterEscolha,
   filtrarPontos,
   instituicaoDoSentido,
   instituicaoDiferente,
@@ -178,4 +179,15 @@ test('a caixa de pontos mostra no máximo o limite e informa o total', () => {
   expect(r.itens.length).toBe(50);
   expect(r.total).toBe(60);
   expect(filtrarPontos(pontos, '5', 50).total).toBe(15);
+});
+
+test('inverter troca embarque e descida', () => {
+  expect(inverterEscolha({embarqueId: 'casa', desembarqueId: 'escola'})).toEqual({
+    embarqueId: 'escola',
+    desembarqueId: 'casa',
+  });
+  expect(inverterEscolha({embarqueId: 'casa', desembarqueId: null})).toEqual({
+    embarqueId: null,
+    desembarqueId: 'casa',
+  });
 });
