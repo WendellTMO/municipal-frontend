@@ -29,6 +29,10 @@ export async function lerToken() {
   return antigo;
 }
 
+export async function temSessao() {
+  return !!(await lerToken());
+}
+
 export async function apagarToken() {
   try {
     await Keychain.resetGenericPassword({ service: SERVICO });
