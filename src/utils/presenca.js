@@ -40,12 +40,14 @@ const semAcento = texto =>
     .toLowerCase();
 
 // Pontos para a caixa de seleção: em ordem alfabética, filtrados pelo texto (sem acento nem
-// maiúsculas) e limitados a `limite` para a lista não pesar quando a rota tem muitas paradas.
+// maiúsculas) no apelido ou no endereço e limitados a `limite` para a lista não pesar quando a rota tem muitas paradas.
 export const filtrarPontos = (pontos, texto, limite = 50) => {
   const busca = semAcento(texto).trim();
   const achados = [];
   for (const ponto of pontos || []) {
-    if (!busca || semAcento(ponto.apelido).includes(busca)) achados.push(ponto);
+    if (!busca || semAcento(ponto.apelido).includes(busca) || semAcento(ponto.endereco).includes(busca)) {
+      achados.push(ponto);
+    }
   }
   achados.sort((a, b) => String(a.apelido).localeCompare(String(b.apelido), 'pt-BR', {sensitivity: 'base'}));
   return {itens: achados.slice(0, limite), total: achados.length};

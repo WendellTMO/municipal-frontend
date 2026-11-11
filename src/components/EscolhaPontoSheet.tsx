@@ -21,7 +21,7 @@ import {
   tituloEscolha,
 } from '../utils/presenca';
 
-export type PontoEscolha = { id: string; apelido: string; instituicao?: unknown };
+export type PontoEscolha = { id: string; apelido: string; endereco?: string | null; instituicao?: unknown };
 export type Escolha = { embarqueId: string | null; desembarqueId: string | null };
 
 export type InstituicaoDaRota = { id: string; nome: string; pontoId: string };

@@ -179,3 +179,13 @@ test('a caixa de pontos mostra no máximo o limite e informa o total', () => {
   expect(r.total).toBe(60);
   expect(filtrarPontos(pontos, '5', 50).total).toBe(15);
 });
+
+test('a busca da caixa de pontos acha também pelo endereço', () => {
+  const pontos = [
+    {id: '1', apelido: 'Ponto perto do mercadinho', endereco: 'Rua das Flores, 120 - Bairro Novo'},
+    {id: '2', apelido: 'Praça', endereco: null},
+  ];
+  expect(filtrarPontos(pontos, 'flores').itens.map(p => p.id)).toEqual(['1']);
+  expect(filtrarPontos(pontos, 'bairro novo').total).toBe(1);
+  expect(filtrarPontos(pontos, 'praca').itens.map(p => p.id)).toEqual(['2']);
+});
