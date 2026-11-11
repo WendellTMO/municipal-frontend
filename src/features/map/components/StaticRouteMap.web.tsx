@@ -24,11 +24,14 @@ interface StaticRouteMapProps {
   numerar?: boolean;
   pino?: { latitude: number; longitude: number } | null;
   aoTocarLongo?: (local: { latitude: number; longitude: number }) => void;
+  // Toque em um pino: devolve o id do ponto (só pontos que têm id).
+  aoTocarPonto?: (id: string) => void;
   margemTopo?: number;
   margemBase?: number;
 }
 
 interface PreparedPoint {
+  id: string | null;
   lat: number;
   lng: number;
   label: string;
@@ -50,6 +53,7 @@ function preparePoints(points: RoutePoint[], numerar?: boolean): PreparedPoint[]
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
 
   return validPoints.map((p, i) => ({
+    id: p.id == null ? null : String(p.id),
     lat: Number(p.latitude),
     lng: Number(p.longitude),
     label:
@@ -101,6 +105,7 @@ export default function StaticRouteMap({
   numerar,
   pino,
   aoTocarLongo,
+  aoTocarPonto,
   margemTopo = 40,
   margemBase = 0,
 }: StaticRouteMapProps) {
@@ -110,6 +115,8 @@ export default function StaticRouteMap({
   const [mapReady, setMapReady] = useState(false);
   const longoRef = useRef(aoTocarLongo);
   longoRef.current = aoTocarLongo;
+  const pontoRef = useRef(aoTocarPonto);
+  pontoRef.current = aoTocarPonto;
 
   const points = useMemo(() => preparePoints(pontosRota ?? [], numerar), [pontosRota, numerar]);
   const paradas = useMemo(() => {
@@ -183,11 +190,13 @@ export default function StaticRouteMap({
         iconAnchor: [14, 42],
         popupAnchor: [0, -42],
       });
-      layers.push(
-        L.marker(latLngs[i], { icon })
-          .addTo(map)
-          .bindPopup(`<strong>${point.name}</strong>`),
-      );
+      const marcador = L.marker(latLngs[i], { icon })
+        .addTo(map)
+        .bindPopup(`<strong>${point.name}</strong>`);
+      marcador.on('click', () => {
+        if (point.id !== null) pontoRef.current?.(point.id);
+      });
+      layers.push(marcador);
     });
 
     if (latLngs.length >= 2) {

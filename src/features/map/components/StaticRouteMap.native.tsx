@@ -20,6 +20,8 @@ interface StaticRouteMapProps {
   numerar?: boolean;
   pino?: { latitude: number; longitude: number } | null;
   aoTocarLongo?: (local: { latitude: number; longitude: number }) => void;
+  // Toque em um pino: devolve o id do ponto (só pontos que têm id).
+  aoTocarPonto?: (id: string) => void;
   margemTopo?: number;
   margemBase?: number;
 }
@@ -52,6 +54,7 @@ function buildStaticRouteHtml(
 
   const pointsJson = JSON.stringify(
     validPoints.map((p, i) => ({
+      id: p.id == null ? null : String(p.id),
       lat: Number(p.latitude),
       lng: Number(p.longitude),
       label: opcoes.numerar
@@ -129,7 +132,13 @@ function buildStaticRouteHtml(
           popupAnchor: [0, -42],
         });
 
-        L.marker(latLng, { icon: icon }).addTo(map).bindPopup('<strong>' + point.name + '</strong>');
+        var marcador = L.marker(latLng, { icon: icon }).addTo(map).bindPopup('<strong>' + point.name + '</strong>');
+        marcador.on('click', function() {
+          if (point.id === null) return;
+          try {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ponto', id: point.id }));
+          } catch(err) {}
+        });
       });
 
       if (latLngs.length >= 2) {
@@ -186,6 +195,7 @@ export default function StaticRouteMap({
   numerar,
   pino,
   aoTocarLongo,
+  aoTocarPonto,
   margemTopo = 40,
   margemBase = 0,
 }: StaticRouteMapProps) {
@@ -229,6 +239,7 @@ export default function StaticRouteMap({
           try {
             const data = JSON.parse(event.nativeEvent.data);
             if (data.type === 'mapReady') setLoading(false);
+            if (data.type === 'ponto' && aoTocarPonto) aoTocarPonto(String(data.id));
             if (data.type === 'longPress' && aoTocarLongo) {
               aoTocarLongo({ latitude: data.latitude, longitude: data.longitude });
             }
