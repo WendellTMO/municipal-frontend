@@ -64,6 +64,13 @@ try {
 
 type Linha = 'emb' | 'des';
 
+/** Selo colorido ao lado do nome: verde para Embarque, vermelho para Desembarque. */
+const Selo = ({ tipo }: { tipo: Linha }) => (
+  <View style={[styles.selo, tipo === 'des' ? styles.seloDesembarque : styles.seloEmbarque]}>
+    <Text style={styles.seloTexto}>{tipo === 'des' ? 'Desembarque' : 'Embarque'}</Text>
+  </View>
+);
+
 const LinhaDoPonto = ({
   titulo,
   ponto,
@@ -84,23 +91,22 @@ const LinhaDoPonto = ({
     accessibilityRole="button"
     accessibilityState={{ selected: ativa }}
     accessibilityLabel={`${titulo}: ${ponto ? ponto.apelido : 'nenhum ponto escolhido'}. Toque para escolher no mapa`}>
-    <View style={[styles.marca, tipo === 'des' ? styles.marcaDesembarque : styles.marcaEmbarque]} />
     <View style={styles.linhaTexto}>
-      <Text style={styles.linhaRotulo}>{titulo}</Text>
-      {ponto ? (
-        <>
-          <Text style={styles.linhaNome} numberOfLines={2}>
+      <View style={styles.linhaTopo}>
+        <Selo tipo={tipo} />
+        {ponto ? (
+          <Text style={[styles.linhaNome, styles.linhaNomeAoLado]} numberOfLines={2}>
             {ponto.apelido}
           </Text>
-          {ponto.endereco ? (
-            <Text style={styles.linhaEndereco} numberOfLines={1}>
-              {ponto.endereco}
-            </Text>
-          ) : null}
-        </>
-      ) : (
-        <Text style={styles.linhaVazia}>Toque em um ponto do mapa</Text>
-      )}
+        ) : (
+          <Text style={[styles.linhaVazia, styles.linhaNomeAoLado]}>Toque em um ponto do mapa</Text>
+        )}
+      </View>
+      {ponto && ponto.endereco ? (
+        <Text style={styles.linhaEndereco} numberOfLines={1}>
+          {ponto.endereco}
+        </Text>
+      ) : null}
     </View>
   </Tappable>
 );
@@ -345,18 +351,17 @@ export const LinhaDosPontos = ({
 }) => {
   if (!embarque && !desembarque) return null;
   const cor = claro ? '#FFFFFF' : colors.text.primary;
-  const suave = claro ? '#FFFFFF' : colors.text.secondary;
   return (
     <View style={styles.cartao}>
       {embarque ? (
         <View style={styles.cartaoLinha}>
-          <Text style={[styles.cartaoRotulo, { color: suave }]}>Embarque</Text>
+          <Selo tipo="emb" />
           <Text style={[styles.cartaoNome, { color: cor }]}>{embarque}</Text>
         </View>
       ) : null}
       {desembarque ? (
         <View style={styles.cartaoLinha}>
-          <Text style={[styles.cartaoRotulo, { color: suave }]}>Desembarque</Text>
+          <Selo tipo="des" />
           <Text style={[styles.cartaoNome, { color: cor }]}>{desembarque}</Text>
         </View>
       ) : null}
@@ -424,11 +429,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.paper,
   },
   linhaAtiva: { borderColor: colors.primary.main, backgroundColor: colors.primary.lighter },
-  marca: { width: 14, height: 14 },
-  marcaEmbarque: { borderRadius: 7, backgroundColor: colors.success.main },
-  marcaDesembarque: { borderRadius: 3, backgroundColor: colors.error.main },
   linhaTexto: { flex: 1 },
-  linhaRotulo: { ...textStyles.caption, fontWeight: '700' as const, color: colors.text.secondary, textTransform: 'uppercase' },
+  linhaTopo: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  linhaNomeAoLado: { flex: 1 },
+  // Fundos escuros o bastante para o texto branco passar no contraste (mínimo 4,5:1).
+  // Mesma largura nos dois selos: os nomes começam alinhados.
+  selo: { minWidth: 104, alignItems: 'center', paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: borderRadius.md },
+  seloEmbarque: { backgroundColor: '#15803D' },
+  seloDesembarque: { backgroundColor: '#B91C1C' },
+  seloTexto: { ...textStyles.caption, color: '#FFFFFF', fontWeight: '700' as const },
   linhaNome: { ...textStyles.body, fontWeight: '700' as const, color: colors.text.primary },
   linhaEndereco: { ...textStyles.caption, color: colors.text.secondary },
   linhaVazia: { ...textStyles.body, color: colors.text.secondary },
@@ -452,8 +461,7 @@ const styles = StyleSheet.create({
   erroTexto: { ...textStyles.caption, flex: 1, color: colors.error.main },
   confirmar: { minHeight: 54, marginTop: spacing.base },
   cartao: { marginTop: spacing.md, gap: spacing.sm },
-  cartaoLinha: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.md },
-  cartaoRotulo: { ...textStyles.caption, fontWeight: '700' as const, width: 92 },
+  cartaoLinha: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   cartaoNome: { ...textStyles.body, flex: 1, fontWeight: '700' as const },
   alterar: { minHeight: 48, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: borderRadius.lg, marginTop: spacing.xs },
   alterarTexto: { ...textStyles.button, fontWeight: '700' as const },
