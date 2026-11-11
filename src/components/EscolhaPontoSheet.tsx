@@ -14,6 +14,7 @@ import {
   embarqueForaDaInstituicao,
   escolhaCompleta,
   instituicaoDiferente,
+  inverterEscolha,
   pedeDesembarque,
   pedeEmbarque,
   pedeInstituicao,
@@ -322,6 +323,14 @@ const EscolhaPontoSheet = ({
                   marcado={escolha.embarqueId}
                   onMarcar={(id) => setEscolha((atual) => ({ ...atual, embarqueId: id }))}
                 />
+              ) : null}
+              {circular ? (
+                <Tappable
+                  onPress={() => setEscolha((atual) => inverterEscolha(atual))}
+                  sombra={false}
+                  accessibilityLabel="Inverter embarque e descida">
+                  <Text style={styles.linhaAlterar}>Inverter (volta para casa)</Text>
+                </Tappable>
               ) : null}
               {pedeDesembarque(sentido) ? (
                 <CaixaPontos

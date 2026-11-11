@@ -74,6 +74,12 @@ export const separarInstituicoes = (instituicoesDaRota, idsDoAluno, texto) => {
 export const instituicaoDiferente = (escolhidaId, propriaId) =>
   !!escolhidaId && !!propriaId && escolhidaId !== propriaId;
 
+// Circular: quem volta para casa faz o caminho inverso, então basta trocar embarque e descida.
+export const inverterEscolha = escolha => ({
+  embarqueId: escolha.desembarqueId,
+  desembarqueId: escolha.embarqueId,
+});
+
 export const escolhaCompleta = (sentido, escolha) => {
   if (pedeEmbarque(sentido) && !escolha.embarqueId) return false;
   if (pedeDesembarque(sentido) && !escolha.desembarqueId) return false;
