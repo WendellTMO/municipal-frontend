@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useTrajetoRuas } from '../hooks/useTrajetoRuas';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
+import { escaparHtml, jsonParaScript } from '../utils/htmlSeguro';
 
 interface RoutePoint {
   id?: string | number;
@@ -49,10 +50,10 @@ function buildStaticRouteHtml(
   opcoes: OpcoesHtml,
 ): string {
   const validPoints = pontosValidos(points);
-  const pinoJson = JSON.stringify(opcoes.pino || null);
-  const ruasJson = JSON.stringify(trajeto.map(c => [c.latitude, c.longitude]));
+  const pinoJson = jsonParaScript(opcoes.pino || null);
+  const ruasJson = jsonParaScript(trajeto.map(c => [c.latitude, c.longitude]));
 
-  const pointsJson = JSON.stringify(
+  const pointsJson = jsonParaScript(
     validPoints.map((p, i) => ({
       id: p.id == null ? null : String(p.id),
       lat: Number(p.latitude),
@@ -63,7 +64,8 @@ function buildStaticRouteHtml(
       color: opcoes.numerar
         ? '#4285F4'
         : i === 0 ? '#34A853' : i === validPoints.length - 1 ? '#EA4335' : '#4285F4',
-      name: p.nome || p.apelido || `Ponto ${i + 1}`,
+      // O nome vai para o popup como HTML.
+      name: escaparHtml(p.nome || p.apelido || `Ponto ${i + 1}`),
     })),
   );
 

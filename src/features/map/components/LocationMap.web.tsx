@@ -6,6 +6,7 @@ import type { LocationMapProps } from '../types';
 import { normalizeRoutePoints } from '../utils/points';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_OPCOES_CELULAR, TILE_URL } from '../utils/tiles';
 import { destruirMapa } from '../utils/leafletSeguro';
+import { escaparHtml } from '../utils/htmlSeguro';
 
 type LeafletModule = typeof LeafletNS;
 type LeafletMap = LeafletNS.Map;
@@ -253,7 +254,7 @@ export default function LocationMap({
       // Popup em vez de tooltip: tooltip depende de passar o mouse, que não
       // existe em tela de toque.
       if (controles) marcador.bindPopup(
-        '<b>' + (i + 1) + '.</b> ' + (parada.apelido ?? 'Parada ' + (i + 1)),
+        '<b>' + (i + 1) + '.</b> ' + escaparHtml(parada.apelido ?? 'Parada ' + (i + 1)),
         { closeButton: false, offset: [0, -6] },
       );
       paradasRef.current.push(marcador);

@@ -12,7 +12,6 @@ export async function fetchRoutePolyline(
   origin: LatLng,
   destination: LatLng,
 ): Promise<RoutePolylineResult> {
-  console.log('fetchRoutePolyline', origin, destination);
   const { data } = await api.get<RouteApiResponse>('/routing/route', {
     params: {
       origin_lat: origin.latitude,
@@ -21,7 +20,6 @@ export async function fetchRoutePolyline(
       dest_lng: destination.longitude,
     },
   });
-  console.log('data', data);
 
   return {
     coordinates: data.coordinates,
