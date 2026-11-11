@@ -13,6 +13,7 @@ import axios, {
     errorLogger,
   } from '../utils/errors';
 import { registrarApi } from '../utils/telemetriaFila';
+import { avisarSessaoExpirada } from '../utils/sessaoExpirada';
 
 // Create axios instance with /v1 prefix
 export const api: AxiosInstance = axios.create({
@@ -109,7 +110,10 @@ api.interceptors.response.use(
 
     // Handle authentication errors
     if (requiresReauth(parsedError)) {
+      // Só avisa a sessão se a chamada ia com token. Senha errada no login também é 401.
+      const tinhaSessao = !!axiosError?.config?.headers?.Authorization;
       await clearAuthStorage();
+      if (tinhaSessao) avisarSessaoExpirada();
     }
 
     // Reject with the parsed error for consistent handling

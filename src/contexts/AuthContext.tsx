@@ -27,6 +27,7 @@ import { limparCache } from '../utils/cacheTela';
 import { textoDoAviso } from '../utils/avisoPush';
 import { registrarAcao } from '../utils/telemetriaFila';
 import { iniciarTelemetria, pararTelemetria } from '../services/telemetriaService';
+import { registrarAoExpirar } from '../utils/sessaoExpirada';
 import type { 
   AlunoResponse,
   AlunoSelfSignupRequest,
@@ -322,6 +323,15 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       setIsAuthenticated(false);
     }
   }, [user?.id]);
+
+  // O interceptor da API já apagou o token no 401. Aqui a sessão em memória acompanha e volta ao login.
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+    return registrarAoExpirar(() => {
+      toast.info('Sua sessão expirou. Entre de novo.', 5000);
+      void logout();
+    });
+  }, [isAuthenticated, logout, toast]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
