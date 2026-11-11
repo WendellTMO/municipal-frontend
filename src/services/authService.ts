@@ -1,6 +1,7 @@
 import { api } from '../api/client';
 import { Storage, STORAGE_KEYS } from '../utils/storage';
-import { gravarToken, lerToken, apagarToken } from '../utils/tokenSeguro';
+import { gravarToken, lerToken, apagarToken, temSessao } from '../utils/tokenSeguro';
+import { sessaoPorCookie } from '../utils/sessaoPorCookie';
 import { ValidationError, errorLogger } from '../utils/errors';
 import type {
   AlunoResponse,
@@ -53,10 +54,9 @@ export const authService = {
     let loginUser: UserResponse | undefined = user;
     try {
       // Try to get complete user profile
+      // Na web não há token no corpo: o cookie recém-criado já autentica este pedido.
       const userResponse = await api.get<UserResponse>('/users/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       loginUser = userResponse.data;
     } catch (e) {
@@ -125,6 +125,13 @@ export const authService = {
    */
   async logout(): Promise<void> {
     errorLogger.info('User logging out...');
+    if (sessaoPorCookie) {
+      try {
+        await api.post('/auth/logout');
+      } catch {
+        // Sem rede o cookie vence sozinho. A sessão local cai do mesmo jeito.
+      }
+    }
     await apagarToken();
     await Storage.removeItem(STORAGE_KEYS.USER);
     errorLogger.info('User logged out successfully');
@@ -166,8 +173,7 @@ export const authService = {
    * Check if user is authenticated
    */
   async isAuthenticated(): Promise<boolean> {
-    const token = await lerToken();
-    return !!token;
+    return await temSessao();
   },
 
   /**

@@ -6,7 +6,9 @@ import axios, {
     InternalAxiosRequestConfig,
   } from 'axios';
   import { Storage, STORAGE_KEYS } from '../utils/storage';
-import { lerToken, apagarToken } from '../utils/tokenSeguro';
+import { lerToken, apagarToken, temSessao } from '../utils/tokenSeguro';
+import { sessaoPorCookie } from '../utils/sessaoPorCookie';
+import { cabecalhosDaSessao } from '../utils/sessaoCookie';
   import apiConfig from '../config/api';
   import {
     parseApiError,
@@ -23,6 +25,7 @@ export const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000,
+  withCredentials: sessaoPorCookie,
 });
 
 async function attachAuthToken(
@@ -34,6 +37,10 @@ async function attachAuthToken(
       config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    const cookies = typeof document === 'undefined' ? '' : document.cookie;
+    const extras = cabecalhosDaSessao(config.method ?? 'get', cookies, sessaoPorCookie);
+    Object.assign(config.headers, extras);
 
     return config;
 }
@@ -112,7 +119,8 @@ api.interceptors.response.use(
     // Handle authentication errors
     if (requiresReauth(parsedError)) {
       // Só avisa a sessão se a chamada ia com token. Senha errada no login também é 401.
-      const tinhaSessao = !!axiosError?.config?.headers?.Authorization;
+      const tinhaSessao =
+        !!axiosError?.config?.headers?.Authorization || (sessaoPorCookie && (await temSessao()));
       await clearAuthStorage();
       if (tinhaSessao) avisarSessaoExpirada();
     }
