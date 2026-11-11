@@ -10,6 +10,8 @@ import CaixaPontos from './CaixaPontos';
 import Icon, { IconNames } from './Icon';
 import ModalApp from './ModalApp';
 import Tappable from './Tappable';
+import Button from './Button';
+import { StaticRouteMap } from '../features/map/index';
 import { formatarDistancia, pontoMaisProximo } from '../utils/pontoProximo';
 import { lerPosicao, PERMISSAO_NEGADA } from '../utils/lerPosicao';
 import { requestLocationPermission } from '../features/map/hooks/useLocationPermission';
@@ -35,7 +37,15 @@ import {
   tituloEscolha,
 } from '../utils/presenca';
 
-export type PontoEscolha = { id: string; apelido: string; endereco?: string | null; instituicao?: unknown };
+export type PontoEscolha = {
+  id: string;
+  apelido: string;
+  endereco?: string | null;
+  latitude?: number;
+  longitude?: number;
+  ordem?: number;
+  instituicao?: unknown;
+};
 export type Escolha = { embarqueId: string | null; desembarqueId: string | null };
 
 export type InstituicaoDaRota = { id: string; nome: string; pontoId: string };
@@ -96,6 +106,33 @@ const Lista = ({
   </View>
 );
 
+// Botão de ação da folha: contorno, ícone e altura de 48 (mínimo para o dedo no celular).
+const BotaoAcao = ({
+  titulo,
+  icone,
+  onPress,
+  desabilitado = false,
+  carregando = false,
+}: {
+  titulo: string;
+  icone: string;
+  onPress: () => void;
+  desabilitado?: boolean;
+  carregando?: boolean;
+}) => (
+  <Button
+    title={titulo}
+    icon={icone}
+    variant="outline"
+    size="sm"
+    fullWidth
+    onPress={onPress}
+    disabled={desabilitado}
+    loading={carregando}
+    style={styles.botaoAcao}
+  />
+);
+
 // Pede a posição uma vez e marca o ponto da lista mais perto do aluno. Ele pode trocar depois.
 const SugerirPerto = ({
   pontos,
@@ -145,13 +182,12 @@ const SugerirPerto = ({
 
   return (
     <View>
-      <Tappable
+      <BotaoAcao
+        titulo="Usar o ponto mais próximo de mim"
+        icone="my-location"
         onPress={sugerir}
-        disabled={lendo}
-        sombra={false}
-        accessibilityLabel="Usar o ponto mais próximo de mim">
-        <Text style={styles.linhaAlterar}>{lendo ? 'Buscando sua localização...' : 'Usar o ponto mais próximo de mim'}</Text>
-      </Tappable>
+        carregando={lendo}
+      />
       {aviso ? <Text style={styles.instituicao}>{aviso}</Text> : null}
     </View>
   );
@@ -183,6 +219,9 @@ const EscolhaPontoSheet = ({
   const [textoBusca, setTextoBusca] = useState('');
   // Pergunta de instituição diferente: vive dentro da folha, sem abrir outra janela por cima.
   const [confirmandoOutra, setConfirmandoOutra] = useState(false);
+  // Mapa dos pontos: no lugar da lista, com o ponto tocado em destaque no cartão.
+  const [verMapa, setVerMapa] = useState(false);
+  const [focadoId, setFocadoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -194,6 +233,8 @@ const EscolhaPontoSheet = ({
       setOutroEmbarque(false);
       setTextoBusca('');
       setConfirmandoOutra(false);
+      setVerMapa(false);
+      setFocadoId(null);
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -217,6 +258,18 @@ const EscolhaPontoSheet = ({
       lista.push(ponto);
     }
   }
+  // Pontos com coordenadas válidas aparecem no mapa; sem nenhum, o botão do mapa some.
+  const mapaPontos: PontoEscolha[] = [];
+  for (const ponto of pontos ?? []) {
+    if (typeof ponto.latitude === 'number' && typeof ponto.longitude === 'number') mapaPontos.push(ponto);
+  }
+  const focado = (pontos ?? []).find((p) => p.id === focadoId) ?? null;
+  const focadoSelecionavel = lista.some((p) => p.id === focadoId);
+  const escolherNoMapa = (campo: 'embarqueId' | 'desembarqueId') => {
+    setEscolha((atual) => ({ ...atual, [campo]: focadoId }));
+    setVerMapa(false);
+    setFocadoId(null);
+  };
   const { minhas, outras } = separarInstituicoes(instituicoes, instituicoesDoAlunoIds, textoBusca);
   // Sem nenhuma cadastrada na rota, a busca já vem aberta.
   const mostrarBusca = buscandoOutra || minhas.length === 0;
@@ -296,8 +349,52 @@ const EscolhaPontoSheet = ({
             </View>
           ) : pontos === null ? (
             <ActivityIndicator color={colors.primary.main} style={styles.carregando} />
+          ) : verMapa ? (
+            <View>
+              <StaticRouteMap pontosRota={mapaPontos} altura={260} numerar aoTocarPonto={setFocadoId} />
+              {focado ? (
+                <View style={styles.cartaoPonto}>
+                  <Text style={styles.cartaoNome}>{focado.apelido}</Text>
+                  {focado.endereco ? <Text style={styles.cartaoEndereco}>{focado.endereco}</Text> : null}
+                  {focadoSelecionavel && sentido !== 'VOLTA' ? (
+                    <Button
+                      title="Embarcar aqui"
+                      icon="directions-bus"
+                      fullWidth
+                      onPress={() => escolherNoMapa('embarqueId')}
+                      style={styles.botaoAcao}
+                    />
+                  ) : null}
+                  {focadoSelecionavel && sentido !== 'IDA' ? (
+                    <Button
+                      title="Descer aqui"
+                      icon="place"
+                      fullWidth
+                      onPress={() => escolherNoMapa('desembarqueId')}
+                      style={styles.botaoAcao}
+                    />
+                  ) : null}
+                  {!focadoSelecionavel ? (
+                    <Text style={styles.cartaoEndereco}>Este é o ponto da instituição.</Text>
+                  ) : null}
+                </View>
+              ) : (
+                <Text style={styles.instituicao}>Toque em um número do mapa para ver o ponto.</Text>
+              )}
+              <BotaoAcao
+                titulo="Voltar à lista"
+                icone="list"
+                onPress={() => {
+                  setVerMapa(false);
+                  setFocadoId(null);
+                }}
+              />
+            </View>
           ) : (
             <ScrollView style={styles.lista} nestedScrollEnabled>
+              {mapaPontos.length > 0 ? (
+                <BotaoAcao titulo="Ver pontos no mapa" icone="map" onPress={() => setVerMapa(true)} />
+              ) : null}
               {comInstituicao && !mostrarOutroEmbarque ? (
                 <View style={styles.instituicaoBloco}>
                   <Text style={styles.blocoTitulo}>
@@ -308,12 +405,14 @@ const EscolhaPontoSheet = ({
                       <Icon name={IconNames.school} size="md" color={colors.primary.main} />
                       <Text style={styles.instituicaoNome}>{escolhida.nome}</Text>
                       {instituicoes.length > 1 ? (
-                        <Tappable
+                        <Button
+                          title="Trocar"
+                          variant="outline"
+                          size="sm"
                           onPress={() => setTrocando(true)}
-                          sombra={false}
-                          accessibilityLabel="Trocar instituição">
-                          <Text style={styles.linhaAlterar}>Trocar</Text>
-                        </Tappable>
+                          accessibilityLabel="Trocar instituição"
+                          style={styles.botaoAcao}
+                        />
                       ) : null}
                     </View>
                   ) : (
@@ -327,12 +426,11 @@ const EscolhaPontoSheet = ({
                         />
                       ) : null}
                       {minhas.length > 0 && !buscandoOutra ? (
-                        <Tappable
+                        <BotaoAcao
+                          titulo="Outra instituição"
+                          icone="search"
                           onPress={() => setBuscandoOutra(true)}
-                          sombra={false}
-                          accessibilityLabel="Buscar outra instituição">
-                          <Text style={styles.linhaAlterar}>Outra instituição</Text>
-                        </Tappable>
+                        />
                       ) : null}
                       {mostrarBusca ? (
                         <View>
@@ -370,23 +468,21 @@ const EscolhaPontoSheet = ({
                         marcado={embarqueLivre ? escolha.embarqueId : null}
                         onMarcar={(id) => setEscolha((atual) => ({ ...atual, embarqueId: id }))}
                       />
-                      <Tappable
+                      <BotaoAcao
+                        titulo="Embarcar na instituição"
+                        icone="school"
                         onPress={() => {
                           setOutroEmbarque(false);
                           setEscolha((atual) => ({ ...atual, embarqueId: null }));
                         }}
-                        sombra={false}
-                        accessibilityLabel="Embarcar na instituição">
-                        <Text style={styles.linhaAlterar}>Embarcar na instituição</Text>
-                      </Tappable>
+                      />
                     </>
                   ) : (
-                    <Tappable
+                    <BotaoAcao
+                      titulo="Embarcar em outro ponto"
+                      icone="edit-location"
                       onPress={() => setOutroEmbarque(true)}
-                      sombra={false}
-                      accessibilityLabel="Embarcar em outro ponto">
-                      <Text style={styles.linhaAlterar}>Embarcar em outro ponto</Text>
-                    </Tappable>
+                    />
                   )}
                 </View>
               ) : null}
@@ -405,12 +501,12 @@ const EscolhaPontoSheet = ({
                 />
               ) : null}
               {circular ? (
-                <Tappable
+                <BotaoAcao
+                  titulo="Inverter embarque e descida"
+                  icone="swap-vert"
                   onPress={() => setEscolha((atual) => inverterEscolha(atual))}
-                  sombra={false}
-                  accessibilityLabel="Inverter embarque e descida">
-                  <Text style={styles.linhaAlterar}>Inverter (volta para casa)</Text>
-                </Tappable>
+                  desabilitado={!escolha.embarqueId && !escolha.desembarqueId}
+                />
               ) : null}
               {volta ? (
                 <SugerirPerto
@@ -429,7 +525,7 @@ const EscolhaPontoSheet = ({
             </ScrollView>
           )}
 
-          {confirmandoOutra ? null : (
+          {confirmandoOutra || verMapa ? null : (
             <>
           {linhaInstituicao ? <Text style={styles.instituicao}>{linhaInstituicao}</Text> : null}
 
@@ -489,8 +585,12 @@ export const LinhaDosPontos = ({
       <Text style={[styles.linhaTexto, { color: cor }]} numberOfLines={2}>
         {texto}
       </Text>
-      <Tappable onPress={onAlterar} sombra={false} accessibilityLabel="Alterar ponto">
-        <Text style={[styles.linhaAlterar, { color: cor }]}>Alterar</Text>
+      <Tappable
+        onPress={onAlterar}
+        sombra={false}
+        style={[styles.alterarBotao, { borderColor: cor }]}
+        accessibilityLabel="Alterar ponto">
+        <Text style={[styles.alterarTexto, { color: cor }]}>Alterar</Text>
       </Tappable>
     </View>
   );
@@ -583,6 +683,25 @@ const styles = StyleSheet.create({
   confirmarTexto: { ...textStyles.h5, color: '#FFFFFF', fontWeight: '800' as const },
   linhaPontos: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md, marginTop: spacing.md, marginBottom: spacing.xs },
   linhaTexto: { ...textStyles.caption, flex: 1 },
+  botaoAcao: { minHeight: 48, marginTop: spacing.sm },
+  alterarBotao: {
+    minHeight: 44,
+    minWidth: 88,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.base,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+  },
+  alterarTexto: { ...textStyles.button, fontWeight: '700' as const },
+  cartaoPonto: {
+    marginTop: spacing.sm,
+    padding: spacing.base,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary.lighter,
+  },
+  cartaoNome: { ...textStyles.h5, color: colors.text.primary },
+  cartaoEndereco: { ...textStyles.body, color: colors.text.secondary, marginTop: spacing.xs },
   linhaAlterar: { ...textStyles.caption, fontWeight: '700' as const, textDecorationLine: 'underline' },
 });
 
