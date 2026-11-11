@@ -40,9 +40,14 @@ const CaixaPontos = ({ titulo, pontos, marcado, onMarcar, vazio = 'Escolha o pon
         sombra={false}
         accessibilityRole="button"
         accessibilityLabel={`${titulo || 'Ponto'}: ${escolhido ? escolhido.apelido : vazio}. Toque para ${aberta ? 'fechar' : 'abrir a lista'}`}>
-        <Text style={[styles.campoTexto, !escolhido && styles.placeholder]} numberOfLines={2}>
-          {escolhido ? escolhido.apelido : vazio}
-        </Text>
+        <View style={styles.campoTexto}>
+          <Text style={[styles.campoApelido, !escolhido && styles.placeholder]} numberOfLines={2}>
+            {escolhido ? escolhido.apelido : vazio}
+          </Text>
+          {escolhido && escolhido.endereco ? (
+            <Text style={styles.endereco} numberOfLines={2}>{escolhido.endereco}</Text>
+          ) : null}
+        </View>
         <Icon name={aberta ? IconNames.expandLess : IconNames.expandMore} size="md" color={colors.text.secondary} />
       </Tappable>
 
@@ -70,7 +75,10 @@ const CaixaPontos = ({ titulo, pontos, marcado, onMarcar, vazio = 'Escolha o pon
                 accessibilityRole="button"
                 accessibilityState={{ selected: ponto.id === marcado }}
                 accessibilityLabel={ponto.apelido}>
-                <Text style={styles.linhaTexto}>{ponto.apelido}</Text>
+                <View style={styles.linhaTexto}>
+                  <Text style={styles.linhaApelido}>{ponto.apelido}</Text>
+                  {ponto.endereco ? <Text style={styles.endereco}>{ponto.endereco}</Text> : null}
+                </View>
                 {ponto.id === marcado ? <Icon name={IconNames.check} size="md" color={colors.primary.main} /> : null}
               </Tappable>
             ))}
@@ -101,7 +109,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border.light,
     backgroundColor: colors.background.paper,
   },
-  campoTexto: { ...textStyles.body, flex: 1, color: colors.text.primary },
+  campoTexto: { flex: 1 },
+  campoApelido: { ...textStyles.body, color: colors.text.primary },
+  endereco: { ...textStyles.caption, color: colors.text.secondary },
   placeholder: { color: colors.text.hint },
   painel: {
     marginTop: spacing.xs,
@@ -135,7 +145,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border.light,
   },
-  linhaTexto: { ...textStyles.body, flex: 1, color: colors.text.primary },
+  linhaTexto: { flex: 1 },
+  linhaApelido: { ...textStyles.body, color: colors.text.primary },
   vazio: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', paddingVertical: spacing.lg },
   dica: { ...textStyles.caption, color: colors.text.secondary, textAlign: 'center', paddingVertical: spacing.md },
 });
