@@ -4,6 +4,7 @@ import { WebView } from 'react-native-webview';
 import { useTrajetoRuas } from '../hooks/useTrajetoRuas';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
 import { escaparHtml, jsonParaScript } from '../utils/htmlSeguro';
+import { coordenadaValida } from '../utils/coordenadaValida';
 
 interface RoutePoint {
   id?: string | number;
@@ -75,7 +76,7 @@ function buildStaticRouteHtml(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; background: #f5f5f5; }
     body { overflow: hidden; }
@@ -85,7 +86,7 @@ function buildStaticRouteHtml(
 </head>
 <body>
   <div id="map"></div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
     (function() {
       if (typeof L === 'undefined') return;
@@ -242,7 +243,7 @@ export default function StaticRouteMap({
             const data = JSON.parse(event.nativeEvent.data);
             if (data.type === 'mapReady') setLoading(false);
             if (data.type === 'ponto' && aoTocarPonto) aoTocarPonto(String(data.id));
-            if (data.type === 'longPress' && aoTocarLongo) {
+            if (data.type === 'longPress' && aoTocarLongo && coordenadaValida(data.latitude, data.longitude)) {
               aoTocarLongo({ latitude: data.latitude, longitude: data.longitude });
             }
           } catch {}
