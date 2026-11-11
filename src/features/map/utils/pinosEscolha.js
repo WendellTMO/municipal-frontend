@@ -39,7 +39,7 @@ export const pinoEscolhaHtml = ({rotulo, cor, anelDourado, etiqueta}) => {
   const texto = escolhido ? '#FFFFFF' : '#156EF2';
   const borda = escolhido ? '#FFFFFF' : '#156EF2';
   const anel = anelDourado
-    ? `<div style="position:absolute;left:-7px;top:-7px;width:40px;height:40px;border-radius:50%;border:4px solid ${COR_DESTAQUE};box-sizing:border-box"></div>`
+    ? `<div style="position:absolute;left:-3px;top:-3px;width:40px;height:40px;border-radius:50%;border:4px solid ${COR_DESTAQUE};box-sizing:border-box"></div>`
     : '';
   const chip = etiqueta
     ? `<div style="position:absolute;top:40px;left:50%;transform:translateX(-50%);background:${COR_DESTAQUE};color:#1E293B;font:800 12px sans-serif;padding:2px 8px;border-radius:10px;white-space:nowrap">${etiqueta}</div>`

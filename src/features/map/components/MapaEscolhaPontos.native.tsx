@@ -54,7 +54,7 @@ function montarHtml(pontos: PontoDoMapa[]): string {
       function pinoHtml(rotulo, cor, escolhido, anel, etiqueta) {
         var texto = escolhido ? '#FFFFFF' : '#156EF2';
         var borda = escolhido ? '#FFFFFF' : '#156EF2';
-        var anelHtml = anel ? '<div style="position:absolute;left:-7px;top:-7px;width:40px;height:40px;border-radius:50%;border:4px solid #F5A623;box-sizing:border-box"></div>' : '';
+        var anelHtml = anel ? '<div style="position:absolute;left:-3px;top:-3px;width:40px;height:40px;border-radius:50%;border:4px solid #F5A623;box-sizing:border-box"></div>' : '';
         var chip = etiqueta ? '<div style="position:absolute;top:40px;left:50%;transform:translateX(-50%);background:#F5A623;color:#1E293B;font:800 12px sans-serif;padding:2px 8px;border-radius:10px;white-space:nowrap">' + etiqueta + '</div>' : '';
         return '<div style="position:relative;width:34px;height:34px">' + anelHtml +
           '<div style="position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;background:' + cor + ';border:3px solid ' + borda + ';box-shadow:0 2px 6px rgba(0,0,0,.35);box-sizing:border-box;color:' + texto + ';font:800 14px sans-serif;display:flex;align-items:center;justify-content:center">' + rotulo + '</div>' + chip + '</div>';
