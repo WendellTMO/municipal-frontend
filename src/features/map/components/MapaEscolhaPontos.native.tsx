@@ -4,6 +4,7 @@ import { WebView } from 'react-native-webview';
 import { useTrajetoRuas } from '../hooks/useTrajetoRuas';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
 import { linhaDoTrajeto } from '../utils/pinosEscolha';
+import { jsonParaScript } from '../utils/htmlSeguro';
 import type { MapaEscolhaPontosProps, PontoDoMapa } from './MapaEscolhaPontos.tipos';
 
 /**
@@ -12,7 +13,7 @@ import type { MapaEscolhaPontosProps, PontoDoMapa } from './MapaEscolhaPontos.ti
  * sem recarregar a página (o zoom e a posição do mapa ficam como o aluno deixou).
  */
 function montarHtml(pontos: PontoDoMapa[]): string {
-  const pontosJson = JSON.stringify(
+  const pontosJson = jsonParaScript(
     pontos.map((p) => ({ id: p.id, apelido: p.apelido, latitude: p.latitude, longitude: p.longitude })),
   );
   return `

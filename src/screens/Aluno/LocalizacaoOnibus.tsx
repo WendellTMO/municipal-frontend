@@ -172,10 +172,11 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   // A bordo o ônibus é desenhado na posição do próprio aluno e o ponto azul some.
   const posicaoOnibusMapa = aBordo ? posicaoAluno : posicaoMotorista;
 
-  // Rota planejada calculada neste aparelho, a partir da posicao do onibus que ele ja recebe.
+  // Rota planejada a partir da posicao do onibus que o servidor ja entrega. A posicao do aluno
+  // nunca sai do aparelho, nem como origem do trajeto pedido ao servico de rotas.
   const pontosPendentes = paradasPendentes(pontosRota, visitados) as PontoFlatResponse[];
   const rotaPlanejada = useRotaPlanejada(
-    posicaoOnibusMapa,
+    posicaoMotorista,
     paradasRestantesPorProximidade(pontosPendentes, posicaoOnibusMapa),
     statusViagem === 'EM_ANDAMENTO',
   );

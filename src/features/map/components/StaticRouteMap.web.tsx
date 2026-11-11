@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import type * as LeafletNS from 'leaflet';
 import { TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL } from '../utils/tiles';
 import { destruirMapa } from '../utils/leafletSeguro';
+import { escaparHtml } from '../utils/htmlSeguro';
 import { useTrajetoRuas } from '../hooks/useTrajetoRuas';
 
 type LeafletModule = typeof LeafletNS;
@@ -192,7 +193,7 @@ export default function StaticRouteMap({
       });
       const marcador = L.marker(latLngs[i], { icon })
         .addTo(map)
-        .bindPopup(`<strong>${point.name}</strong>`);
+        .bindPopup(`<strong>${escaparHtml(point.name)}</strong>`);
       marcador.on('click', () => {
         if (point.id !== null) pontoRef.current?.(point.id);
       });
