@@ -190,6 +190,7 @@ test('inverter troca embarque e descida', () => {
     embarqueId: null,
     desembarqueId: 'casa',
   });
+});
 
 test('a busca da caixa de pontos acha também pelo endereço', () => {
   const pontos = [
