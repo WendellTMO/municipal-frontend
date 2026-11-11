@@ -190,4 +190,13 @@ test('inverter troca embarque e descida', () => {
     embarqueId: null,
     desembarqueId: 'casa',
   });
+
+test('a busca da caixa de pontos acha também pelo endereço', () => {
+  const pontos = [
+    {id: '1', apelido: 'Ponto perto do mercadinho', endereco: 'Rua das Flores, 120 - Bairro Novo'},
+    {id: '2', apelido: 'Praça', endereco: null},
+  ];
+  expect(filtrarPontos(pontos, 'flores').itens.map(p => p.id)).toEqual(['1']);
+  expect(filtrarPontos(pontos, 'bairro novo').total).toBe(1);
+  expect(filtrarPontos(pontos, 'praca').itens.map(p => p.id)).toEqual(['2']);
 });
