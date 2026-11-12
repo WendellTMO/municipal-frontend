@@ -20,6 +20,8 @@ const INTERVALO_MS = 15_000;
 
 type Props = {
   rotaId?: string;
+  // IDA, VOLTA ou CIRCULAR: o mapa mostra só os pontos que valem nesse sentido.
+  sentido?: string;
   viagemId?: string;
   embarqueId?: string;
   confirmada?: boolean;
@@ -34,6 +36,7 @@ type LatLng = { latitude: number; longitude: number };
 
 const MiniMapaOnibus = ({
   rotaId,
+  sentido,
   viagemId,
   embarqueId,
   confirmada = false,
@@ -64,7 +67,7 @@ const MiniMapaOnibus = ({
     if (!rotaId) return;
     let ativo = true;
     alunoService
-      .listarPontosRota(rotaId)
+      .listarPontosRota(rotaId, sentido)
       .then(unwrapItems)
       .then((lista) => {
         if (ativo) setPontos(lista as PontoFlatResponse[]);
@@ -73,7 +76,7 @@ const MiniMapaOnibus = ({
     return () => {
       ativo = false;
     };
-  }, [rotaId]);
+  }, [rotaId, sentido]);
 
   useEffect(() => {
     // Só aluno confirmado vê o ônibus: sem confirmar, o servidor responde 403 e a espera enganaria.

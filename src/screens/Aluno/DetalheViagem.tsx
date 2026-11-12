@@ -102,14 +102,14 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
     }
     try {
       setCarregandoPontos(true);
-      const pontos = await alunoService.listarPontosRota(rotaId).then(unwrapItems);
+      const pontos = await alunoService.listarPontosRota(rotaId, viagem?.tipo).then(unwrapItems);
       setPontosRota((pontos as PontoFlatResponse[]) || []);
     } catch {
       setPontosRota([]);
     } finally {
       setCarregandoPontos(false);
     }
-  }, [rota?.id]);
+  }, [rota?.id, viagem?.tipo]);
 
   useEffect(() => {
     carregarPontos();

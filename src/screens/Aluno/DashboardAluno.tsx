@@ -365,6 +365,7 @@ const DashboardAluno: React.FC<Props> = ({ navigation }) => {
             onPress={abrirLocalizacao}>
             <MiniMapaOnibus
               rotaId={todayTrip.rota_id}
+              sentido={todayTrip.tipo}
               viagemId={todayTrip.id}
               embarqueId={todayTrip.ponto_embarque_id}
               confirmada={!!todayTrip.status_confirmacao}
