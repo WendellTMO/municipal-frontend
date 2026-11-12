@@ -73,7 +73,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
       if (!rotaId) return;
       try {
         setCarregando(true);
-        const resp = await motoristaService.listarPontosRota(rotaId);
+        const resp = await motoristaService.listarPontosRota(rotaId, viagem?.tipo as string | undefined);
         const items = unwrapItems(resp) as PontoFlatResponse[];
         if (items.length > 0) setPontosRota(items);
       } catch {
@@ -83,7 +83,7 @@ const DetalheViagemMotorista: React.FC<Props> = ({ navigation, route: navRoute }
       }
     };
     buscarPontos();
-  }, [viagem?.rota_id]);
+  }, [viagem?.rota_id, viagem?.tipo]);
 
   // O motivo vai para os alunos e para o gestor junto com o aviso de cancelamento.
   const cancelarComMotivo = async (motivo: string, indice: number) => {

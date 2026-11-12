@@ -52,8 +52,8 @@ export function usePresencaViagem(
     if (pontos || !viagem?.rota_id) return;
     try {
       // Vários cards da mesma rota abrem juntos: dividem a mesma busca.
-      const lista = (await compartilhar(`pontos:${viagem.rota_id}`, () =>
-        alunoService.listarPontosRota(viagem.rota_id as string).then(unwrapItems),
+      const lista = (await compartilhar(`pontos:${viagem.rota_id}:${viagem.tipo}`, () =>
+        alunoService.listarPontosRota(viagem.rota_id as string, viagem.tipo).then(unwrapItems),
       )) as PontoEscolha[];
       setPontos(lista);
     } catch (e) {

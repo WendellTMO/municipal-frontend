@@ -226,7 +226,10 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
         // Fetch route points for map
         const rid = (viagemAtual?.rota_id ?? viagemParam?.rota_id) as string | undefined;
         if (rid) {
-          const pontosResp = await motoristaService.listarPontosRota(rid);
+          const pontosResp = await motoristaService.listarPontosRota(
+            rid,
+            (viagemAtual?.tipo ?? viagemParam?.tipo) as string | undefined,
+          );
           const items = unwrapItems(pontosResp) as PontoFlatResponse[];
           setPontosRota(items);
         }
@@ -549,7 +552,7 @@ const InicioFimViagem: React.FC<Props> = ({ navigation, route }) => {
 
       // Fetch points if not loaded yet
       if (pontosRota.length === 0 && rotaId) {
-        const pontosResp = await motoristaService.listarPontosRota(rotaId);
+        const pontosResp = await motoristaService.listarPontosRota(rotaId, currentViagem?.tipo as string | undefined);
         setPontosRota(unwrapItems(pontosResp) as PontoFlatResponse[]);
       }
 

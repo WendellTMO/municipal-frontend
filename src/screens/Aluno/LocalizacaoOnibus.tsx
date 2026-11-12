@@ -131,11 +131,11 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
   useEffect(() => {
     if (!rotaId) return;
     alunoService
-      .listarPontosRota(rotaId)
+      .listarPontosRota(rotaId, viagem?.tipo as string | undefined)
       .then(unwrapItems)
       .then((pontos) => setPontosRota(pontos as PontoFlatResponse[]))
       .catch(() => setPontosRota([]));
-  }, [rotaId]);
+  }, [rotaId, viagem?.tipo]);
 
   const statusViagem = viagem?.status_viagem as string | undefined;
   const presenca = usePresencaViagem(

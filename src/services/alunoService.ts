@@ -241,11 +241,14 @@ export const alunoService = {
    * List all points for a route
    * Backend: GET /v1/rotas/{id}/pontos
    */
-  async listarPontosRota(rotaId: string): Promise<PontoFlatListResponse> {
+  async listarPontosRota(rotaId: string, sentido?: string): Promise<PontoFlatListResponse> {
     if (!rotaId) {
       return { items: [], total: 0 };
     }
-    const response = await api.get<PontoFlatListResponse>(`/rotas/${rotaId}/pontos`);
+    // Com o sentido da viagem (IDA ou VOLTA) o servidor devolve só os pontos que valem nela.
+    const response = await api.get<PontoFlatListResponse>(`/rotas/${rotaId}/pontos`, {
+      params: sentido ? { sentido } : undefined,
+    });
     return response.data;
   },
 

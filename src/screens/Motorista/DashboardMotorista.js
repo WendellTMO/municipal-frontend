@@ -68,7 +68,7 @@ const DashboardMotorista = ({navigation}) => {
 
             // Uma só busca dos pontos: serve ao detalhe da viagem e a origem e destino do cartão.
             try {
-              const pontos = await motoristaService.listarPontosRota(proxima.rota_id).then(unwrapItems);
+              const pontos = await motoristaService.listarPontosRota(proxima.rota_id, proxima.tipo).then(unwrapItems);
               proxima.pontos = pontos;
               if (pontos && pontos.length > 0) {
                 origem = pontos[0].nome || 'N/A';
