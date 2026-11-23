@@ -1,3 +1,4 @@
+import CompartilharLocalizacao from '../../components/CompartilharLocalizacao';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ScrollView,
@@ -188,6 +189,8 @@ const DetalheViagem: React.FC<Props> = ({ navigation, route }) => {
       <ScrollView contentContainerStyle={withFabSpace()} style={styles.scrollView}>
         <View style={styles.content}>
           {statusViagem === 'CANCELADA' ? <AvisoViagemCancelada motivo={viagem.motivo_cancelamento} /> : null}
+
+          <CompartilharLocalizacao viagemId={(viagem.id ?? viagem.viagem_id) as string | undefined} />
 
           {/* Main Info Card */}
           <View style={styles.card}>
