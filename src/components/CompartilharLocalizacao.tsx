@@ -3,7 +3,7 @@
  * não usa o app, e para pedir aos colegas que compartilhem. Some sozinho quando o servidor não
  * liga o recurso, então fora da demo a tela fica como sempre foi.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { borderRadius, colors, spacing, textStyles } from '../theme';
@@ -12,10 +12,12 @@ import { useToast } from './Toast';
 import {
   buscarEstado,
   escutarCompartilhamento,
+  estadoDaSessao,
   iniciarCompartilhamento,
+  motivoDaParada,
   pararCompartilhamento,
   pedirLocalizacao,
-  viagemCompartilhando,
+  responderChegada,
 } from '../services/compartilharLocalizacao';
 import type { EstadoColaborativo } from '../services/compartilharLocalizacao';
 import { avisoSemCompartilhamento } from '../utils/colaborativa';
@@ -28,7 +30,8 @@ const CompartilharLocalizacao: React.FC<Props> = ({ viagemId }) => {
   const toast = useToast();
   const emFoco = useIsFocused();
   const [estado, setEstado] = useState<EstadoColaborativo | null>(null);
-  const [euCompartilho, setEuCompartilho] = useState(viagemCompartilhando() === viagemId);
+  const [euCompartilho, setEuCompartilho] = useState(estadoDaSessao().viagemId === viagemId);
+  const [perguntandoChegada, setPerguntandoChegada] = useState(false);
   const [dialogo, setDialogo] = useState(false);
   const [ocupado, setOcupado] = useState(false);
 
@@ -48,9 +51,20 @@ const CompartilharLocalizacao: React.FC<Props> = ({ viagemId }) => {
     return () => clearInterval(intervalo);
   }, [emFoco, viagemId, buscar]);
 
+  // Quem para por ter chegado ao destino é avisado, para saber que o envio terminou.
+  const compartilhavaAntes = useRef(euCompartilho);
   useEffect(
-    () => escutarCompartilhamento((atual) => setEuCompartilho(!!viagemId && atual === viagemId)),
-    [viagemId],
+    () =>
+      escutarCompartilhamento((atual) => {
+        const agora = !!viagemId && atual.viagemId === viagemId;
+        setEuCompartilho(agora);
+        setPerguntandoChegada(agora && atual.perguntando);
+        if (compartilhavaAntes.current && !agora && motivoDaParada() === 'chegada') {
+          toast.info('Chegamos ao seu destino. Paramos de compartilhar a sua localização.');
+        }
+        compartilhavaAntes.current = agora;
+      }),
+    [viagemId, toast],
   );
 
   if (!viagemId || !estado || !estado.ativa) return null;
@@ -63,7 +77,7 @@ const CompartilharLocalizacao: React.FC<Props> = ({ viagemId }) => {
     setDialogo(false);
     setOcupado(true);
     try {
-      const resultado = await iniciarCompartilhamento(viagemId);
+      const resultado = await iniciarCompartilhamento(viagemId, estado.destino ?? null);
       if (resultado === 'sem-permissao') toast.warning('Permita o acesso à localização para compartilhar.');
       if (resultado === 'sem-gps') toast.warning('Este aparelho não informa a localização.');
     } finally {
@@ -87,7 +101,7 @@ const CompartilharLocalizacao: React.FC<Props> = ({ viagemId }) => {
     try {
       const resposta = await pedirLocalizacao(viagemId);
       if (resposta.avisados > 0) toast.success(`Avisamos ${resposta.avisados} colega(s) da viagem.`);
-      else if (resposta.motivo === 'recente') toast.info('Já pedimos há pouco. Aguarde alguns minutos.');
+      else if (resposta.motivo === 'recente') toast.info('Já pedimos há pouco. Dá para pedir de novo em alguns minutos.');
       else toast.info('Não há outros colegas confirmados para avisar.');
     } catch {
       toast.warning('Não foi possível pedir agora. Tente de novo.');
@@ -159,6 +173,20 @@ const CompartilharLocalizacao: React.FC<Props> = ({ viagemId }) => {
           cor: colors.background.default,
           corTexto: colors.text.primary,
           onPress: () => setDialogo(false),
+        }}
+      />
+
+      <DialogoConfirmacao
+        visible={perguntandoChegada}
+        titulo="Você chegou ao seu destino?"
+        resumo="Se você já desceu, paramos de compartilhar a sua localização. Sem resposta em 1 minuto, paramos sozinhos."
+        onCancelar={() => responderChegada(false)}
+        principal={{ texto: 'Cheguei, parar de compartilhar', cor: colors.primary.main, onPress: () => responderChegada(true) }}
+        secundario={{
+          texto: 'Ainda estou no ônibus',
+          cor: colors.background.default,
+          corTexto: colors.text.primary,
+          onPress: () => responderChegada(false),
         }}
       />
     </View>
