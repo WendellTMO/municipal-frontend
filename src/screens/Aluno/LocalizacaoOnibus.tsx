@@ -24,6 +24,7 @@ import { unwrapItems } from '../../types';
 import type { PontoFlatResponse } from '../../types';
 import { mesmaLista, paradasPendentes } from '../../utils/paradasPendentes';
 import { manterTelaAcesa } from '../../utils/telaAcesa';
+import CompartilharLocalizacao from '../../components/CompartilharLocalizacao';
 
 type RootParamList = Record<string, object | undefined>;
 type Props = {
@@ -358,6 +359,7 @@ const LocalizacaoOnibus: React.FC<Props> = ({ navigation, route }) => {
 
         {!recolhido && (
           <>
+        <CompartilharLocalizacao viagemId={viagemId} />
         {/* Próxima parada, cabeçalho do painel */}
         {proximoPonto && etaParaProximoPonto != null && (
           <>
